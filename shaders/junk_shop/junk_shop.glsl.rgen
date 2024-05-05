@@ -1,0 +1,70 @@
+#version 460
+
+#extension GL_EXT_ray_tracing					: enable
+#extension GL_GOOGLE_include_directive			: enable
+#extension GL_EXT_shader_image_load_formatted	: enable
+
+#include <shaders/utils/tone_mapping.glsl>
+#include <shaders/utils/rng.glsl>
+
+#include <shaders/junk_shop/shared.glsl>
+#include <shaders/junk_shop/ray_payload.glsl>
+
+layout(set = 0, binding = acceleration_structure_binding) uniform accelerationStructureEXT scene;
+
+layout(location = 0) rayPayloadEXT payload_t payload;
+
+layout(set = 0, binding = result_image_binding)			uniform image2D result;
+layout(set = 0, binding = accumulated_buffer_binding)	uniform image2D accumulated_buffer;
+
+layout(push_constant) uniform push_constants_t
+{
+	layout(offset = 0) 		camera_t 	camera;
+	layout(offset = 128) 	uint 		accumulated_frames_count;	
+} push_constants;
+
+void init_payload()
+{
+	float frame = float(push_constants.accumulated_frames_count);
+
+	payload.seed 	 	= vec2(random(frame + cos(gl_LaunchIDEXT.xy)), random(frame + sin(gl_LaunchIDEXT.xy)));
+	payload.acc			= vec3(0);
+	payload.abso		= vec3(1);
+	payload.is_missed	= false;
+	payload.all_bounds 	= 0;
+	payload.ray.or 		= vec3(0);
+	payload.ray.dir 	= vec3(0);
+}
+
+void main()
+{
+	init_payload();
+
+	payload.ray = get_primary_ray(push_constants.camera, ivec2(0, 0));
+
+	for (; payload.all_bounds < max_recursive; ++payload.all_bounds) 
+	{
+		if (payload.is_missed)
+			break;
+
+		trace(payload.ray, scene);
+	}
+
+	/*
+	 * Т.к. в Vulkan ось Y направлена вниз, то нужно переверунть итоговое изображение. 
+	*/
+	ivec2 pixel_coord = ivec2(gl_LaunchIDEXT.xy);
+	pixel_coord.y = int(gl_LaunchSizeEXT.y - gl_LaunchIDEXT.y);
+
+	vec3 pixel_color_for_current_frame = white_preserving_luma_based_reinhard(payload.acc);
+
+	vec3 final_pixel_color = imageLoad(accumulated_buffer, pixel_coord).rgb;
+
+	if (push_constants.accumulated_frames_count == 0)
+		final_pixel_color = pixel_color_for_current_frame;
+	else
+		final_pixel_color += pixel_color_for_current_frame;
+
+	imageStore(accumulated_buffer, pixel_coord, vec4(final_pixel_color, 0.0));
+	imageStore(result, pixel_coord, vec4(final_pixel_color / float(push_constants.accumulated_frames_count + 1), 1.0));
+}

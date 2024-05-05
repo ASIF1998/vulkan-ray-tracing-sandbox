@@ -1,0 +1,5 @@
+build/
+.vscode/
+nsight/
+configuration.hpp
+.vs/

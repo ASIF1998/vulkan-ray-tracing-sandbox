@@ -1,0 +1,13 @@
+#pragma once
+
+#include <base/math.hpp>
+
+#include <filesystem>
+
+namespace sample_vk
+{
+    constexpr bool enable_vk_profiling                      = false;
+    constexpr bool enable_vk_objects_naming                 = true;
+
+    const std::filesystem::path project_dir = "@VULKAN_RAY_TRACING_SANDBOX_PROJECT_DIR@";
+}
