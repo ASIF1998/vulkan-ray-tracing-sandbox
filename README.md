@@ -20,7 +20,7 @@
 Простой пример, где при помощи трассировки лучей рисуется треугольник.
 
 ### Результат
-![hello-triangle](https://github.com/ASIF1998/vulkan-ray-tracing-sandbox/tree/main/results/hello-triangle/hello-triangle.png)
+![](results/hello-triangle/hello-triangle.png)
 
 ## JunkShop
 В этой сцене рисуется модель [junkshop](https://www.aendom.com/tuts/junkshop-workflow-en/) при помощи Path tracing'а и [PBR](https://www.shadertoy.com/view/cll3R4). 
@@ -28,6 +28,6 @@
 Чтобы переместить камеру, нажимайте клавиши W/S/A/D/SPACE/SHIFT. Камеру также можно повернуть, щелкнув кнопкой мыши по окну и перетащив мышь. При движении камеры будет присутствовать шум, т.к. рендер снова начнёт накапливать образцы.
 
 ### Результаты
-![junk-shop-1](https://github.com/ASIF1998/vulkan-ray-tracing-sandbox/tree/main/results/junk-shop/junk-shop-1.png)
-![junk-shop-2](https://github.com/ASIF1998/vulkan-ray-tracing-sandbox/tree/main/results/junk-shop/junk-shop-2.png)
-![junk-shop-video](https://github.com/ASIF1998/vulkan-ray-tracing-sandbox/tree/main/results/junk-shop/junk-shop.mp4)
+![](results/junk-shop/junk-shop-1.png)
+![](results/junk-shop/junk-shop-2.png)
+[junk-shop-video](https://github.com/ASIF1998/vulkan-ray-tracing-sandbox/tree/main/results/junk-shop/junk-shop.mp4)
