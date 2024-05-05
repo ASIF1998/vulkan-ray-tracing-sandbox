@@ -1,5 +1,5 @@
-#ifndef MODEL_VIEW_MATERIAL_GLSL
-#define MODEL_VIEW_MATERIAL_GLSL
+#ifndef JUNK_SHOP_MATERIAL_GLSL
+#define JUNK_SHOP_MATERIAL_GLSL
 
 struct material_t   
 {

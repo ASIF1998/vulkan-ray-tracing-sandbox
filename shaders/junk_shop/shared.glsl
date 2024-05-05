@@ -1,5 +1,5 @@
-#ifndef MODEL_VIEW_BINDINGS_GLSL
-#define MODEL_VIEW_BINDINGS_GLSL
+#ifndef JUNK_SHOP_BINDINGS_GLSL
+#define JUNK_SHOP_BINDINGS_GLSL
 
 #include <shaders/utils/ray.glsl>
 
