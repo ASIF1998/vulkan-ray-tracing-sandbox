@@ -805,18 +805,27 @@ void HelloTriangle::show()
 
 void HelloTriangle::destroyDescriptorSets()
 {
-    vkDestroyDescriptorPool(_context.device_handle, _descriptor_pool_handle, nullptr);
-    vkDestroyDescriptorSetLayout(_context.device_handle, _descriptor_set_layout_handle, nullptr);
+    if (_descriptor_pool_handle != VK_NULL_HANDLE)
+        vkDestroyDescriptorPool(_context.device_handle, _descriptor_pool_handle, nullptr);
+
+    if (_descriptor_set_layout_handle != VK_NULL_HANDLE)
+        vkDestroyDescriptorSetLayout(_context.device_handle, _descriptor_set_layout_handle, nullptr);
 }
 
 void HelloTriangle::destroyShaders()
 {
     for (auto shader_module: _shader_modules)
-        vkDestroyShaderModule(_context.device_handle, shader_module, nullptr);
+    {
+        if (shader_module != VK_NULL_HANDLE)
+            vkDestroyShaderModule(_context.device_handle, shader_module, nullptr);
+    }
 }
 
 void HelloTriangle::destroyPipeline()
 {
-    vkDestroyPipelineLayout(_context.device_handle, _pipeline_layout_handle, nullptr);
-    vkDestroyPipeline(_context.device_handle, _pipeline_handle, nullptr);
+    if (_pipeline_layout_handle != VK_NULL_HANDLE)
+        vkDestroyPipelineLayout(_context.device_handle, _pipeline_layout_handle, nullptr);
+
+    if (_pipeline_handle != VK_NULL_HANDLE)
+        vkDestroyPipeline(_context.device_handle, _pipeline_handle, nullptr);
 }

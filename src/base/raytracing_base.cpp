@@ -42,7 +42,8 @@ namespace sample_vk
 
     Window::~Window()
     {
-        SDL_DestroyWindow(_ptr_window);
+        if (_ptr_window)
+            SDL_DestroyWindow(_ptr_window);
     }
 
     Window& Window::operator = (Window&& window)
@@ -207,7 +208,8 @@ namespace sample_vk
 
     void RayTracingBase::destroyInstance()
     {
-        vkDestroyInstance(_context.instance_handle, nullptr);        
+        if (_context.instance_handle != VK_NULL_HANDLE)
+            vkDestroyInstance(_context.instance_handle, nullptr);        
     }
 }
 
@@ -414,7 +416,8 @@ namespace sample_vk
 
     void RayTracingBase::destroyDevice()
     {
-        vkDestroyDevice(_context.device_handle, nullptr);
+        if (_context.device_handle != VK_NULL_HANDLE)
+            vkDestroyDevice(_context.device_handle, nullptr);
     }
 }
 
@@ -446,7 +449,8 @@ namespace sample_vk
 
     void RayTracingBase::destroyCommandPool()
     {
-        vkDestroyCommandPool(_context.device_handle, _context.command_pool_handle, nullptr);
+        if (_surface_handle != VK_NULL_HANDLE)
+            vkDestroyCommandPool(_context.device_handle, _context.command_pool_handle, nullptr);
     }
 
     CommandBuffer RayTracingBase::getCommandBuffer() const
@@ -486,7 +490,8 @@ namespace sample_vk
 
     void RayTracingBase::destroySurface()
     {
-        vkDestroySurfaceKHR(_context.instance_handle, _surface_handle, nullptr);
+        if (_surface_handle != VK_NULL_HANDLE)
+            vkDestroySurfaceKHR(_context.instance_handle, _surface_handle, nullptr);
     }
 }
 
@@ -646,7 +651,8 @@ namespace sample_vk
 
     void RayTracingBase::destroySwapchain()
     {
-        vkDestroySwapchainKHR(_context.device_handle, _swapchain_handle, nullptr);
+        if (_swapchain_handle != VK_NULL_HANDLE)
+            vkDestroySwapchainKHR(_context.device_handle, _swapchain_handle, nullptr);
     }
 
     void RayTracingBase::getSwapchainImages()
@@ -756,7 +762,10 @@ namespace sample_vk
     void RayTracingBase::destroySwapchainImageViews()
     {
         for (auto image_view_handle: _swapchain_image_view_handles)
-            vkDestroyImageView(_context.device_handle, image_view_handle, nullptr);
+        {
+            if (image_view_handle != VK_NULL_HANDLE)
+                vkDestroyImageView(_context.device_handle, image_view_handle, nullptr);
+        }
     }
 }
 

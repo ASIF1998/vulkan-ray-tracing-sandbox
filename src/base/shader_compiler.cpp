@@ -115,15 +115,22 @@ namespace sample_vk::shader
 
 namespace sample_vk::shader
 {
+    bool Compiler::_is_init = false;
+
     void Compiler::init()
     {
         if (!glslang_initialize_process())
             log::vkError("[Sahder Compiler]: Failed initialize glslang.");
+        
+        _is_init = true;
     }
 
     void Compiler::finalize() noexcept
     {
-        glslang_finalize_process();
+        if (_is_init)
+            glslang_finalize_process();
+
+        _is_init = false;
     }
 }
 

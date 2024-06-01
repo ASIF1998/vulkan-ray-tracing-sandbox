@@ -53,7 +53,7 @@ namespace sample_vk
                     msg
                 ) << std::endl;
             
-            exit(EXIT_FAILURE);
+            throw std::runtime_error(msg.data());    
         }
 
         std::cout 

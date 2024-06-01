@@ -25,9 +25,9 @@ int main(int argc, char* argv[])
         pApp->init();
         pApp->show();
     }
-    catch(const std::exception& ex)
+    catch (...)
     {
-        log::appError("Msg from excpetion: {}", ex.what());
+
     }
     
     return 0;

@@ -50,5 +50,8 @@ namespace sample_vk::shader
             const std::filesystem::path&    filename, 
             Type                            type
         );
+
+    private:
+        static bool _is_init;
     };
 }

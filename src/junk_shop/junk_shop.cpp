@@ -856,18 +856,27 @@ void JunkShop::buildCommandBuffers()
 
 void JunkShop::destroyDescriptorSets()
 {
-	vkDestroyDescriptorPool(_context.device_handle, _descriptor_pool, nullptr);
+	if (_descriptor_pool != VK_NULL_HANDLE)
+		vkDestroyDescriptorPool(_context.device_handle, _descriptor_pool, nullptr);
 }
 
 void JunkShop::destroyShaders()
 {
 	for (auto shader_module_handle: _shader_modules)
-		vkDestroyShaderModule(_context.device_handle, shader_module_handle, nullptr);
+	{
+		if (shader_module_handle != VK_NULL_HANDLE)
+			vkDestroyShaderModule(_context.device_handle, shader_module_handle, nullptr);
+	}
 }
 
 void JunkShop::destroyPipeline()
 {
-	vkDestroyDescriptorSetLayout(_context.device_handle, _descriptor_set_layout_handle, nullptr);
-	vkDestroyPipelineLayout(_context.device_handle, _pipeline_layout, nullptr);
-	vkDestroyPipeline(_context.device_handle, _pipeline, nullptr);
+	if (_descriptor_set_layout_handle != VK_NULL_HANDLE)
+		vkDestroyDescriptorSetLayout(_context.device_handle, _descriptor_set_layout_handle, nullptr);
+
+	if (_pipeline_layout != VK_NULL_HANDLE)
+		vkDestroyPipelineLayout(_context.device_handle, _pipeline_layout, nullptr);
+
+	if (_pipeline != VK_NULL_HANDLE)
+		vkDestroyPipeline(_context.device_handle, _pipeline, nullptr);
 }
