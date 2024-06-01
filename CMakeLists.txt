@@ -28,7 +28,7 @@ add_executable(vulkan-ray-tracing-sandbox ${VULKAN_RAY_TRACING_SANDBOX_SOURCES} 
 ######################################################################
 find_package(Vulkan REQUIRED)
 
-set(Vulkan_SDK_DIR ${Vulkan_INCLUDE_DIRS}/../Lib)
+set(Vulkan_SDK_LIBS ${Vulkan_INCLUDE_DIRS}/../Lib)
 
 ######################################################################
 #   glslang
@@ -60,7 +60,7 @@ else()
 endif()
 
 foreach(library ${GLSLANG_LIBS_NAME})
-    set(GLSLANG_LIBS ${GLSLANG_LIBS} ${Vulkan_SDK_DIR}/${library})
+    set(GLSLANG_LIBS ${GLSLANG_LIBS} ${Vulkan_SDK_LIBS}/${library})
 endforeach()
 
 ######################################################################
@@ -93,8 +93,8 @@ set(STB_INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/)
 #   SDL2
 ######################################################################
 set(SDL2_LIBS 
-    ${Vulkan_SDK_DIR}/SDL2.lib
-    ${Vulkan_SDK_DIR}/SDL2main.lib
+    ${Vulkan_SDK_LIBS}/SDL2.lib
+    ${Vulkan_SDK_LIBS}/SDL2main.lib
 )
 
 ######################################################################
