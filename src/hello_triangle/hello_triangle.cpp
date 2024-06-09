@@ -554,7 +554,10 @@ void HelloTriangle::creareDescriptorSets()
 
     for (auto i: std::views::iota(0u, _descriptor_set_handles.size()))
         VK_CHECK(vkAllocateDescriptorSets(_context.device_handle, &descriptor_set_allocate_info, &_descriptor_set_handles[i]));
+}
 
+void HelloTriangle::updateDescriptorSets()
+{
     VkDescriptorImageInfo storage_image_descriptor{};
     storage_image_descriptor.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
@@ -662,6 +665,22 @@ void HelloTriangle::init()
     createPipeline();
     createShaderBindingTable();
 
+    updateDescriptorSets();
+    buildCommandBuffers();
+}
+
+void HelloTriangle::resizeWindow()
+{
+    VK_CHECK(vkDeviceWaitIdle(_context.device_handle));
+
+    destroySwapchainImageViews();
+    destroySwapchain();
+
+    createSwapchain();
+    getSwapchainImages();
+    createSwapchainImageViews();
+
+    updateDescriptorSets();
     buildCommandBuffers();
 }
 
@@ -785,10 +804,16 @@ void HelloTriangle::show()
                     if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
                         stay = false;
                     break;
+                case SDL_WINDOWEVENT:
+                    if (event.window.event = SDL_WINDOW_RESIZABLE)
+                        resizeWindow();
+                    break;
             }
         }
 
         auto image_index = getNextImageIndex();
+        if (auto is_resize_window = image_index == std::numeric_limits<uint32_t>::max(); is_resize_window)
+            continue;
 
         _ray_tracing_launch[image_index]->execute(getContext());
 
@@ -796,8 +821,14 @@ void HelloTriangle::show()
 
         present_info.pImageIndices = &image_index;
 
-        VK_CHECK(vkQueuePresentKHR(_context.queue.handle, &present_info));
-        VK_CHECK(result);
+        auto present_result = vkQueuePresentKHR(_context.queue.handle, &present_info);
+        if (auto is_resize_window = present_result == VK_ERROR_OUT_OF_DATE_KHR; is_resize_window)
+            continue;
+        else 
+        {
+            VK_CHECK(present_result);
+            VK_CHECK(result);
+        }
 
         _swapchain.present_layout_to_general[image_index]->execute(getContext());
     }

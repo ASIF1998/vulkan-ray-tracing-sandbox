@@ -45,6 +45,14 @@ namespace sample_vk
     {
         return std::make_pair(_width, _height);
     }
+
+    void Camera::setSize(float width, float height)
+    {
+        assert(width > 0.0 && height > 0.0);
+
+        _width  = width;
+        _height = _height;
+    }
 }
 
 namespace sample_vk

@@ -62,9 +62,6 @@ namespace sample_vk
 
     private:
         SDL_Window* _ptr_window = nullptr;
-
-        uint32_t _width     = 0;
-        uint32_t _height    = 0;
     };
 
     class RayTracingBase
@@ -100,7 +97,6 @@ namespace sample_vk
         [[nodiscard]]
         const Context* getContext() const noexcept;
 
-    private:
         void getPhysicalDevice();
         void getQueue();
         void getSwapchainImages();
@@ -128,6 +124,8 @@ namespace sample_vk
 
         [[nodiscard]]
         std::vector<VkSurfaceFormatKHR> getSurfaceFormats() const;
+
+        virtual void resizeWindow() = 0;
 
     protected:
         std::optional<Window> _window;

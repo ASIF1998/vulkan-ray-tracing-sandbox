@@ -33,6 +33,8 @@ class HelloTriangle final :
     void init() override;
     void show() override;
 
+    void resizeWindow() override;
+
     void createPipeline();
     void compileShaders();
     void createShaderBindingTable();
@@ -47,6 +49,8 @@ class HelloTriangle final :
     void destroyDescriptorSets();
     void destroyShaders();
     void destroyPipeline();
+
+    void updateDescriptorSets();
 
     void buildCommandBuffers();
 

@@ -15,9 +15,7 @@
 
 namespace sample_vk
 {
-    Window::Window(const std::string_view title, uint32_t width, uint32_t height) :
-        _width  (width),
-        _height (height)
+    Window::Window(const std::string_view title, uint32_t width, uint32_t height)
     {
         log::windowInfo("Create window.");
 
@@ -25,7 +23,7 @@ namespace sample_vk
             title.data(), 
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
             static_cast<int>(width), static_cast<int>(height), 
-            SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN /*| SDL_WINDOW_RESIZABLE*/
+            SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
         );
 
         if (!_ptr_window)
@@ -35,9 +33,6 @@ namespace sample_vk
     Window::Window(Window&& window)
     {
         std::swap(window._ptr_window, _ptr_window);
-
-        _width = window._width;
-        _height = window._height;
     }
 
     Window::~Window()
@@ -49,16 +44,17 @@ namespace sample_vk
     Window& Window::operator = (Window&& window)
     {
         std::swap(window._ptr_window, _ptr_window);
-
-        _width = window._width;
-        _height = window._height;
-
         return *this;
     }
 
     Window::Size Window::getSize() const
     {
-        return {_width, _height};
+        int width   = 0;
+        int height  = 0;
+
+        SDL_GetWindowSize(_ptr_window, &width, &height);
+
+        return {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
     }
 
     std::vector<const char*> Window::getVulkanExtensions() const
@@ -116,7 +112,7 @@ namespace sample_vk
 
 namespace sample_vk
 {
-    enum WindowDefaultrs : uint32_t
+    enum : uint32_t
     {
         DEFAULT_WINDOW_WIDTH    = 2500,
         DEFAULT_WDINDOW_HEIGHT  = 1200
@@ -637,8 +633,6 @@ namespace sample_vk
         swapchian_create_info.surface               = _surface_handle;
         swapchian_create_info.compositeAlpha        = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
-        log::vkInfo("Create swapchains");
-
         VK_CHECK(
             vkCreateSwapchainKHR(
                 _context.device_handle, 
@@ -791,17 +785,22 @@ namespace sample_vk
 
         VK_CHECK(vkCreateFence(_context.device_handle, &fence_create_info, nullptr, &fence_handle));
 
-        VK_CHECK(vkAcquireNextImageKHR(
+        auto result = vkAcquireNextImageKHR(
             _context.device_handle, 
             _swapchain_handle, 
             time, 
             VK_NULL_HANDLE, 
             fence_handle,
             &image_index
-        ));
+        );
 
         vkWaitForFences(_context.device_handle, 1, &fence_handle, VK_TRUE, time);
         vkDestroyFence(_context.device_handle, fence_handle, nullptr);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+            return std::numeric_limits<uint32_t>::max();
+        else 
+            VK_CHECK(result);
 
         return image_index;
     }

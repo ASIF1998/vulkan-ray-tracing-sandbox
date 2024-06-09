@@ -25,7 +25,25 @@ void JunkShop::init()
 	createAccumulationBuffer();
 	createPipeline();
 	createShaderBindingTable();
-	createAndAllocateDescriptorSets();
+	createDescriptorSets();
+
+	buildCommandBuffers();
+}
+
+void JunkShop::resizeWindow()
+{
+	VK_CHECK(vkDeviceWaitIdle(_context.device_handle));
+
+	auto [width, height] = _window->getSize();
+	_scene->getCameraController().getCamera().setSize(static_cast<float>(width), static_cast<float>(height));
+	
+	destroySwapchainImageViews();
+	destroySwapchain();
+
+	createSwapchain();
+	getSwapchainImages();
+	createSwapchainImageViews();
+	createAccumulationBuffer();
 
 	buildCommandBuffers();
 }
@@ -156,7 +174,7 @@ void JunkShop::updateDescriptorSet(uint32_t image_index)
 	);
 }
 
-bool JunkShop::process_events()
+bool JunkShop::processEvents()
 {
 	SDL_Event event = { };
 
@@ -201,6 +219,13 @@ bool JunkShop::process_events()
 			case SDL_MOUSEBUTTONDOWN:
 				_draw_stay = DrawStay::clear;
 				break;
+			case SDL_WINDOWEVENT:
+				if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+				{
+					resizeWindow();
+					_draw_stay = DrawStay::clear;
+				}
+				break;
 		}
 	}
 
@@ -211,41 +236,21 @@ void JunkShop::show()
 {
 	log::appInfo("Sample running !!!");
 
-	while (process_events())
+	while (processEvents())
 	{
 		if (_draw_stay == DrawStay::clear)
+		{
 			_accumulated_frames_count = 0;
+			_draw_stay = DrawStay::draw;
+		}
 		else
 			++_accumulated_frames_count;
 
 		_scene->updateCamera();
 		
-		uint32_t image_index = std::numeric_limits<uint32_t>::max();
-
-		{
-			const auto time = std::numeric_limits<uint64_t>::max();
-
-			VkFence fence_handle = VK_NULL_HANDLE;
-            VkFenceCreateInfo fence_create_info = { };
-            fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-
-            VK_CHECK(vkCreateFence(_context.device_handle, &fence_create_info, nullptr, &fence_handle));
-
-			VK_CHECK(
-				vkAcquireNextImageKHR(
-					_context.device_handle,
-					_swapchain_handle,
-					std::numeric_limits<uint64_t>::max(),
-					VK_NULL_HANDLE,
-					fence_handle,
-					&image_index
-				)
-			);
-
-			vkWaitForFences(_context.device_handle, 1, &fence_handle, VK_TRUE, time);
-            vkDestroyFence(_context.device_handle, fence_handle, nullptr);
-
-		}
+		auto image_index = getNextImageIndex();
+		if (auto is_resize_window = image_index == std::numeric_limits<uint32_t>::max(); is_resize_window)
+			continue;
 
 		updateDescriptorSet(image_index);
 
@@ -297,19 +302,26 @@ void JunkShop::show()
 
 		command_buffer_for_trace_ray.execute(getContext());
 
-		VkResult present_result = VK_RESULT_MAX_ENUM;
+		VkResult result = VK_RESULT_MAX_ENUM;
 
 		VkPresentInfoKHR present_info = { };
 		present_info.sType			= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		present_info.pImageIndices	= &image_index;
-		present_info.pResults		= &present_result;
+		present_info.pResults		= &result;
 		present_info.pSwapchains	= &_swapchain_handle;
 		present_info.swapchainCount = 1;
 
 		_swapchain.general_to_present_layout[image_index]->execute(getContext());
 
-		VK_CHECK(vkQueuePresentKHR(_context.queue.handle, &present_info));
-        VK_CHECK(present_result);
+		auto present_result = vkQueuePresentKHR(_context.queue.handle, &present_info);
+
+		if (auto is_resize_window = present_result == VK_ERROR_OUT_OF_DATE_KHR; is_resize_window)
+			continue;
+		else 
+		{
+			VK_CHECK(present_result);
+			VK_CHECK(result);
+		}
 
 		_swapchain.present_layout_to_general[image_index]->execute(getContext());
 	}
@@ -647,7 +659,7 @@ auto JunkShop::getPoolSizes() const
 	return pool_sizes;
 }
 
-void JunkShop::createAndAllocateDescriptorSets()
+void JunkShop::createDescriptorSets()
 {
 	auto pool_sizes = getPoolSizes();
 

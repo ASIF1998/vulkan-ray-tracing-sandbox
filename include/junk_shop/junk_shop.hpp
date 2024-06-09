@@ -71,18 +71,20 @@ class JunkShop final :
         };
     };
 
-public:
-    ~JunkShop();
-
     void init() override;
     void show() override;
+
+    void resizeWindow() override;
+
+public:
+    ~JunkShop();
 
 private:
     void createPipelineLayout();
     void createPipeline();
     void compileShaders();
     void createShaderBindingTable();
-    void createAndAllocateDescriptorSets();
+    void createDescriptorSets();
     void createAS();
     void createAccumulationBuffer();
 
@@ -100,7 +102,7 @@ private:
 
     PushConstants getPushConstantData();
 
-    bool process_events();
+    bool processEvents();
 
     [[nodiscard]] std::array<VkDescriptorSetLayoutBinding, DescriptorSets::count> getPipelineDescriptorSetsBindings()   const;
     [[nodiscard]] std::array<VkDescriptorPoolSize, DescriptorSets::count>         getPoolSizes()                        const;

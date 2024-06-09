@@ -21,6 +21,7 @@ namespace sample_vk
         [[nodiscard]] glm::mat4 getInvProjection() const;
 
         [[nodiscard]] std::pair<float, float> getSize() const;
+        void setSize(float width, float height);
 
         void setDepthRange(float near, float far);
         
