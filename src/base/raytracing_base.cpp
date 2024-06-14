@@ -708,7 +708,7 @@ namespace sample_vk
             }
         });
 
-        command_buffer.execute(getContext());
+        command_buffer.upload(getContext());
     }
 
     void RayTracingBase::createSwapchainImageViews()

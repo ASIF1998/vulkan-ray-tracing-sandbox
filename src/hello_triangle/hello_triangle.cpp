@@ -239,7 +239,7 @@ void HelloTriangle::createBLAS()
         );
     });
 
-    command_buffer.execute(getContext());
+    command_buffer.upload(getContext());
 
     _blas = AccelerationStructure(getContext(), blas_handle, std::move(blas_buffer));
 }
@@ -376,7 +376,7 @@ void HelloTriangle::createTLAS()
         );
     });
 
-    command_buffer_for_build_tlas.execute(getContext());
+    command_buffer_for_build_tlas.upload(getContext());
 
     _tlas = std::make_optional<AccelerationStructure>(getContext(), tlas_handle, std::move(tlas_buffer));
 }
@@ -815,9 +815,9 @@ void HelloTriangle::show()
         if (auto is_resize_window = image_index == std::numeric_limits<uint32_t>::max(); is_resize_window)
             continue;
 
-        _ray_tracing_launch[image_index]->execute(getContext());
+        _ray_tracing_launch[image_index]->upload(getContext());
 
-        _swapchain.general_to_present_layout[image_index]->execute(getContext());
+        _swapchain.general_to_present_layout[image_index]->upload(getContext());
 
         present_info.pImageIndices = &image_index;
 
@@ -830,7 +830,7 @@ void HelloTriangle::show()
             VK_CHECK(result);
         }
 
-        _swapchain.present_layout_to_general[image_index]->execute(getContext());
+        _swapchain.present_layout_to_general[image_index]->upload(getContext());
     }
 }
 

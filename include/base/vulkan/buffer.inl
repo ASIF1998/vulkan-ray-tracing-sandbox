@@ -53,7 +53,7 @@ namespace sample_vk
             vkCmdCopyBuffer(vk_handle, temp_buffer.vk_handle, buffer.vk_handle, 1, &copy);
         });
 
-        command_buffer.execute(buffer._ptr_context);
+        command_buffer.upload(buffer._ptr_context);
     }
 
     template<typename T>

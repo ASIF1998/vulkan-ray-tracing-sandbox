@@ -39,7 +39,7 @@ namespace sample_vk
         vkEndCommandBuffer(_vk_handle);
     }
 
-    void CommandBuffer::execute(const Context* ptr_context)
+    void CommandBuffer::upload(const Context* ptr_context)
     {
         VkCommandBufferSubmitInfo command_buffer_info = { };
         command_buffer_info.sType           = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;

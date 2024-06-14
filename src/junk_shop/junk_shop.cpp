@@ -300,7 +300,7 @@ void JunkShop::show()
 			);
 		});
 
-		command_buffer_for_trace_ray.execute(getContext());
+		command_buffer_for_trace_ray.upload(getContext());
 
 		VkResult result = VK_RESULT_MAX_ENUM;
 
@@ -311,7 +311,7 @@ void JunkShop::show()
 		present_info.pSwapchains	= &_swapchain_handle;
 		present_info.swapchainCount = 1;
 
-		_swapchain.general_to_present_layout[image_index]->execute(getContext());
+		_swapchain.general_to_present_layout[image_index]->upload(getContext());
 
 		auto present_result = vkQueuePresentKHR(_context.queue.handle, &present_info);
 
@@ -323,7 +323,7 @@ void JunkShop::show()
 			VK_CHECK(result);
 		}
 
-		_swapchain.present_layout_to_general[image_index]->execute(getContext());
+		_swapchain.present_layout_to_general[image_index]->upload(getContext());
 	}
 }
 

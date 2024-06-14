@@ -137,7 +137,7 @@ namespace sample_vk
             vkCmdCopyBufferToImage2(command_buffer_handle, &copy_info);
         });
 
-        command_buffer.execute(_ptr_context);
+        command_buffer.upload(_ptr_context);
     }
 
     void Image::init() noexcept
@@ -201,7 +201,7 @@ namespace sample_vk
                     vkCmdBlitImage2(command_buffer_handle, &blit_info);
                 });
 
-                command_buffer.execute(ptr_context);
+                command_buffer.upload(ptr_context);
             }
         }
     };
@@ -285,7 +285,7 @@ namespace sample_vk
             vkCmdPipelineBarrier2(command_buffer_handle, &dependency_info);
         });
 
-        command_buffer.execute(_ptr_context);
+        command_buffer.upload(_ptr_context);
     }
 
     void Image::Builder::validate() const
@@ -458,7 +458,7 @@ namespace sample_vk
                 vkCmdClearColorImage(handle, image.vk_handle, VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &range);
             });
 
-            command_buffer.execute(_ptr_context);
+            command_buffer.upload(_ptr_context);
         }
 
         return image;

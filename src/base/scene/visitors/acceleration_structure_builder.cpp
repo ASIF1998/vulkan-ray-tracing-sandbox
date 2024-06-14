@@ -198,7 +198,7 @@ namespace sample_vk
             );
         });
 
-        command_buffer_for_build.execute(_ptr_context);
+        command_buffer_for_build.upload(_ptr_context);
 
         ptr_node->acceleation_structure = std::make_optional<AccelerationStructure>(_ptr_context, acceleration_structure_handle, std::move(tlas_buffer));
     }
@@ -325,7 +325,7 @@ namespace sample_vk
             );
         });
 
-        command_buffer_for_build.execute(_ptr_context);
+        command_buffer_for_build.upload(_ptr_context);
 
         ptr_node->acceleation_structure = std::make_optional<AccelerationStructure>(
             _ptr_context, 

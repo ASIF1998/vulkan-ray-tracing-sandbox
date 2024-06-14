@@ -26,7 +26,7 @@ namespace sample_vk
 
         void write(const std::function<void (VkCommandBuffer command_buffer_handle)>& writer);
 
-        void execute(const Context* ptr_context);
+        void upload(const Context* ptr_context);
 
     private:
         VkCommandBuffer _vk_handle      = VK_NULL_HANDLE;
