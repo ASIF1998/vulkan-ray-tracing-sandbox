@@ -307,9 +307,9 @@ namespace sample_vk
 
 namespace sample_vk
 {
-    uint32_t VkUtils::getAlignedSize(uint32_t size, uint32_t aligned)
+    uint32_t VkUtils::getAlignedSize(VkDeviceSize size, VkDeviceSize aligned)
     {
-        return (size + (aligned - 1)) & ~(aligned - 1);
+        return static_cast<uint32_t>((size + (aligned - 1)) & ~(aligned - 1));
     }
 }
 
@@ -323,5 +323,14 @@ namespace sample_vk
             log::vkError("[VkUtils]: Vulkan function pointer table not initialized.");
 
         return _vulkan_function_pointer_table.value();
+    }
+}
+
+namespace sample_vk
+{
+    uint32_t VkUtils::getMipLevelsCount(uint32_t width, uint32_t height)
+    {
+        assert(width > 0 && height > 0);
+        return static_cast<uint32_t>(std::floor(std::log2(std::max(width, height)) + 1) + 0.5);
     }
 }

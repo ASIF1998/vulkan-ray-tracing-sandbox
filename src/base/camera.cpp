@@ -4,8 +4,8 @@
 namespace sample_vk
 {
     Camera::Camera(uint32_t width, uint32_t height) :
-        _width  (width),
-        _height (height)
+        _width  (static_cast<float>(width)),
+        _height (static_cast<float>(height))
     { }
 
     void Camera::setDepthRange(float near, float far)
@@ -28,7 +28,7 @@ namespace sample_vk
     float Camera::getEyeToPixelConeSpreadAngle() const
     {
         auto fov_in_radians = _fov * (M_PI / 180.0);
-        return std::atan((2.0f * std::tan(fov_in_radians * 0.5f)) / _height);
+        return std::atan(static_cast<float>((2.0 * std::tan(fov_in_radians * 0.5)) / _height));
     }
 
     glm::mat4 Camera::getInvViewMatrix() const

@@ -320,7 +320,7 @@ namespace sample_vk
         image_create_info.tiling                = VK_IMAGE_TILING_OPTIMAL;
 
         if (_generate_mipmap)
-            image_create_info.mipLevels = std::floor(std::log2(std::max(_width, _height)) + 1);
+            image_create_info.mipLevels = VkUtils::getMipLevelsCount(_width, _height);
 
         Image image (_ptr_context);
 
@@ -424,7 +424,7 @@ namespace sample_vk
             sampler_create_info.anisotropyEnable    = VK_FALSE;
             sampler_create_info.mipmapMode          = VK_SAMPLER_MIPMAP_MODE_LINEAR;
             sampler_create_info.minLod              = 0;
-            sampler_create_info.maxLod              = image.level_count;
+            sampler_create_info.maxLod              = static_cast<float>(image.level_count);
 
             VK_CHECK(
                 vkCreateSampler(
@@ -591,7 +591,7 @@ namespace sample_vk
 
         write_data.ptr_data = stbi_load_from_memory(
             _compressed_image.ptr_data, 
-            _compressed_image.size, 
+            static_cast<int>(_compressed_image.size), 
             &write_data.width, &write_data.height,
             &_channels_per_pixel,
             _channels_per_pixel

@@ -23,6 +23,12 @@ include_directories(include/)
 
 add_executable(vulkan-ray-tracing-sandbox ${VULKAN_RAY_TRACING_SANDBOX_SOURCES} main.cpp)
 
+# Warning level 3
+# @todo set /W4
+if (MSVC)
+    target_compile_options(vulkan-ray-tracing-sandbox PRIVATE /W3 /WX)
+endif()
+
 ######################################################################
 #   vulkan
 ######################################################################

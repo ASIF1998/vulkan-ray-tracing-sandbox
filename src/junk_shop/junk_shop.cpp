@@ -638,23 +638,23 @@ auto JunkShop::getPoolSizes() const
 
 	pool_sizes[DescriptorSets::albedos] = { };
 	pool_sizes[DescriptorSets::albedos].type			= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	pool_sizes[DescriptorSets::albedos].descriptorCount	= materials.size();
+	pool_sizes[DescriptorSets::albedos].descriptorCount	= static_cast<uint32_t>(materials.size());
 
 	pool_sizes[DescriptorSets::normal_maps] = { };
 	pool_sizes[DescriptorSets::normal_maps].type			= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	pool_sizes[DescriptorSets::normal_maps].descriptorCount	= materials.size();
+	pool_sizes[DescriptorSets::normal_maps].descriptorCount	= static_cast<uint32_t>(materials.size());
 
 	pool_sizes[DescriptorSets::metallic] = { };
 	pool_sizes[DescriptorSets::metallic].type				= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	pool_sizes[DescriptorSets::metallic].descriptorCount	= materials.size();
+	pool_sizes[DescriptorSets::metallic].descriptorCount	= static_cast<uint32_t>(materials.size());
 
 	pool_sizes[DescriptorSets::roughness] = { };
 	pool_sizes[DescriptorSets::roughness].type				= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	pool_sizes[DescriptorSets::roughness].descriptorCount	= materials.size();
+	pool_sizes[DescriptorSets::roughness].descriptorCount	= static_cast<uint32_t>(materials.size());
 	
 	pool_sizes[DescriptorSets::emissive] = { };
 	pool_sizes[DescriptorSets::emissive].type				= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	pool_sizes[DescriptorSets::emissive].descriptorCount	= materials.size();
+	pool_sizes[DescriptorSets::emissive].descriptorCount	= static_cast<uint32_t>(materials.size());
 
 	return pool_sizes;
 }
@@ -793,7 +793,7 @@ void JunkShop::initCamera()
 {
 	auto& camera = _scene->getCameraController().getCamera();
 
-	camera.setDepthRange(0.01, 1000.0);
+	camera.setDepthRange(0.01f, 1000.0f);
 	camera.lookaAt(glm::vec3(50, 1823.898, 5133.947),glm::vec3(-0.5, 0, 1));
 }
 

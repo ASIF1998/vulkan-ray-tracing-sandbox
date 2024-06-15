@@ -111,10 +111,13 @@ namespace sample_vk
         static size_t getFormatSize(VkFormat format);
 
         [[nodiscard]]
-        static uint32_t getAlignedSize(uint32_t size, uint32_t aligned);
+        static uint32_t getAlignedSize(VkDeviceSize size, VkDeviceSize aligned);
 
         [[nodiscard]]
         static const VkFunctionPointerTable& getVulkanFunctionPointerTable();
+
+        [[nodiscard]]
+        static uint32_t getMipLevelsCount(uint32_t width, uint32_t height);
 
     private:
         static std::optional<VkFunctionPointerTable> _vulkan_function_pointer_table;

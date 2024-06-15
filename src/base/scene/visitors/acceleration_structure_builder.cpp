@@ -230,7 +230,7 @@ namespace sample_vk
             triangles.indexData.deviceAddress   = mesh.index_buffer.getAddress();
             triangles.indexType                 = VK_INDEX_TYPE_UINT32;
 
-            triangles.maxVertex                 = mesh.vertex_count;
+            triangles.maxVertex                 = static_cast<uint32_t>(mesh.vertex_count);
             triangles.vertexData.deviceAddress  = mesh.vertex_buffer.getAddress();
             triangles.vertexFormat              = VK_FORMAT_R32G32B32_SFLOAT;
             triangles.vertexStride              = sizeof(Mesh::Attributes);

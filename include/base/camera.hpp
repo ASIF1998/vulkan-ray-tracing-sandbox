@@ -41,7 +41,7 @@ namespace sample_vk
         glm::vec3 _dir  = glm::vec3(0, 0, -1);
         glm::vec3 _up   = glm::vec3(0, 1, 0);
 
-        float _near  = 0.01;
+        float _near  = 0.01f;
         float _far   = std::numeric_limits<float>::max() - 1.0f;
 
         float _fov = 45.0;
@@ -65,8 +65,8 @@ namespace sample_vk
     private:
         Camera _camera;
 
-        Sint32 _prev_x = 0.0;
-        Sint32 _prev_y = 0.0;
+        Sint32 _prev_x = 0;
+        Sint32 _prev_y = 0;
 
         bool _is_mouse_button_pressed = false;
 

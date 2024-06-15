@@ -789,8 +789,6 @@ void HelloTriangle::show()
     present_info.pSwapchains    = &_swapchain_handle;
     present_info.swapchainCount = 1;
 
-    auto [width, height] = _window->getSize();
-    
     while (stay)
     {
         while(SDL_PollEvent(&event))
