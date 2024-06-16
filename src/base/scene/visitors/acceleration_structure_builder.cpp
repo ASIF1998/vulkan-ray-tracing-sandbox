@@ -32,7 +32,7 @@ namespace sample_vk
 
         auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
 
-        Buffer::writeData(_identity_matrix.value(), identity_matrix, command_buffer, _ptr_context->queue.handle);
+        Buffer::writeData(_identity_matrix.value(), identity_matrix, command_buffer);
     }
 
     void ASBuilder::process(Node* ptr_node)
@@ -107,7 +107,7 @@ namespace sample_vk
         {
             auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
 
-            Buffer::writeData(instances_buffer, std::span(instances), command_buffer, _ptr_context->queue.handle);
+            Buffer::writeData(instances_buffer, std::span(instances), command_buffer);
         }
 
         VkAccelerationStructureGeometryKHR geometry = { };
@@ -116,10 +116,10 @@ namespace sample_vk
         geometry.flags          = VK_GEOMETRY_OPAQUE_BIT_KHR;
 
         {
-            auto& instances = geometry.geometry.instances;
-            instances.sType                 = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
-            instances.data.deviceAddress    = instances_buffer.getAddress();
-            instances.arrayOfPointers       = VK_FALSE;
+            auto& geometry_instances = geometry.geometry.instances;
+            geometry_instances.sType                = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
+            geometry_instances.data.deviceAddress   = instances_buffer.getAddress();
+            geometry_instances.arrayOfPointers      = VK_FALSE;
         }
 
         VkAccelerationStructureBuildGeometryInfoKHR geometry_build_info = { };

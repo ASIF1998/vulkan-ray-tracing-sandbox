@@ -55,8 +55,7 @@ namespace sample_vk
         Buffer::writeData(
             references_buffer, 
             std::span(references), 
-            command_buffer_for_write, 
-            _ptr_context->queue.handle
+            command_buffer_for_write
         );
 
         return references_buffer;

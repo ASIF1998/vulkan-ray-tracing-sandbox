@@ -587,8 +587,7 @@ void JunkShop::createShaderBindingTable()
 		Buffer::writeData(
 			buffer.value(), 
 			data, 
-			command_buffer, 
-			_context.queue.handle
+			command_buffer
 		);
 	};
 
@@ -785,7 +784,7 @@ void JunkShop::initVertexBuffersReferences()
 	Buffer::writeData<VkDeviceAddress>(
 		*_vertex_buffers_references.scene_info_reference, 
 		std::span(references),
-		command_buffer, _context.queue.handle
+		command_buffer
 	);
 }
 

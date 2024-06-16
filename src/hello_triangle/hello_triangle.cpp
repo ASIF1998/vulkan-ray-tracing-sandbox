@@ -129,7 +129,7 @@ void HelloTriangle::createBLAS()
 
         auto command_buffer = getCommandBuffer();
 
-        Buffer::writeData(transform_matrix_buffer, transform_matrix, command_buffer, _context.queue.handle);
+        Buffer::writeData(transform_matrix_buffer, transform_matrix, command_buffer);
     }
 
     VkAccelerationStructureGeometryKHR blas_geometry = { };
@@ -276,7 +276,7 @@ void HelloTriangle::createTLAS()
 
         auto command_buffer = getCommandBuffer();
 
-        Buffer::writeData(instance_buffer, as_instance, command_buffer, _context.queue.handle);
+        Buffer::writeData(instance_buffer, as_instance, command_buffer);
     }
 
     auto instance_buffer_address = instance_buffer.getAddress();
@@ -465,8 +465,7 @@ void HelloTriangle::createShaderBindingTable()
 		Buffer::writeData(
 			buffer.value(), 
 			data, 
-			command_buffer, 
-			_context.queue.handle
+			command_buffer
 		);
 	};
 
@@ -478,8 +477,6 @@ void HelloTriangle::createShaderBindingTable()
     createBufferForSBT(_sbt._miss_shader_binding_table, miss_data, "miss");
     createBufferForSBT(_sbt._chit_shader_binding_table, closest_hit_data, "closest hit");
 
-    auto stride = VkUtils::getAlignedSize(handle_size_aligned, _ray_tracing_pipeline_properties.shaderGroupBaseAlignment);
-    
     _sbt.raygen_region.deviceAddress 	= _sbt._raygen_shader_binding_table->getAddress();
 	_sbt.raygen_region.stride 			= handle_size_aligned;
 	_sbt.raygen_region.size 			= handle_size_aligned;
@@ -650,8 +647,8 @@ void HelloTriangle::initMesh()
     auto command_buffer_for_copy_vertices   = getCommandBuffer();
     auto command_buffer_for_copy_indices    = getCommandBuffer();
 
-    Buffer::writeData(_mesh.vertex_buffer.value(), std::span(_mesh.vertices), command_buffer_for_copy_vertices, _context.queue.handle);
-    Buffer::writeData(_mesh.index_buffer.value(), std::span(_mesh.indices), command_buffer_for_copy_indices, _context.queue.handle);
+    Buffer::writeData(_mesh.vertex_buffer.value(), std::span(_mesh.vertices), command_buffer_for_copy_vertices);
+    Buffer::writeData(_mesh.index_buffer.value(), std::span(_mesh.indices), command_buffer_for_copy_indices);
 }
 
 void HelloTriangle::init()
@@ -803,7 +800,7 @@ void HelloTriangle::show()
                         stay = false;
                     break;
                 case SDL_WINDOWEVENT:
-                    if (event.window.event = SDL_WINDOW_RESIZABLE)
+                    if (event.window.event == SDL_WINDOW_RESIZABLE)
                         resizeWindow();
                     break;
             }

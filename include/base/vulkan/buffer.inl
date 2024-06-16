@@ -9,8 +9,7 @@ namespace sample_vk
     static void Buffer::writeData(
         Buffer&             buffer, 
         const std::span<T>  data, 
-        CommandBuffer&      command_buffer,
-        VkQueue             queue_handle
+        CommandBuffer&      command_buffer
     )
     {
         Buffer temp_buffer (buffer._ptr_context);
@@ -60,15 +59,13 @@ namespace sample_vk
     static void Buffer::writeData(
         Buffer&         buffer, 
         const T&        obj, 
-        CommandBuffer&  command_buffer, 
-        VkQueue         queue_handle
+        CommandBuffer&  command_buffer
     )
     {
         writeData(
             buffer, 
             std::span(reinterpret_cast<const uint8_t*>(&obj), sizeof(T)), 
-            command_buffer,
-            queue_handle
+            command_buffer
         );
     }
 }

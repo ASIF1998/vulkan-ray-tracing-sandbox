@@ -47,16 +47,14 @@ namespace sample_vk
         static void writeData(
             Buffer&             buffer, 
             const std::span<T>  data, 
-            CommandBuffer&      command_buffer, 
-            VkQueue             queue_handle
+            CommandBuffer&      command_buffer
         );
 
         template<typename T>
         static void writeData(
             Buffer&         buffer, 
             const T&        obj, 
-            CommandBuffer&  command_buffer, 
-            VkQueue         queue_handle
+            CommandBuffer&  command_buffer
         );
         
     public:

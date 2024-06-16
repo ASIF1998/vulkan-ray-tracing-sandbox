@@ -68,8 +68,7 @@ namespace sample_vk::utils
         Buffer::writeData(
             buffer,
             data,
-            command_buffer,
-            ptr_context->queue.handle
+            command_buffer
         );
 
         return buffer;
