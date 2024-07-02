@@ -2,6 +2,8 @@
 
 #include <base/vulkan/memory.hpp>
 
+#include <base/scene/visitors/acceleration_structure_builder.hpp>
+
 Animation::~Animation()
 {
 
@@ -18,6 +20,11 @@ void Animation::initScene()
             .vkMemoryTypeIndex(*memory_index)
             .viewport(width, height)
             .import();
+
+        auto ptr_as_builder = std::make_unique<ASBuilder>(getContext());
+
+        auto& model = _scene->getModel();
+        model.visit(ptr_as_builder);
     }
 }
 
