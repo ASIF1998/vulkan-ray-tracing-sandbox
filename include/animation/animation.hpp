@@ -1,6 +1,7 @@
 #pragma once
 
 #include <base/raytracing_base.hpp>
+#include <base/scene/scene.hpp>
 
 using namespace sample_vk;
 
@@ -12,6 +13,8 @@ class Animation final :
 
     void resizeWindow() override;
 
+    void initScene();
+
 public:
     Animation() = default;
 
@@ -22,4 +25,7 @@ public:
 
     Animation& operator = (Animation&& animation)       = delete;
     Animation& operator = (const Animation& animation)  = delete;
+
+private:
+    std::optional<Scene> _scene;
 };
