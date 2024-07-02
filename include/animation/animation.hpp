@@ -15,6 +15,8 @@ class Animation final :
 
     void initScene();
 
+    bool processEvents();
+    
 public:
     Animation() = default;
 
