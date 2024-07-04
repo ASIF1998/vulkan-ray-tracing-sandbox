@@ -16,7 +16,7 @@ void Animation::initScene()
         auto [width, height] = _window->getSize();
 
         _scene = Scene::Importer(getContext())
-            .path(project_dir / "content/mech-drone/source/Drone.FBX")
+            .path(project_dir / "content/dancing_penguin.glb")
             .vkMemoryTypeIndex(*memory_index)
             .viewport(width, height)
             .import();
@@ -56,8 +56,6 @@ bool Animation::processEvents()
 
     return true;
 }
-
-
 
 void Animation::show()
 {
