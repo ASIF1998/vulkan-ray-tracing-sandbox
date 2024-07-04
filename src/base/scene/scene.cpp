@@ -518,6 +518,25 @@ namespace sample_vk
         _material_manager.add(std::move(material));
     }
 
+    void Scene::Importer::processBones(const aiMesh* ptr_mesh)
+    {
+        for (auto bone_index: std::views::iota(0u, ptr_mesh->mNumBones))
+        {
+            const auto ptr_bone = ptr_mesh->mBones[bone_index];
+            
+            log::appInfo("[Scene::Importer]\t\t - Bone name: {}", ptr_bone->mName.C_Str());
+            log::appInfo("[Scene::Importer]\t\t -   weights: {}", ptr_bone->mNumWeights);
+
+            for (auto weight_index: std::views::iota(0u, ptr_bone->mNumWeights))
+            {
+                const auto& weight = ptr_bone->mWeights[weight_index];
+                // log::appInfo("[Scene::Importer]\t\t\t {}) vertex id: {},  weight: {}", weight_index, weight.mVertexId, weight.mWeight);
+            }
+
+            // ptr_bone->mName
+        }
+    }
+
     void Scene::Importer::processNode(const aiScene* ptr_scene, const aiNode* ptr_node)
     {
         log::appInfo("[Scene::Importer]\t - Process node: {}", ptr_node->mName.C_Str());
@@ -569,6 +588,9 @@ namespace sample_vk
 
                 indices.clear();
                 attributes.clear();
+
+                if (ptr_mesh->HasBones())
+                    processBones(ptr_mesh);
             }
         }
 

@@ -95,6 +95,8 @@ namespace sample_vk
         [[nodiscard]] Scene import();
 
     private:
+        void processBones(const aiMesh* ptr_mesh);
+
         void processNode(const aiScene* ptr_scene, const aiNode* ptr_node);
 
         [[nodiscard]]
