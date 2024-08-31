@@ -25,6 +25,34 @@ namespace sample_vk
 
 namespace sample_vk
 {
+    struct BoneInfo
+    {
+        glm::mat4 offset_matrix;
+        glm::mat4 final_transform;
+    };
+
+    struct VertexBoneData
+    {
+        void add(uint32_t bone_index, float weight)
+        {
+            bone_ids.push_back(bone_index);
+            weights.push_back(weight);
+        }
+
+        std::vector<uint32_t>   bone_ids;
+        std::vector<float>      weights;
+        glm::mat4               local_to_bone_space; /// @todo вероятно придётся убрать.
+    };
+
+    struct AnimationData
+    {
+        std::vector<VertexBoneData>             vertices_bone_data;
+        std::unordered_multimap<size_t, size_t> mesh_id_to_vbd_id;
+    };
+}
+
+namespace sample_vk
+{
     struct Light
     {
         alignas(16) glm::vec3 pos;
@@ -95,6 +123,8 @@ namespace sample_vk
         [[nodiscard]] Scene import();
 
     private:
+        size_t getMeshCount() const;
+
         void processBones(const aiMesh* ptr_mesh);
 
         void processNode(const aiScene* ptr_scene, const aiNode* ptr_node);
@@ -153,5 +183,7 @@ namespace sample_vk
         {
             glm::mat4 transform = glm::mat4(1.0f);
         } _current_state;
+
+        AnimationData animation_data;
     };
 }

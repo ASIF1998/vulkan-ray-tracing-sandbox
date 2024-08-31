@@ -518,22 +518,34 @@ namespace sample_vk
         _material_manager.add(std::move(material));
     }
 
+    size_t Scene::Importer::getMeshCount() const
+    {
+        return _ptr_root_node->children.size();
+    }
+
     void Scene::Importer::processBones(const aiMesh* ptr_mesh)
     {
+        auto current_mesh_id = getMeshCount() - 1;
+
+        VertexBoneData vertex_bone_data;
+
         for (auto bone_index: std::views::iota(0u, ptr_mesh->mNumBones))
         {
             const auto ptr_bone = ptr_mesh->mBones[bone_index];
-            
+
             log::appInfo("[Scene::Importer]\t\t - Bone name: {}", ptr_bone->mName.C_Str());
-            log::appInfo("[Scene::Importer]\t\t -   weights: {}", ptr_bone->mNumWeights);
+            log::appInfo("[Scene::Importer]\t\t -   Weights: {}", ptr_bone->mNumWeights);
+
+            vertex_bone_data.local_to_bone_space = utils::cast(ptr_bone->mOffsetMatrix);
 
             for (auto weight_index: std::views::iota(0u, ptr_bone->mNumWeights))
             {
                 const auto& weight = ptr_bone->mWeights[weight_index];
-                // log::appInfo("[Scene::Importer]\t\t\t {}) vertex id: {},  weight: {}", weight_index, weight.mVertexId, weight.mWeight);
+                vertex_bone_data.add(weight.mVertexId, weight.mWeight);
             }
-
-            // ptr_bone->mName
+        
+            animation_data.vertices_bone_data.push_back(std::move(vertex_bone_data));
+            animation_data.mesh_id_to_vbd_id.insert(std::make_pair(current_mesh_id, bone_index));
         }
     }
 
