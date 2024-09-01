@@ -86,7 +86,7 @@ namespace sample_vk
             _ptr_context,
             image_size,
             *memory_type_index,
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT
         );
 
         {
