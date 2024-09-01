@@ -10,9 +10,6 @@
 
 #include <ranges>
 
-#include <glslang/Include/glslang_c_interface.h>
-#include <glslang/Public/ShaderLang.h>
-
 namespace sample_vk
 {
     Window::Window(const std::string_view title, uint32_t width, uint32_t height)
