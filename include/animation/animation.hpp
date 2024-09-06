@@ -8,14 +8,46 @@ using namespace sample_vk;
 class Animation final :
     public RayTracingBase
 {
+    struct StageId
+    {
+        enum 
+        {
+            ray_gen,
+            chit,
+            miss,
+
+            count
+        };
+    };
+
+    struct Bindings
+    {
+        enum
+        {
+            result,
+            acceleration_structure,
+
+            count
+        };
+    };
+
     void init() override;
     void show() override;
 
     void resizeWindow() override;
 
     void initScene();
+    void initCamera();
+
+    void createPipelineLayout();
+    void createPipeline();
+
+    void destroyPipelineLayout();
+    void destroyPipeline();
 
     bool processEvents();
+
+    void swapchainImageToPresentUsgae(uint32_t image_index);
     
 public:
     Animation() = default;
@@ -30,4 +62,9 @@ public:
 
 private:
     std::optional<Scene> _scene;
+
+    VkPipeline _pipeline_handle = VK_NULL_HANDLE;
+    VkPipelineLayout _pipeline_layout_handle = VK_NULL_HANDLE;    
+
+    constexpr static uint32_t max_ray_tracing_recursive = 1u;
 };

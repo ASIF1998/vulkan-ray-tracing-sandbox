@@ -793,7 +793,7 @@ void JunkShop::initCamera()
 	auto& camera = _scene->getCameraController().getCamera();
 
 	camera.setDepthRange(0.01f, 1000.0f);
-	camera.lookaAt(glm::vec3(50, 1823.898, 5133.947),glm::vec3(-0.5, 0, 1));
+	camera.lookaAt(glm::vec3(50, 1823.898, 5133.947), glm::vec3(-0.5, 0, 1));
 }
 
 PushConstants JunkShop::getPushConstantData()
