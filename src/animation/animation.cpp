@@ -128,7 +128,7 @@ void Animation::createPipeline()
     pipeline_info.pStages                        = shader_stage_create_infos.data();
     pipeline_info.groupCount                     = Animation::StageId::count;
     pipeline_info.pGroups                        = groups.data();
-    pipeline_info.maxPipelineRayRecursionDepth   = max_ray_tracing_recursive;
+    pipeline_info.maxPipelineRayRecursionDepth   = _max_ray_tracing_recursive;
     pipeline_info.layout                         = _pipeline_layout_handle;
 
     auto func_table = VkUtils::getVulkanFunctionPointerTable();
@@ -146,6 +146,82 @@ void Animation::createPipeline()
 
     for (auto shader_module: shader_modules)
         vkDestroyShaderModule(ptr_context->device_handle, shader_module, nullptr);
+}
+
+void Animation::createShaderBindingTable()
+{
+    constexpr uint32_t miss_count 	= 1;
+	constexpr uint32_t hit_count 	= 1;
+
+	constexpr uint32_t handle_count = 1 + miss_count + hit_count;
+
+	uint32_t handle_size_aligned = VkUtils::getAlignedSize(
+		_ray_tracing_pipeline_properties.shaderGroupHandleSize, 
+		_ray_tracing_pipeline_properties.shaderGroupHandleAlignment	
+	);
+
+	uint32_t data_size = handle_count * handle_size_aligned;
+
+	std::vector<uint8_t> raw_data (data_size);
+
+	auto func_table = VkUtils::getVulkanFunctionPointerTable();
+
+	VK_CHECK(
+		func_table.vkGetRayTracingShaderGroupHandlesKHR(
+			_context.device_handle,
+			_pipeline_handle,
+			0, Animation::StageId::count,
+			data_size, raw_data.data()
+		)
+	);
+
+	auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	if (!memory_type_index.has_value())
+		log::appError("Not memory index for create SBT.");
+
+	auto createBufferForSBT = [this, &memory_type_index] (
+		std::optional<Buffer>&		buffer, 
+		const std::span<uint8_t> 	data,
+		const std::string_view 		name
+	)
+	{
+		buffer = Buffer::make(
+			getContext(),
+			_ray_tracing_pipeline_properties.shaderGroupHandleSize,
+			*memory_type_index,
+			VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+			std::format("[SBT]: {}", name)
+		);
+
+		auto command_buffer = getCommandBuffer();
+
+		Buffer::writeData(
+			buffer.value(), 
+			data, 
+			command_buffer
+		);
+	};
+
+	auto raygen_data 		= std::span(&raw_data[handle_size_aligned * Animation::StageId::ray_gen], _ray_tracing_pipeline_properties.shaderGroupHandleSize);
+	auto closest_hit_data 	= std::span(&raw_data[handle_size_aligned * Animation::StageId::chit], _ray_tracing_pipeline_properties.shaderGroupHandleSize); 
+	auto miss_data 			= std::span(&raw_data[handle_size_aligned * Animation::StageId::miss], _ray_tracing_pipeline_properties.shaderGroupHandleSize);
+
+	createBufferForSBT(_sbt.raygen, raygen_data, "raygen");
+	createBufferForSBT(_sbt.closest_hit, closest_hit_data, "closest hit");
+	createBufferForSBT(_sbt.miss, miss_data, "miss");
+
+	_sbt.raygen_region.deviceAddress 	= _sbt.raygen->getAddress();
+	_sbt.raygen_region.stride 			= handle_size_aligned;
+	_sbt.raygen_region.size 			= handle_size_aligned;
+
+	_sbt.chit_region.deviceAddress 		= _sbt.closest_hit->getAddress();
+	_sbt.raygen_region.stride 			= handle_size_aligned;
+	_sbt.raygen_region.size 			= handle_size_aligned;
+	
+	_sbt.miss_region.deviceAddress 		= _sbt.miss->getAddress();
+	_sbt.raygen_region.stride 			= handle_size_aligned;
+	_sbt.raygen_region.size 			= handle_size_aligned;
 }
 
 void Animation::destroyPipelineLayout()
@@ -168,6 +244,7 @@ void Animation::init()
     initCamera();
     createPipelineLayout();
     createPipeline();
+    createShaderBindingTable();
 }
 
 bool Animation::processEvents()

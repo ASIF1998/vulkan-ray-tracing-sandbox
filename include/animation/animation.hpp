@@ -42,6 +42,8 @@ class Animation final :
     void createPipelineLayout();
     void createPipeline();
 
+    void createShaderBindingTable();
+
     void destroyPipelineLayout();
     void destroyPipeline();
 
@@ -63,8 +65,20 @@ public:
 private:
     std::optional<Scene> _scene;
 
-    VkPipeline _pipeline_handle = VK_NULL_HANDLE;
-    VkPipelineLayout _pipeline_layout_handle = VK_NULL_HANDLE;    
+    VkPipeline          _pipeline_handle        = VK_NULL_HANDLE;
+    VkPipelineLayout    _pipeline_layout_handle = VK_NULL_HANDLE;
 
-    constexpr static uint32_t max_ray_tracing_recursive = 1u;
+    struct 
+    {
+        std::optional<Buffer> raygen;
+        std::optional<Buffer> closest_hit;
+        std::optional<Buffer> miss;
+
+        VkStridedDeviceAddressRegionKHR raygen_region = { };
+        VkStridedDeviceAddressRegionKHR chit_region = { };
+        VkStridedDeviceAddressRegionKHR miss_region = { };
+        VkStridedDeviceAddressRegionKHR callable_region = { };
+    } _sbt;
+
+    constexpr static uint32_t _max_ray_tracing_recursive = 1u;
 };
