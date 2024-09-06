@@ -10,6 +10,7 @@ Animation::~Animation()
 {
     destroyPipelineLayout();
     destroyPipeline();
+    destroyDescriptorSets();
 }
 
 void Animation::initScene()
@@ -41,8 +42,6 @@ void Animation::initCamera()
 
 void Animation::createPipelineLayout()
 {
-    auto ptr_context = getContext();
-
     std::vector<VkDescriptorSetLayoutBinding> bindings (2);
     bindings[0].binding         = Animation::Bindings::result;
     bindings[0].descriptorCount = 1;
@@ -52,26 +51,45 @@ void Animation::createPipelineLayout()
     bindings[1].binding         = Animation::Bindings::acceleration_structure;
     bindings[1].descriptorCount = 1;
     bindings[1].descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-    bindings[1].stageFlags  = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
+    bindings[1].stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
 
-    VkDescriptorSetLayout set_layout_handle = VK_NULL_HANDLE;
     VkDescriptorSetLayoutCreateInfo set_layout_info = { };
     set_layout_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     set_layout_info.pBindings       = bindings.data();
     set_layout_info.bindingCount    = static_cast<uint32_t>(bindings.size());
 
-    VK_CHECK(vkCreateDescriptorSetLayout(ptr_context->device_handle, &set_layout_info, nullptr, &set_layout_handle));
+    VK_CHECK(vkCreateDescriptorSetLayout(_context.device_handle, &set_layout_info, nullptr, &_descriptor_set_layout_handle));
 
     std::vector<VkDescriptorSetLayout> set_layouts;
 
     VkPipelineLayoutCreateInfo pipeline_layout_info = { };
     pipeline_layout_info.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_info.setLayoutCount = 1;
-    pipeline_layout_info.pSetLayouts    = &set_layout_handle;
+    pipeline_layout_info.pSetLayouts    = &_descriptor_set_layout_handle;
 
-    VK_CHECK(vkCreatePipelineLayout(ptr_context->device_handle, &pipeline_layout_info, nullptr, &_pipeline_layout_handle));
+    VK_CHECK(vkCreatePipelineLayout(_context.device_handle, &pipeline_layout_info, nullptr, &_pipeline_layout_handle));
+}
 
-    vkDestroyDescriptorSetLayout(ptr_context->device_handle, set_layout_handle, nullptr);
+void Animation::createDescriptorSets()
+{
+    std::vector<VkDescriptorPoolSize> pool_sizes;
+    pool_sizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1});
+
+    VkDescriptorPoolCreateInfo descriptor_pool_create_info = { };
+    descriptor_pool_create_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    descriptor_pool_create_info.maxSets         = 1;
+    descriptor_pool_create_info.poolSizeCount   = static_cast<uint32_t>(pool_sizes.size());
+    descriptor_pool_create_info.pPoolSizes      = pool_sizes.data();
+
+    VK_CHECK(vkCreateDescriptorPool(_context.device_handle, &descriptor_pool_create_info, nullptr, &_descriptor_pool_handle));
+
+    VkDescriptorSetAllocateInfo descriptor_set_allocate_info = { };
+    descriptor_set_allocate_info.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    descriptor_set_allocate_info.descriptorPool     = _descriptor_pool_handle;
+    descriptor_set_allocate_info.descriptorSetCount = 1;
+    descriptor_set_allocate_info.pSetLayouts        = &_descriptor_set_layout_handle;
+
+    VK_CHECK(vkAllocateDescriptorSets(_context.device_handle, &descriptor_set_allocate_info, &_descriptor_set_handle));
 }
 
 void Animation::createPipeline()
@@ -230,6 +248,15 @@ void Animation::destroyPipelineLayout()
         vkDestroyPipelineLayout(getContext()->device_handle, _pipeline_layout_handle, nullptr);
 }
 
+void Animation::destroyDescriptorSets()
+{
+    if (_descriptor_set_layout_handle != VK_NULL_HANDLE)
+        vkDestroyDescriptorSetLayout(_context.device_handle, _descriptor_set_layout_handle, nullptr);
+
+    if (_descriptor_pool_handle != VK_NULL_HANDLE)
+        vkDestroyDescriptorPool(_context.device_handle, _descriptor_pool_handle, nullptr);
+}
+
 void Animation::destroyPipeline()
 {
     if (_pipeline_handle != VK_NULL_HANDLE)
@@ -244,6 +271,7 @@ void Animation::init()
     initCamera();
     createPipelineLayout();
     createPipeline();
+    createDescriptorSets();
     createShaderBindingTable();
 }
 
@@ -269,7 +297,7 @@ bool Animation::processEvents()
     return true;
 }
 
-void Animation::swapchainImageToPresentUsgae(uint32_t image_index)
+void Animation::swapchainImageToPresentUsage(uint32_t image_index)
 {
     auto command_buffer = getCommandBuffer();
 
@@ -306,15 +334,108 @@ void Animation::swapchainImageToPresentUsgae(uint32_t image_index)
     command_buffer.upload(getContext());
 }
 
+void Animation::swapchainImageToGeneralUsage(uint32_t image_index)
+{
+    auto command_buffer = getCommandBuffer();
+
+    command_buffer.write([this, image_index](VkCommandBuffer command_buffer_handle)
+    {
+        VkImageSubresourceRange range = { };
+        range.aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT;
+        range.baseArrayLayer    = 0;
+        range.layerCount        = 1;
+        range.baseMipLevel      = 0;
+        range.levelCount        = 1;
+
+        VkImageMemoryBarrier image_memory_barrier = { };
+        image_memory_barrier.sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        image_memory_barrier.srcAccessMask          = VK_ACCESS_NONE_KHR;
+        image_memory_barrier.dstAccessMask          = VK_ACCESS_SHADER_WRITE_BIT;
+        image_memory_barrier.oldLayout              = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        image_memory_barrier.newLayout              = VK_IMAGE_LAYOUT_GENERAL;
+        image_memory_barrier.srcQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR;
+        image_memory_barrier.dstQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR;
+        image_memory_barrier.image                  = _swapchain_image_handles[image_index];
+        image_memory_barrier.subresourceRange       = range;
+
+        vkCmdPipelineBarrier(
+            command_buffer_handle, 
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, 
+            0,
+            0, nullptr,
+            0, nullptr, 
+            1, &image_memory_barrier
+        );
+    });
+
+    command_buffer.upload(getContext());
+}
+
+void Animation::updateDescriptorSets(uint32_t image_index)
+{
+    VkDescriptorImageInfo image_info = { };
+    image_info.imageLayout  = VK_IMAGE_LAYOUT_GENERAL;
+    image_info.imageView    = _swapchain_image_view_handles[image_index];
+
+    VkWriteDescriptorSet write_info = { };
+    write_info.sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_info.descriptorCount  = 1;
+    write_info.descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    write_info.dstArrayElement  = 0;
+    write_info.dstBinding       = Animation::Bindings::result;
+    write_info.dstSet           = _descriptor_set_handle;
+    write_info.dstSet           = _descriptor_set_handle;
+    write_info.pImageInfo       = &image_info;
+
+    vkUpdateDescriptorSets(
+        _context.device_handle,
+        1, &write_info,
+        0, nullptr
+    );
+}
+
 void Animation::show()
 {
-    /// @todo 
-    for (uint32_t i = 0; i < NUM_IMAGES_IN_SWAPCHAIN; ++i)
-        swapchainImageToPresentUsgae(i);
-
     while (processEvents())
     {
         auto image_index = getNextImageIndex();
+
+        swapchainImageToGeneralUsage(image_index);
+        updateDescriptorSets(image_index);
+
+        auto draw_command_buffer = getCommandBuffer();
+        draw_command_buffer.write([this](VkCommandBuffer command_buffer_handle) 
+        {
+            auto func_table = VkUtils::getVulkanFunctionPointerTable();
+            auto [width, height] = _window->getSize();
+
+            vkCmdBindPipeline(
+				command_buffer_handle,
+				VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR,
+				_pipeline_handle
+			);
+
+            vkCmdBindDescriptorSets(
+                command_buffer_handle, 
+                VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, 
+                _pipeline_layout_handle, 
+                0, 1, &_descriptor_set_handle, 
+                0, nullptr
+            );
+
+            func_table.vkCmdTraceRaysKHR(
+				command_buffer_handle,
+				&_sbt.raygen_region,
+				&_sbt.miss_region,
+				&_sbt.chit_region,
+				&_sbt.callable_region,
+				width, height, 1
+			);
+        });
+
+        draw_command_buffer.upload(getContext());
+
+        swapchainImageToPresentUsage(image_index);
 
         VkResult result = VK_RESULT_MAX_ENUM;
 

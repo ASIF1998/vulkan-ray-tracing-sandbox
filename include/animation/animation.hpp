@@ -41,15 +41,20 @@ class Animation final :
 
     void createPipelineLayout();
     void createPipeline();
+    void createDescriptorSets();
 
     void createShaderBindingTable();
 
+    void destroyDescriptorSets();
     void destroyPipelineLayout();
     void destroyPipeline();
 
     bool processEvents();
 
-    void swapchainImageToPresentUsgae(uint32_t image_index);
+    void swapchainImageToPresentUsage(uint32_t image_index);
+    void swapchainImageToGeneralUsage(uint32_t image_index);
+
+    void updateDescriptorSets(uint32_t image_index);
     
 public:
     Animation() = default;
@@ -65,8 +70,11 @@ public:
 private:
     std::optional<Scene> _scene;
 
-    VkPipeline          _pipeline_handle        = VK_NULL_HANDLE;
-    VkPipelineLayout    _pipeline_layout_handle = VK_NULL_HANDLE;
+    VkPipeline              _pipeline_handle                = VK_NULL_HANDLE;
+    VkPipelineLayout        _pipeline_layout_handle         = VK_NULL_HANDLE;
+    VkDescriptorSetLayout   _descriptor_set_layout_handle   = VK_NULL_HANDLE;
+    VkDescriptorSet         _descriptor_set_handle          = VK_NULL_HANDLE;
+    VkDescriptorPool        _descriptor_pool_handle         = VK_NULL_HANDLE;
 
     struct 
     {
