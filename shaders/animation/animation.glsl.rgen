@@ -1,0 +1,17 @@
+#version 460
+
+#extension GL_EXT_ray_tracing                   : enable
+#extension GL_GOOGLE_include_directive          : enable
+#extension GL_EXT_shader_image_load_formatted	: enable
+
+#include <shaders/animation/shared.glsl>
+
+layout(set = 0, binding = result_image_binding) uniform image2D result;
+
+layout(set = 0, binding = acceleration_structure_binding) uniform accelerationStructureEXT scene;
+
+void main()
+{
+    ivec2 pixel_coord = ivec2(gl_LaunchIDEXT.xy);
+    imageStore(result, pixel_coord, vec4(vec3(0.5), 0.0));
+}
