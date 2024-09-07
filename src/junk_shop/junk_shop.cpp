@@ -178,27 +178,6 @@ bool JunkShop::processEvents()
 {
 	SDL_Event event = { };
 
-	auto is_move = [] (auto current_scancode)
-	{
-		constexpr std::array scancodes = 
-		{
-			SDL_SCANCODE_W,
-			SDL_SCANCODE_A,
-			SDL_SCANCODE_S,
-			SDL_SCANCODE_D,
-			SDL_SCANCODE_SPACE,
-			SDL_SCANCODE_LSHIFT
-		};
-
-		for (auto scancode: scancodes)
-		{
-			if (current_scancode == scancode)
-				return true;
-		}
-
-		return false;
-	};
-
 	while (SDL_PollEvent(&event))
 	{
 		_scene->processEvent(&event);

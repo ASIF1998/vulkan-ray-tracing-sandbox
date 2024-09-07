@@ -36,9 +36,9 @@ void Animation::initScene()
 void Animation::initCamera()
 {
     auto& camera = _scene->getCameraController().getCamera();
+    camera.setDepthRange(0.0001f, 1000.0f);
 
-    camera.setDepthRange(0.0f, 1000.0f);
-    camera.lookaAt(glm::vec3(50, 1823.898, 5133.947), glm::vec3(-0.5, 0, 1));
+    camera.lookaAt(glm::vec3(0, 200, 500), glm::vec3(0, 0, 1));
 }
 
 void Animation::createPipelineLayout()
@@ -66,12 +66,17 @@ void Animation::createPipelineLayout()
 
     VK_CHECK(vkCreateDescriptorSetLayout(_context.device_handle, &set_layout_info, nullptr, &_descriptor_set_layout_handle));
 
-    std::vector<VkDescriptorSetLayout> set_layouts;
+    VkPushConstantRange push_constant_range = { };
+    push_constant_range.offset      = 0;
+    push_constant_range.size        = sizeof(PushConstants);
+    push_constant_range.stageFlags  = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
 
     VkPipelineLayoutCreateInfo pipeline_layout_info = { };
-    pipeline_layout_info.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_info.setLayoutCount = 1;
-    pipeline_layout_info.pSetLayouts    = &_descriptor_set_layout_handle;
+    pipeline_layout_info.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipeline_layout_info.setLayoutCount         = 1;
+    pipeline_layout_info.pSetLayouts            = &_descriptor_set_layout_handle;
+    pipeline_layout_info.pushConstantRangeCount = 1;
+    pipeline_layout_info.pPushConstantRanges    = &push_constant_range;
 
     VK_CHECK(vkCreatePipelineLayout(_context.device_handle, &pipeline_layout_info, nullptr, &_pipeline_layout_handle));
 }
@@ -305,6 +310,14 @@ bool Animation::processEvents()
     return true;
 }
 
+void Animation::processPushConstants()
+{
+    const auto& camera = _scene->getCameraController().getCamera();
+
+    _push_constants.rgen.camera_data.inv_view       = camera.getInvViewMatrix();
+    _push_constants.rgen.camera_data.inv_projection = camera.getInvProjection();
+}
+
 void Animation::swapchainImageToPresentUsage(uint32_t image_index)
 {
     auto command_buffer = getCommandBuffer();
@@ -476,8 +489,11 @@ void Animation::show()
     {
         auto image_index = getNextImageIndex();
 
+        processPushConstants();
+
         swapchainImageToGeneralUsage(image_index);
         updateDescriptorSets(image_index);
+        _scene->updateCamera();
 
         auto draw_command_buffer = getCommandBuffer();
         draw_command_buffer.write([this](VkCommandBuffer command_buffer_handle) 
@@ -498,6 +514,12 @@ void Animation::show()
                 0, 1, &_descriptor_set_handle, 
                 0, nullptr
             );
+
+            vkCmdPushConstants(
+				command_buffer_handle,
+				_pipeline_layout_handle, VK_SHADER_STAGE_RAYGEN_BIT_KHR,
+				0, sizeof(PushConstants::RayGen), &_push_constants.rgen
+			);
 
             func_table.vkCmdTraceRaysKHR(
 				command_buffer_handle,

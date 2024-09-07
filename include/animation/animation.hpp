@@ -32,6 +32,18 @@ class Animation final :
         };
     };
 
+    struct PushConstants
+    {
+        struct RayGen
+        {
+            struct CameraData
+            {
+                glm::mat4 inv_view;
+                glm::mat4 inv_projection;
+            } camera_data;
+        } rgen;
+    };
+
     void init() override;
     void show() override;
 
@@ -53,6 +65,7 @@ class Animation final :
     void destroyPipeline();
 
     bool processEvents();
+    void processPushConstants();
 
     void swapchainImageToPresentUsage(uint32_t image_index);
     void swapchainImageToGeneralUsage(uint32_t image_index);
@@ -98,6 +111,8 @@ private:
 
         std::optional<Buffer> scene_info_reference;
     } _vertex_buffers_references;
+
+    PushConstants _push_constants;
 
     constexpr static uint32_t _max_ray_tracing_recursive = 1u;
 };
