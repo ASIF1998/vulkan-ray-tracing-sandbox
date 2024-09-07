@@ -373,23 +373,41 @@ void Animation::swapchainImageToGeneralUsage(uint32_t image_index)
 
 void Animation::updateDescriptorSets(uint32_t image_index)
 {
+    std::array<VkWriteDescriptorSet, 2> write_infos = { };
+
     VkDescriptorImageInfo image_info = { };
     image_info.imageLayout  = VK_IMAGE_LAYOUT_GENERAL;
     image_info.imageView    = _swapchain_image_view_handles[image_index];
 
-    VkWriteDescriptorSet write_info = { };
-    write_info.sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_info.descriptorCount  = 1;
-    write_info.descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    write_info.dstArrayElement  = 0;
-    write_info.dstBinding       = Animation::Bindings::result;
-    write_info.dstSet           = _descriptor_set_handle;
-    write_info.dstSet           = _descriptor_set_handle;
-    write_info.pImageInfo       = &image_info;
+    write_infos[0] = { }; 
+    write_infos[0].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_infos[0].descriptorCount  = 1;
+    write_infos[0].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    write_infos[0].dstArrayElement  = 0;
+    write_infos[0].dstBinding       = Animation::Bindings::result;
+    write_infos[0].dstSet           = _descriptor_set_handle;
+    write_infos[0].dstSet           = _descriptor_set_handle;
+    write_infos[0].pImageInfo       = &image_info;
+
+    auto acceleration_structure_handle = _scene->getModel().getRootTLAS().value();
+
+    VkWriteDescriptorSetAccelerationStructureKHR write_acceleration_structure_info = { };
+	write_acceleration_structure_info.sType 						= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+	write_acceleration_structure_info.accelerationStructureCount 	= 1;
+    write_acceleration_structure_info.pAccelerationStructures       = &acceleration_structure_handle;
+
+    write_infos[1] = { }; 
+    write_infos[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_infos[1].pNext           = &write_acceleration_structure_info;
+    write_infos[1].descriptorCount = 1;
+    write_infos[1].descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    write_infos[1].dstArrayElement = 0;
+    write_infos[1].dstBinding      = Animation::Bindings::acceleration_structure;
+    write_infos[1].dstSet          = _descriptor_set_handle;
 
     vkUpdateDescriptorSets(
         _context.device_handle,
-        1, &write_info,
+        static_cast<uint32_t>(write_infos.size()), write_infos.data(),
         0, nullptr
     );
 }

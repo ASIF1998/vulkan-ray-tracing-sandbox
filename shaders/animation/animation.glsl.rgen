@@ -5,13 +5,35 @@
 #extension GL_EXT_shader_image_load_formatted	: enable
 
 #include <shaders/animation/shared.glsl>
+#include <shaders/animation/ray_payload.glsl>
 
 layout(set = 0, binding = result_image_binding) uniform image2D result;
 
 layout(set = 0, binding = acceleration_structure_binding) uniform accelerationStructureEXT scene;
 
+layout(location = 0) rayPayloadEXT payload_t payload;
+
+void init_payload()
+{
+    payload.col = vec3(0);
+
+    ivec2 pixel_coord = ivec2(gl_LaunchIDEXT.xy);
+	pixel_coord.y = int(gl_LaunchSizeEXT.y - gl_LaunchIDEXT.y);
+
+    vec2 p = vec2(pixel_coord) / vec2(gl_LaunchSizeEXT.xy);
+
+    payload.ray.or  = vec3(0, 197, 325);
+    payload.ray.dir =  normalize(vec3(p * 2.0 - 1.0, -1)); 
+
+    payload.ray.dir.x *= float(gl_LaunchSizeEXT.x) / float(gl_LaunchSizeEXT.y);;
+}
+
 void main()
 {
+    init_payload();
+
+    trace(payload.ray, scene);
+
     ivec2 pixel_coord = ivec2(gl_LaunchIDEXT.xy);
-    imageStore(result, pixel_coord, vec4(vec3(0.5), 0.0));
+    imageStore(result, pixel_coord, vec4(payload.col, 0.0));
 }
