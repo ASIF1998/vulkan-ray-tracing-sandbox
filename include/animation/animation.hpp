@@ -26,6 +26,7 @@ class Animation final :
         {
             result,
             acceleration_structure,
+            scene_geometry,
 
             count
         };
@@ -44,6 +45,8 @@ class Animation final :
     void createDescriptorSets();
 
     void createShaderBindingTable();
+
+    void initVertexBufferReferences();
 
     void destroyDescriptorSets();
     void destroyPipelineLayout();
@@ -87,6 +90,14 @@ private:
         VkStridedDeviceAddressRegionKHR miss_region = { };
         VkStridedDeviceAddressRegionKHR callable_region = { };
     } _sbt;
+
+    struct 
+    {
+        std::optional<Buffer> scene_geometries_ref;
+        std::optional<Buffer> scene_indices_ref;
+
+        std::optional<Buffer> scene_info_reference;
+    } _vertex_buffers_references;
 
     constexpr static uint32_t _max_ray_tracing_recursive = 1u;
 };

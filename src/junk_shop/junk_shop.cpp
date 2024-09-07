@@ -71,7 +71,7 @@ VkDescriptorImageInfo JunkShop::createDescriptorImageInfo(VkImageView image_view
 auto JunkShop::createDescriptorBufferInfo(VkBuffer buffer_handle, VkDeviceSize size, VkDeviceSize offset)
 	-> VkDescriptorBufferInfo
 {
-	VkDescriptorBufferInfo 	buffer_info = { };
+	VkDescriptorBufferInfo buffer_info = { };
 	buffer_info.buffer 	= buffer_handle;
 	buffer_info.offset 	= offset;
 	buffer_info.range 	= size;

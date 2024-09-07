@@ -3,6 +3,7 @@
 
 const uint result_image_binding             = 0;
 const uint acceleration_structure_binding   = 1;
+const uint scene_geometry_binding			= 2;
 
 float infinity = uintBitsToFloat(0x7F800000);
 

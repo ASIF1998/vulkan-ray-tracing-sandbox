@@ -3,6 +3,7 @@
 #include <base/vulkan/memory.hpp>
 
 #include <base/scene/visitors/acceleration_structure_builder.hpp>
+#include <base/scene/visitors/scene_geometry_references_getter.hpp>
 
 #include <base/shader_compiler.hpp>
 
@@ -42,7 +43,7 @@ void Animation::initCamera()
 
 void Animation::createPipelineLayout()
 {
-    std::vector<VkDescriptorSetLayoutBinding> bindings (2);
+    std::vector<VkDescriptorSetLayoutBinding> bindings (3);
     bindings[0].binding         = Animation::Bindings::result;
     bindings[0].descriptorCount = 1;
     bindings[0].descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
@@ -52,6 +53,11 @@ void Animation::createPipelineLayout()
     bindings[1].descriptorCount = 1;
     bindings[1].descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
     bindings[1].stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
+    
+    bindings[2].binding         = Animation::Bindings::scene_geometry;
+    bindings[2].descriptorCount = 1;
+    bindings[2].descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    bindings[2].stageFlags      = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
     VkDescriptorSetLayoutCreateInfo set_layout_info = { };
     set_layout_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -74,6 +80,7 @@ void Animation::createDescriptorSets()
 {
     std::vector<VkDescriptorPoolSize> pool_sizes;
     pool_sizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1});
+    pool_sizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1});
 
     VkDescriptorPoolCreateInfo descriptor_pool_create_info = { };
     descriptor_pool_create_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -273,6 +280,7 @@ void Animation::init()
     createPipeline();
     createDescriptorSets();
     createShaderBindingTable();
+    initVertexBufferReferences();
 }
 
 bool Animation::processEvents()
@@ -373,7 +381,7 @@ void Animation::swapchainImageToGeneralUsage(uint32_t image_index)
 
 void Animation::updateDescriptorSets(uint32_t image_index)
 {
-    std::array<VkWriteDescriptorSet, 2> write_infos = { };
+    std::array<VkWriteDescriptorSet, 3> write_infos = { };
 
     VkDescriptorImageInfo image_info = { };
     image_info.imageLayout  = VK_IMAGE_LAYOUT_GENERAL;
@@ -405,11 +413,61 @@ void Animation::updateDescriptorSets(uint32_t image_index)
     write_infos[1].dstBinding      = Animation::Bindings::acceleration_structure;
     write_infos[1].dstSet          = _descriptor_set_handle;
 
+    VkDescriptorBufferInfo buffer_info = { };
+	buffer_info.buffer 	= _vertex_buffers_references.scene_info_reference->vk_handle;
+	buffer_info.offset 	= 0;
+	buffer_info.range 	= sizeof(VkDeviceAddress) * 2;
+
+    write_infos[2] = { };
+    write_infos[2].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_infos[2].descriptorCount  = 1;
+    write_infos[2].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    write_infos[2].dstBinding       = Animation::Bindings::scene_geometry;
+    write_infos[2].dstSet           = _descriptor_set_handle;
+    write_infos[2].pBufferInfo      = &buffer_info;
+
     vkUpdateDescriptorSets(
         _context.device_handle,
         static_cast<uint32_t>(write_infos.size()), write_infos.data(),
         0, nullptr
     );
+}
+
+void Animation::initVertexBufferReferences()
+{
+    auto ptr_visitor = std::make_unique<SceneGeometryReferencesGetter>(getContext());
+
+	_scene->getModel().visit(ptr_visitor);
+
+	_vertex_buffers_references.scene_geometries_ref	= ptr_visitor->getVertexBuffersReferences();
+	_vertex_buffers_references.scene_indices_ref	= ptr_visitor->getIndexBuffersReferences();
+	
+	if (auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+	{
+		_vertex_buffers_references.scene_info_reference = Buffer::make(
+			getContext(),
+			sizeof(VkDeviceAddress) * 2,
+			*memory_index,
+			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+			"Pointer to vertex buffers references"
+		);
+	}
+	else 
+		log::appError("Not memory index for create vertex buffers references.");
+
+	auto command_buffer = getCommandBuffer();
+
+	std::array<VkDeviceAddress, 2> references
+	{
+		_vertex_buffers_references.scene_geometries_ref->getAddress(),
+		_vertex_buffers_references.scene_indices_ref->getAddress()
+	};
+
+	Buffer::writeData<VkDeviceAddress>(
+		*_vertex_buffers_references.scene_info_reference, 
+		std::span(references),
+		command_buffer
+	);
 }
 
 void Animation::show()
