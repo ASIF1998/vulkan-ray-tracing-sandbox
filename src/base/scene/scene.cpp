@@ -539,13 +539,14 @@ namespace sample_vk
 
     void Scene::Importer::processAnimation(const aiMesh* ptr_mesh, std::span<Mesh::SkinningData> skinning_data)
     {
-        log::appInfo("[Scene::Importer]\t\t - Bone count: {}", ptr_mesh->mNumBones);
+        animation.bone_count = 0;
+        animation.bone_infos.clear();
 
         for (auto i: std::views::iota(0u, ptr_mesh->mNumBones))
         {
             auto bone_id = std::numeric_limits<uint32_t>::infinity();
-
             std::string bone_name = ptr_mesh->mBones[i]->mName.C_Str();
+
             if (auto info = animation.bone_infos.find(bone_name); info != std::end(animation.bone_infos))
                 bone_id = info->second.bone_id;
             else
@@ -584,6 +585,8 @@ namespace sample_vk
                 }
             }
         }
+
+        log::appInfo("[Scene::Importer]\t\t - Bone count: {}", animation.bone_count);
     }
 
     void Scene::Importer::processNode(const aiScene* ptr_scene, const aiNode* ptr_node)
