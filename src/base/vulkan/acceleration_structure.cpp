@@ -22,13 +22,12 @@ namespace sample_vk
         if (vk_handle == VK_NULL_HANDLE)
             log::vkError("[AccelerationStructure]: acceleration structure handle is null.");
 
-        if (!buffer.isInit())
+        if (buffer == std::nullopt)
             log::vkError("[AccelerationStructure]: buffer not initialize.");
     }
 
     AccelerationStructure::AccelerationStructure(AccelerationStructure&& acceleration_structure) :
-        _ptr_context    (acceleration_structure._ptr_context),
-        buffer          (acceleration_structure._ptr_context)
+        _ptr_context (acceleration_structure._ptr_context)
     {
         std::swap(vk_handle, acceleration_structure.vk_handle);
         std::swap(buffer, acceleration_structure.buffer);
@@ -61,6 +60,6 @@ namespace sample_vk
     {
         return  _ptr_context != nullptr     && 
                 vk_handle != VK_NULL_HANDLE && 
-                buffer.isInit();
+                buffer != std::nullopt;
     }
 }

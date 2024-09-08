@@ -18,12 +18,12 @@ namespace sample_vk
 {
     struct Buffer
     {
-    public:
+    private:
         Buffer(const Context* ptr_context);
 
+    public:
         Buffer(Buffer&& buffer);
         Buffer(const Buffer& buffer) = delete;
-
         ~Buffer();
 
         Buffer& operator = (Buffer&& buffer);
@@ -31,8 +31,6 @@ namespace sample_vk
 
         [[nodiscard]] VkMemoryRequirements  getMemoryRequirements() const noexcept;
         [[nodiscard]] VkDeviceAddress       getAddress()            const noexcept;
-
-        [[nodiscard]] bool isInit() const noexcept;
 
         [[nodiscard]]
         static Buffer make(

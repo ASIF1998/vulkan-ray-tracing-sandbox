@@ -227,11 +227,11 @@ namespace sample_vk
             triangles = { };
             triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 
-            triangles.indexData.deviceAddress   = mesh.index_buffer.getAddress();
+            triangles.indexData.deviceAddress   = mesh.index_buffer->getAddress();
             triangles.indexType                 = VK_INDEX_TYPE_UINT32;
 
             triangles.maxVertex                 = static_cast<uint32_t>(mesh.vertex_count);
-            triangles.vertexData.deviceAddress  = mesh.vertex_buffer.getAddress();
+            triangles.vertexData.deviceAddress  = mesh.vertex_buffer->getAddress();
             triangles.vertexFormat              = VK_FORMAT_R32G32B32_SFLOAT;
             triangles.vertexStride              = sizeof(Mesh::Attributes);
 

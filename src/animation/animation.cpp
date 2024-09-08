@@ -37,7 +37,6 @@ void Animation::initCamera()
 {
     auto& camera = _scene->getCameraController().getCamera();
     camera.setDepthRange(0.0001f, 1000.0f);
-
     camera.lookaAt(glm::vec3(0, 200, 500), glm::vec3(0, 0, 1));
 }
 
@@ -47,7 +46,7 @@ void Animation::createPipelineLayout()
     bindings[0].binding         = Animation::Bindings::result;
     bindings[0].descriptorCount = 1;
     bindings[0].descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    bindings[0].stageFlags = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
+    bindings[0].stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
     
     bindings[1].binding         = Animation::Bindings::acceleration_structure;
     bindings[1].descriptorCount = 1;
@@ -106,19 +105,19 @@ void Animation::createDescriptorSets()
 
 void Animation::createPipeline()
 {
-    auto ptr_context = getContext();
+    const auto ptr_context = getContext();
 
     const auto animation_shaders_root = project_dir / "shaders/animation";
 
     std::array<VkShaderModule, Animation::StageId::count> shader_modules = { VK_NULL_HANDLE };
     shader_modules[Animation::StageId::ray_gen] = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rgen", shader::Type::raygen);
-    shader_modules[Animation::StageId::miss] = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rmiss", shader::Type::miss);
-    shader_modules[Animation::StageId::chit] = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rchit", shader::Type::closesthit);
+    shader_modules[Animation::StageId::miss]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rmiss", shader::Type::miss);
+    shader_modules[Animation::StageId::chit]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rchit", shader::Type::closesthit);
 
     std::array<VkShaderStageFlagBits, Animation::StageId::count> stages = { };
     stages[Animation::StageId::ray_gen] = VK_SHADER_STAGE_RAYGEN_BIT_KHR; 
-    stages[Animation::StageId::miss] = VK_SHADER_STAGE_MISS_BIT_KHR; 
-    stages[Animation::StageId::chit] = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR; 
+    stages[Animation::StageId::miss]    = VK_SHADER_STAGE_MISS_BIT_KHR; 
+    stages[Animation::StageId::chit]    = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR; 
 
     std::array<VkPipelineShaderStageCreateInfo, Animation::StageId::count> shader_stage_create_infos = { };
     for (size_t i = 0; i < Animation::StageId::count; ++i)

@@ -27,27 +27,8 @@ namespace sample_vk
 {
     struct BoneInfo
     {
-        glm::mat4 offset_matrix;
-        glm::mat4 final_transform;
-    };
-
-    struct VertexBoneData
-    {
-        void add(uint32_t bone_index, float weight)
-        {
-            bone_ids.push_back(bone_index);
-            weights.push_back(weight);
-        }
-
-        std::vector<uint32_t>   bone_ids;
-        std::vector<float>      weights;
-        glm::mat4               local_to_bone_space; /// @todo вероятно придётся убрать.
-    };
-
-    struct AnimationData
-    {
-        std::vector<VertexBoneData>             vertices_bone_data;
-        std::unordered_multimap<size_t, size_t> mesh_id_to_vbd_id;
+        uint32_t    bone_id = std::numeric_limits<uint32_t>::infinity();
+        glm::mat4   offset;
     };
 }
 
@@ -125,18 +106,18 @@ namespace sample_vk
     private:
         size_t getMeshCount() const;
 
-        void processBones(const aiMesh* ptr_mesh);
-
+        void processMaterial(const aiScene* ptr_scene, const aiMaterial* ptr_material);
+        void processAnimation(const aiMesh* ptr_mesh, std::span<Mesh::SkinningData> skinning_data);
         void processNode(const aiScene* ptr_scene, const aiNode* ptr_node);
 
         [[nodiscard]]
         Mesh createMesh (
             const std::string_view              name,
             const std::span<uint32_t>           indices,
-            const std::span<Mesh::Attributes>   attributes
+            const std::span<Mesh::Attributes>   attributes,
+            const std::span<Mesh::SkinningData> skinning_data
         ) const;
 
-        void processMaterial(const aiScene* ptr_scene, const aiMaterial* ptr_material);
 
         [[nodiscard]]
         Image getImage(
@@ -157,7 +138,13 @@ namespace sample_vk
             VkFilter            filter
         );
 
-        void add(const std::string_view name, const std::span<uint32_t> indices, const std::span<Mesh::Attributes> attributes);
+        void add(
+            const std::string_view              name, 
+            const std::span<uint32_t>           indices, 
+            const std::span<Mesh::Attributes>   attributes, 
+            const std::span<Mesh::SkinningData> skinning_data
+        );
+
         void add(const aiLight* ptr_light);
 
         void validate() const;
@@ -184,6 +171,10 @@ namespace sample_vk
             glm::mat4 transform = glm::mat4(1.0f);
         } _current_state;
 
-        AnimationData animation_data;
+        struct
+        {
+            std::map<std::string, BoneInfo> bone_infos;
+            uint32_t                        bone_count = 0;
+        } animation;
     };
 }

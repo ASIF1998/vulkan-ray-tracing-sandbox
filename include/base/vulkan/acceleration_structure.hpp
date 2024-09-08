@@ -33,7 +33,7 @@ namespace sample_vk
 
     public:
         VkAccelerationStructureKHR  vk_handle = VK_NULL_HANDLE;
-        Buffer                      buffer;
+        std::optional<Buffer>       buffer;
     
     private:
         const Context* _ptr_context = nullptr;

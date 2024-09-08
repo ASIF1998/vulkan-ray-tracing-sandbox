@@ -23,11 +23,11 @@ namespace sample_vk
 
     Buffer::~Buffer()
     {
-        if (isInit())
-        {
+        if (vk_handle != VK_NULL_HANDLE)
             vkDestroyBuffer(_ptr_context->device_handle, vk_handle, nullptr);
+
+        if (memory_handle != VK_NULL_HANDLE) 
             vkFreeMemory(_ptr_context->device_handle, memory_handle, nullptr);
-        }
     }
 
     Buffer& Buffer::operator = (Buffer&& buffer)
@@ -56,11 +56,6 @@ namespace sample_vk
         buffer_device_address_info.buffer   = vk_handle;
 
         return vkGetBufferDeviceAddress(_ptr_context->device_handle, &buffer_device_address_info);
-    }
-
-    bool Buffer::isInit() const noexcept
-    {
-        return  memory_handle != VK_NULL_HANDLE  && vk_handle != VK_NULL_HANDLE;
     }
 
     Buffer Buffer::make(

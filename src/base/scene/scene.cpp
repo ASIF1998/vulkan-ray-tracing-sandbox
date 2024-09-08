@@ -265,7 +265,7 @@ namespace sample_vk
 
         std::array indices = {0u, 1u, 2u, 1u, 3u, 2u};
 
-        Mesh mesh (ptr_context);
+        Mesh mesh;
 
         mesh.index_count    = indices.size();
         mesh.vertex_count   = attributes.size();
@@ -361,10 +361,11 @@ namespace sample_vk
     Mesh Scene::Importer::createMesh(
         const std::string_view              name,
         const std::span<uint32_t>           indices,
-        const std::span<Mesh::Attributes>   attributes
+        const std::span<Mesh::Attributes>   attributes,
+        const std::span<Mesh::SkinningData> skinning_data
     ) const
     {
-        Mesh mesh (_ptr_context);
+        Mesh mesh;
 
         mesh.index_count    = indices.size();
         mesh.vertex_count   = attributes.size();
@@ -391,20 +392,32 @@ namespace sample_vk
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
         );
 
+        if (!skinning_data.empty())
+        {
+            mesh.skinning_buffer = utils::createBuffer
+            (
+                _ptr_context,
+                std::format("[Skinning buffer]: {}", name), 
+                skinning_data, 
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
+            );   
+        }
+
         return mesh;
     }
 
     void Scene::Importer::add(
         const std::string_view              name, 
         const std::span<uint32_t>           indices, 
-        const std::span<Mesh::Attributes>   attributes
+        const std::span<Mesh::Attributes>   attributes,
+        const std::span<Mesh::SkinningData> skinning_data
     )
     {
         _ptr_root_node->children.push_back(
             std::make_unique<MeshNode>(
                 name, 
                 _current_state.transform, 
-                createMesh(name, indices, attributes)
+                createMesh(name, indices, attributes, skinning_data)
             )
         );
     }
@@ -523,29 +536,53 @@ namespace sample_vk
         return _ptr_root_node->children.size();
     }
 
-    void Scene::Importer::processBones(const aiMesh* ptr_mesh)
+
+    void Scene::Importer::processAnimation(const aiMesh* ptr_mesh, std::span<Mesh::SkinningData> skinning_data)
     {
-        auto current_mesh_id = getMeshCount() - 1;
+        log::appInfo("[Scene::Importer]\t\t - Bone count: {}", ptr_mesh->mNumBones);
 
-        VertexBoneData vertex_bone_data;
-
-        for (auto bone_index: std::views::iota(0u, ptr_mesh->mNumBones))
+        for (auto i: std::views::iota(0u, ptr_mesh->mNumBones))
         {
-            const auto ptr_bone = ptr_mesh->mBones[bone_index];
+            auto bone_id = std::numeric_limits<uint32_t>::infinity();
 
-            log::appInfo("[Scene::Importer]\t\t - Bone name: {}", ptr_bone->mName.C_Str());
-            log::appInfo("[Scene::Importer]\t\t -   Weights: {}", ptr_bone->mNumWeights);
-
-            vertex_bone_data.local_to_bone_space = utils::cast(ptr_bone->mOffsetMatrix);
-
-            for (auto weight_index: std::views::iota(0u, ptr_bone->mNumWeights))
+            std::string bone_name = ptr_mesh->mBones[i]->mName.C_Str();
+            if (auto info = animation.bone_infos.find(bone_name); info != std::end(animation.bone_infos))
+                bone_id = info->second.bone_id;
+            else
             {
-                const auto& weight = ptr_bone->mWeights[weight_index];
-                vertex_bone_data.add(weight.mVertexId, weight.mWeight);
+                BoneInfo bone_info;
+                bone_id             = animation.bone_count;
+                bone_info.bone_id   = animation.bone_count;
+                bone_info.offset    = utils::cast(ptr_mesh->mBones[i]->mOffsetMatrix);
+
+                animation.bone_infos[bone_name] = bone_info;
+
+                ++animation.bone_count;
             }
-        
-            animation_data.vertices_bone_data.push_back(std::move(vertex_bone_data));
-            animation_data.mesh_id_to_vbd_id.insert(std::make_pair(current_mesh_id, bone_index));
+
+            std::span weights (ptr_mesh->mBones[i]->mWeights, ptr_mesh->mBones[i]->mNumWeights);
+            for (auto j: std::views::iota(0u, weights.size()))
+            {
+                auto vertex_id  = weights[j].mVertexId;
+                auto weight     = weights[j].mWeight;
+
+                if (vertex_id >= ptr_mesh->mNumVertices)
+                {
+                    log::appWarning("[Scene::Importer] failed load bone weight: {} >= {}", vertex_id, ptr_mesh->mNumVertices);
+                    continue;
+                }
+
+                auto& vert_skin_data = skinning_data[vertex_id];
+                for (auto k: std::views::iota(0u, 4u))
+                {
+                    if (vert_skin_data.bone_ids[k] > 0 || vert_skin_data.weights[k] > 0.0)
+                        continue;
+
+                    vert_skin_data.bone_ids[k]  = bone_id;
+                    vert_skin_data.weights[k]   = weight;
+                    break;
+                }
+            }
         }
     }
 
@@ -567,6 +604,7 @@ namespace sample_vk
 
             std::vector<uint32_t>           indices;
             std::vector<Mesh::Attributes>   attributes;
+            std::vector<Mesh::SkinningData> skinning_data;
 
             for (auto i: std::views::iota(0u, ptr_node->mNumMeshes))
             {
@@ -596,13 +634,17 @@ namespace sample_vk
                     indices.push_back(ptr_faces[j].mIndices[2]);
                 }
 
-                add(ptr_mesh->mName.C_Str(), std::span(indices), std::span(attributes));
+                if (ptr_mesh->HasBones())
+                {
+                    skinning_data.resize(attributes.size());
+                    processAnimation(ptr_mesh, skinning_data);
+                }
+
+                add(ptr_mesh->mName.C_Str(), indices, attributes, skinning_data);
 
                 indices.clear();
                 attributes.clear();
 
-                if (ptr_mesh->HasBones())
-                    processBones(ptr_mesh);
             }
         }
 
