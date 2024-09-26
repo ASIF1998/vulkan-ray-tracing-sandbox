@@ -7,6 +7,8 @@
 
 #include <base/shader_compiler.hpp>
 
+using namespace animation_sample;
+
 Animation::~Animation()
 {
     destroyPipelineLayout();
@@ -43,17 +45,17 @@ void Animation::initCamera()
 void Animation::createPipelineLayout()
 {
     std::vector<VkDescriptorSetLayoutBinding> bindings (3);
-    bindings[0].binding         = Animation::Bindings::result;
+    bindings[0].binding         = Bindings::result;
     bindings[0].descriptorCount = 1;
     bindings[0].descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     bindings[0].stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
     
-    bindings[1].binding         = Animation::Bindings::acceleration_structure;
+    bindings[1].binding         = Bindings::acceleration_structure;
     bindings[1].descriptorCount = 1;
     bindings[1].descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
     bindings[1].stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
     
-    bindings[2].binding         = Animation::Bindings::scene_geometry;
+    bindings[2].binding         = Bindings::scene_geometry;
     bindings[2].descriptorCount = 1;
     bindings[2].descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     bindings[2].stageFlags      = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
@@ -109,18 +111,18 @@ void Animation::createPipeline()
 
     const auto animation_shaders_root = project_dir / "shaders/animation";
 
-    std::array<VkShaderModule, Animation::StageId::count> shader_modules = { VK_NULL_HANDLE };
-    shader_modules[Animation::StageId::ray_gen] = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rgen", shader::Type::raygen);
-    shader_modules[Animation::StageId::miss]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rmiss", shader::Type::miss);
-    shader_modules[Animation::StageId::chit]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rchit", shader::Type::closesthit);
+    std::array<VkShaderModule, StageId::count> shader_modules = { VK_NULL_HANDLE };
+    shader_modules[StageId::ray_gen] = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rgen", shader::Type::raygen);
+    shader_modules[StageId::miss]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rmiss", shader::Type::miss);
+    shader_modules[StageId::chit]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rchit", shader::Type::closesthit);
 
-    std::array<VkShaderStageFlagBits, Animation::StageId::count> stages = { };
-    stages[Animation::StageId::ray_gen] = VK_SHADER_STAGE_RAYGEN_BIT_KHR; 
-    stages[Animation::StageId::miss]    = VK_SHADER_STAGE_MISS_BIT_KHR; 
-    stages[Animation::StageId::chit]    = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR; 
+    std::array<VkShaderStageFlagBits, StageId::count> stages = { };
+    stages[StageId::ray_gen] = VK_SHADER_STAGE_RAYGEN_BIT_KHR; 
+    stages[StageId::miss]    = VK_SHADER_STAGE_MISS_BIT_KHR; 
+    stages[StageId::chit]    = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR; 
 
-    std::array<VkPipelineShaderStageCreateInfo, Animation::StageId::count> shader_stage_create_infos = { };
-    for (size_t i = 0; i < Animation::StageId::count; ++i)
+    std::array<VkPipelineShaderStageCreateInfo, StageId::count> shader_stage_create_infos = { };
+    for (size_t i = 0; i < StageId::count; ++i)
     {
         shader_stage_create_infos[i].sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shader_stage_create_infos[i].module = shader_modules[i];
@@ -128,34 +130,34 @@ void Animation::createPipeline()
         shader_stage_create_infos[i].stage  = stages[i];
     }
     
-    std::array<VkRayTracingShaderGroupCreateInfoKHR, Animation::StageId::count> groups = { };
+    std::array<VkRayTracingShaderGroupCreateInfoKHR, StageId::count> groups = { };
 
-    groups[Animation::StageId::ray_gen].sType               = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
-    groups[Animation::StageId::ray_gen].generalShader       = Animation::StageId::ray_gen;
-    groups[Animation::StageId::ray_gen].anyHitShader        = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::ray_gen].closestHitShader    = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::ray_gen].intersectionShader  = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::ray_gen].type                = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+    groups[StageId::ray_gen].sType              = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+    groups[StageId::ray_gen].generalShader      = StageId::ray_gen;
+    groups[StageId::ray_gen].anyHitShader       = VK_SHADER_UNUSED_KHR;
+    groups[StageId::ray_gen].closestHitShader   = VK_SHADER_UNUSED_KHR;
+    groups[StageId::ray_gen].intersectionShader = VK_SHADER_UNUSED_KHR;
+    groups[StageId::ray_gen].type               = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
 
-    groups[Animation::StageId::miss].sType              = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
-    groups[Animation::StageId::miss].generalShader      = Animation::StageId::miss;
-    groups[Animation::StageId::miss].anyHitShader       = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::miss].closestHitShader   = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::miss].intersectionShader = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::miss].type               = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+    groups[StageId::miss].sType                 = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+    groups[StageId::miss].generalShader         = StageId::miss;
+    groups[StageId::miss].anyHitShader          = VK_SHADER_UNUSED_KHR;
+    groups[StageId::miss].closestHitShader      = VK_SHADER_UNUSED_KHR;
+    groups[StageId::miss].intersectionShader    = VK_SHADER_UNUSED_KHR;
+    groups[StageId::miss].type                  = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
     
-    groups[Animation::StageId::chit].sType              = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
-    groups[Animation::StageId::chit].generalShader      = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::chit].anyHitShader       = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::chit].closestHitShader   = Animation::StageId::chit;
-    groups[Animation::StageId::chit].intersectionShader = VK_SHADER_UNUSED_KHR;
-    groups[Animation::StageId::chit].type               = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+    groups[StageId::chit].sType                 = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+    groups[StageId::chit].generalShader         = VK_SHADER_UNUSED_KHR;
+    groups[StageId::chit].anyHitShader          = VK_SHADER_UNUSED_KHR;
+    groups[StageId::chit].closestHitShader      = StageId::chit;
+    groups[StageId::chit].intersectionShader    = VK_SHADER_UNUSED_KHR;
+    groups[StageId::chit].type                  = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
 
     VkRayTracingPipelineCreateInfoKHR pipeline_info = { };
     pipeline_info.sType                          = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
-    pipeline_info.stageCount                     = Animation::StageId::count;
+    pipeline_info.stageCount                     = StageId::count;
     pipeline_info.pStages                        = shader_stage_create_infos.data();
-    pipeline_info.groupCount                     = Animation::StageId::count;
+    pipeline_info.groupCount                     = StageId::count;
     pipeline_info.pGroups                        = groups.data();
     pipeline_info.maxPipelineRayRecursionDepth   = _max_ray_tracing_recursive;
     pipeline_info.layout                         = _pipeline_layout_handle;
@@ -199,7 +201,7 @@ void Animation::createShaderBindingTable()
 		func_table.vkGetRayTracingShaderGroupHandlesKHR(
 			_context.device_handle,
 			_pipeline_handle,
-			0, Animation::StageId::count,
+			0, StageId::count,
 			data_size, raw_data.data()
 		)
 	);
@@ -232,9 +234,9 @@ void Animation::createShaderBindingTable()
 		);
 	};
 
-	auto raygen_data 		= std::span(&raw_data[handle_size_aligned * Animation::StageId::ray_gen], _ray_tracing_pipeline_properties.shaderGroupHandleSize);
-	auto closest_hit_data 	= std::span(&raw_data[handle_size_aligned * Animation::StageId::chit], _ray_tracing_pipeline_properties.shaderGroupHandleSize); 
-	auto miss_data 			= std::span(&raw_data[handle_size_aligned * Animation::StageId::miss], _ray_tracing_pipeline_properties.shaderGroupHandleSize);
+	auto raygen_data 		= std::span(&raw_data[handle_size_aligned * StageId::ray_gen], _ray_tracing_pipeline_properties.shaderGroupHandleSize);
+	auto closest_hit_data 	= std::span(&raw_data[handle_size_aligned * StageId::chit], _ray_tracing_pipeline_properties.shaderGroupHandleSize); 
+	auto miss_data 			= std::span(&raw_data[handle_size_aligned * StageId::miss], _ray_tracing_pipeline_properties.shaderGroupHandleSize);
 
 	createBufferForSBT(_sbt.raygen, raygen_data, "raygen");
 	createBufferForSBT(_sbt.closest_hit, closest_hit_data, "closest hit");
@@ -404,7 +406,7 @@ void Animation::updateDescriptorSets(uint32_t image_index)
     write_infos[0].descriptorCount  = 1;
     write_infos[0].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     write_infos[0].dstArrayElement  = 0;
-    write_infos[0].dstBinding       = Animation::Bindings::result;
+    write_infos[0].dstBinding       = Bindings::result;
     write_infos[0].dstSet           = _descriptor_set_handle;
     write_infos[0].dstSet           = _descriptor_set_handle;
     write_infos[0].pImageInfo       = &image_info;
@@ -422,7 +424,7 @@ void Animation::updateDescriptorSets(uint32_t image_index)
     write_infos[1].descriptorCount = 1;
     write_infos[1].descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
     write_infos[1].dstArrayElement = 0;
-    write_infos[1].dstBinding      = Animation::Bindings::acceleration_structure;
+    write_infos[1].dstBinding      = Bindings::acceleration_structure;
     write_infos[1].dstSet          = _descriptor_set_handle;
 
     VkDescriptorBufferInfo buffer_info = { };
@@ -434,7 +436,7 @@ void Animation::updateDescriptorSets(uint32_t image_index)
     write_infos[2].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     write_infos[2].descriptorCount  = 1;
     write_infos[2].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    write_infos[2].dstBinding       = Animation::Bindings::scene_geometry;
+    write_infos[2].dstBinding       = Bindings::scene_geometry;
     write_infos[2].dstSet           = _descriptor_set_handle;
     write_infos[2].pBufferInfo      = &buffer_info;
 
@@ -551,5 +553,5 @@ void Animation::show()
 
 void Animation::resizeWindow()
 {
-
+    /// @todo
 } 

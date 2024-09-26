@@ -5,8 +5,7 @@
 
 using namespace sample_vk;
 
-class Animation final :
-    public RayTracingBase
+namespace sample_vk::animation_sample
 {
     struct StageId
     {
@@ -19,7 +18,7 @@ class Animation final :
             count
         };
     };
-
+    
     struct Bindings
     {
         enum
@@ -43,7 +42,11 @@ class Animation final :
             } camera_data;
         } rgen;
     };
+}
 
+class Animation final :
+    public RayTracingBase
+{
     void init() override;
     void show() override;
 
@@ -112,7 +115,7 @@ private:
         std::optional<Buffer> scene_info_reference;
     } _vertex_buffers_references;
 
-    PushConstants _push_constants;
+    animation_sample::PushConstants _push_constants;
 
     constexpr static uint32_t _max_ray_tracing_recursive = 1u;
 };
