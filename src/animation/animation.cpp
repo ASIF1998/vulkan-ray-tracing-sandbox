@@ -484,10 +484,32 @@ void Animation::initVertexBufferReferences()
 	);
 }
 
+void Animation::updateTime()
+{
+    static std::chrono::high_resolution_clock timer;
+
+    static auto begin   = timer.now();
+    static auto end     = begin;
+
+    end = timer.now();
+
+    _time.delta = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - begin).count();
+
+    begin = end;
+}
+
 void Animation::show()
 {
+    auto& animator = _scene->getAnimator();
+    
     while (processEvents())
     {
+        updateTime();
+
+        animator.update(_time.delta);
+
+        _window->setTitle(std::format("Animation, {}ms", _time.delta));
+
         auto image_index = getNextImageIndex();
 
         processPushConstants();

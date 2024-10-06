@@ -74,6 +74,8 @@ class Animation final :
     void swapchainImageToGeneralUsage(uint32_t image_index);
 
     void updateDescriptorSets(uint32_t image_index);
+
+    void updateTime();
     
 public:
     Animation() = default;
@@ -114,6 +116,11 @@ private:
 
         std::optional<Buffer> scene_info_reference;
     } _vertex_buffers_references;
+
+    struct 
+    {
+        float delta;
+    } _time;
 
     animation::PushConstants _push_constants;
 
