@@ -105,11 +105,17 @@ namespace sample_vk
 
 namespace sample_vk
 {
-    Scene::Scene(Model&& model, std::vector<Light>&& lights, const Camera& camera) :
+    Scene::Scene(
+        Model&&                     model, 
+        std::vector<Light>&&        lights, 
+        const Camera&               camera,
+        std::optional<Animator>&&   animator
+    ) :
         _model              (std::move(model)),
         _lights             (std::move(lights)),
         _camera_controller  (camera)
     {
+        std::swap(_animator, animator);
     }
 
     Model& Scene::getModel() noexcept
@@ -299,6 +305,16 @@ namespace sample_vk
 
         return new MeshNode(name, transform, std::move(mesh));
     }
+
+    bool Scene::hasAnimator() const
+    {
+        return _animator != std::nullopt;
+    }
+
+    Animator& Scene::getAnimator()
+    {
+        return _animator.value();
+    }
 }
 
 namespace sample_vk
@@ -333,10 +349,7 @@ namespace sample_vk
         if (!_width || !_height)
             log::appError("[Scene::Importer] Viewport can't be with empty sizes.");
     }
-}
 
-namespace sample_vk
-{
     static auto getVertexAndIndexCount(const aiScene* ptr_scene, const aiNode* ptr_node)
         -> std::pair<size_t, size_t>
     {
@@ -776,9 +789,10 @@ namespace sample_vk
 
         return Scene
         (
-            Model(std::move(_ptr_root_node), std::move(_material_manager), _animation.animator), 
+            Model(std::move(_ptr_root_node), std::move(_material_manager)), 
             std::move(_processed_lights),
-            camera
+            camera,
+            std::move(_animation.animator)
         );
     }
 }

@@ -1,20 +1,12 @@
 #include <base/scene/model.hpp>
 #include <base/logger/logger.hpp>
 
-#include <stdexcept>
-
 namespace sample_vk
 {
-    Model::Model(
-        std::unique_ptr<Node>&&     ptr_node,
-        MaterialManager&&           material_manager,
-        std::optional<Animator>&    animator
-    ) :
+    Model::Model(std::unique_ptr<Node>&& ptr_node, MaterialManager&& material_manager) :
         _ptr_node           (std::move(ptr_node)),
         _material_manager   (std::move(material_manager))
-    { 
-        std::swap(_animator, animator);
-    }
+    { }
 
     std::optional<VkAccelerationStructureKHR> Model::getRootTLAS() const noexcept
     {

@@ -41,6 +41,12 @@ namespace sample_vk
         [[nodiscard]] const Model&              getModel()              const noexcept;
         [[nodiscard]] CameraController&         getCameraController()   noexcept;
         [[nodiscard]] const std::vector<Light>& getLights()             const noexcept;
+        
+        [[nodiscard]]
+        bool hasAnimator() const;
+
+        [[nodiscard]]
+        Animator& getAnimator();
 
         void processEvent(const SDL_Event* ptr_event);
         void updateCamera();
@@ -56,7 +62,12 @@ namespace sample_vk
         );
 
     private:
-        Scene(Model&& model, std::vector<Light>&& lights, const Camera& camera);
+        explicit Scene(
+            Model&&                     model, 
+            std::vector<Light>&&        lights, 
+            const Camera&               camera,
+            std::optional<Animator>&&   animator
+        );
 
         [[nodiscard]]
         static MeshNode* makeRectNode(
@@ -71,6 +82,8 @@ namespace sample_vk
         std::vector<Light> _lights;
 
         CameraController _camera_controller; 
+
+        std::optional<Animator> _animator;
     };
 
     class Scene::Importer

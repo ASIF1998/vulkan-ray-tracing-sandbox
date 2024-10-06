@@ -19,11 +19,7 @@ namespace sample_vk
         friend class Scene;
 
     private:
-        Model(
-            std::unique_ptr<Node>&&     ptr_node, 
-            MaterialManager&&           material_manager, 
-            std::optional<Animator>&    animator
-        );
+        explicit Model(std::unique_ptr<Node>&& ptr_node, MaterialManager&& material_manager);
 
     public:
         template<IsNodeVisitor T>
@@ -48,6 +44,5 @@ namespace sample_vk
     private:
         std::unique_ptr<Node>   _ptr_node;
         MaterialManager         _material_manager;
-        std::optional<Animator> _animator;
     };
 }
