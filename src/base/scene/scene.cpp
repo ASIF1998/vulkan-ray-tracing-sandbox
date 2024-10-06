@@ -679,29 +679,25 @@ namespace sample_vk
             {
                 auto id = res->bone_id;
 
-                std::vector<PositionKey> position_keys;
+                std::vector<PositionKey>    position_keys;
+                std::vector<RotationKey>    rotation_keys;
+                std::vector<ScaleKey>       scale_keys;
+
                 position_keys.reserve(ptr_channel->mNumPositionKeys);
-                for (auto j: std::views::iota(0u, ptr_channel->mNumPositionKeys))
-                {
-                    auto time = static_cast<float>(ptr_channel->mPositionKeys[j].mTime);
-                    position_keys.emplace_back(utils::cast(ptr_channel->mPositionKeys[j].mValue), time);
-                }
-
-                std::vector<RotationKey> rotation_keys;
                 rotation_keys.reserve(ptr_channel->mNumRotationKeys);
-                for (auto j: std::views::iota(0u, ptr_channel->mNumRotationKeys))
-                {
-                    auto time = static_cast<float>(ptr_channel->mRotationKeys[j].mTime);
-                    rotation_keys.emplace_back(utils::cast(ptr_channel->mRotationKeys[j].mValue), time);
-                }
-
-                std::vector<ScaleKey> scale_keys;
                 scale_keys.reserve(ptr_channel->mNumScalingKeys);
-                for (auto j: std::views::iota(0u, ptr_channel->mNumScalingKeys))
-                {
-                    auto time = static_cast<float>(ptr_channel->mScalingKeys[j].mTime);
-                    scale_keys.emplace_back(utils::cast(ptr_channel->mScalingKeys[j].mValue), time);
-                }
+
+                const std::span positions (ptr_channel->mPositionKeys, ptr_channel->mNumPositionKeys);
+                for (const auto& pos: positions)
+                    position_keys.emplace_back(utils::cast(pos.mValue), static_cast<float>(pos.mTime));
+
+                const std::span rotations (ptr_channel->mRotationKeys, ptr_channel->mNumRotationKeys);
+                for (const auto& rot: rotations)
+                    rotation_keys.emplace_back(utils::cast(rot.mValue), static_cast<float>(rot.mTime));
+
+                const std::span scales (ptr_channel->mScalingKeys, ptr_channel->mNumScalingKeys);
+                for (const auto& scale: scales)
+                    scale_keys.emplace_back(utils::cast(scale.mValue), static_cast<float>(scale.mTime));
 
                 _animation.bones.push_back(
                     Bone::Builder()
