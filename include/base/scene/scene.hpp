@@ -25,15 +25,6 @@ namespace sample_vk
 
 namespace sample_vk
 {
-    struct BoneInfo
-    {
-        uint32_t    bone_id = std::numeric_limits<uint32_t>::infinity();
-        glm::mat4   offset;
-    };
-}
-
-namespace sample_vk
-{
     struct Light
     {
         alignas(16) glm::vec3 pos;
@@ -110,6 +101,9 @@ namespace sample_vk
         void processAnimation(const aiMesh* ptr_mesh, std::span<Mesh::SkinningData> skinning_data);
         void processNode(const aiScene* ptr_scene, const aiNode* ptr_node);
 
+        void getKeyFrames(const aiAnimation* ptr_animation);
+        void getAnimation(const aiScene* ptr_scene);
+
         [[nodiscard]]
         Mesh createMesh (
             const std::string_view              name,
@@ -173,8 +167,13 @@ namespace sample_vk
 
         struct
         {
-            std::map<std::string, BoneInfo> bone_infos;
-            uint32_t                        bone_count = 0;
-        } animation;
+            BoneRegistry        bone_infos;
+            std::vector<Bone>   bones;
+            
+            AnimationHierarchiry::Node  root_node;
+            AnimationHierarchiry::Node* ptr_current_node = &root_node;
+
+            std::optional<Animator> animator;
+        } _animation;
     };
 }

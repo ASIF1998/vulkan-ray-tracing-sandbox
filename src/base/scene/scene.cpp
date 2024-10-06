@@ -45,6 +45,11 @@ namespace sample_vk::utils
         return glm::vec4(col.r, col.g, col.b, 0.0f);
     }
 
+    glm::quat cast(const aiQuaternion& quat)
+    {
+        return glm::quat(quat.x, quat.y, quat.z, quat.w);
+    }
+
     template<typename T>
     Buffer createBuffer(
         const Context*          ptr_context,
@@ -536,36 +541,31 @@ namespace sample_vk
         return _ptr_root_node->children.size();
     }
 
-
     void Scene::Importer::processAnimation(const aiMesh* ptr_mesh, std::span<Mesh::SkinningData> skinning_data)
     {
-        animation.bone_count = 0;
-        animation.bone_infos.clear();
-
-        for (auto i: std::views::iota(0u, ptr_mesh->mNumBones))
+        const std::span bones (ptr_mesh->mBones, ptr_mesh->mNumBones);
+        for (const auto& bone: bones)
         {
-            auto bone_id = std::numeric_limits<uint32_t>::infinity();
-            std::string bone_name = ptr_mesh->mBones[i]->mName.C_Str();
+            auto        bone_id     = std::numeric_limits<uint32_t>::infinity();
+            std::string bone_name   = bone->mName.C_Str();
 
-            if (auto info = animation.bone_infos.find(bone_name); info != std::end(animation.bone_infos))
-                bone_id = info->second.bone_id;
+            if (auto info = _animation.bone_infos.get(bone_name); info)
+                bone_id = info->bone_id;
             else
             {
                 BoneInfo bone_info;
-                bone_id             = animation.bone_count;
-                bone_info.bone_id   = animation.bone_count;
-                bone_info.offset    = utils::cast(ptr_mesh->mBones[i]->mOffsetMatrix);
+                bone_id             = static_cast<uint32_t>(_animation.bone_infos.boneCount());
+                bone_info.bone_id   = bone_id;
+                bone_info.offset    = utils::cast(bone->mOffsetMatrix);
 
-                animation.bone_infos[bone_name] = bone_info;
-
-                ++animation.bone_count;
+                _animation.bone_infos.add(bone_name, bone_info);
             }
 
-            std::span weights (ptr_mesh->mBones[i]->mWeights, ptr_mesh->mBones[i]->mNumWeights);
-            for (auto j: std::views::iota(0u, weights.size()))
+            const std::span weights (bone->mWeights, bone->mNumWeights);
+            for (const auto& weight_info: weights)
             {
-                auto vertex_id  = weights[j].mVertexId;
-                auto weight     = weights[j].mWeight;
+                auto vertex_id  = weight_info.mVertexId;
+                auto weight     = weight_info.mWeight;
 
                 if (vertex_id >= ptr_mesh->mNumVertices)
                 {
@@ -586,7 +586,7 @@ namespace sample_vk
             }
         }
 
-        log::appInfo("[Scene::Importer]\t\t - Bone count: {}", animation.bone_count);
+        log::appInfo("[Scene::Importer]\t\t - Bone count: {}", _animation.bone_infos.boneCount());
     }
 
     void Scene::Importer::processNode(const aiScene* ptr_scene, const aiNode* ptr_node)
@@ -651,8 +651,93 @@ namespace sample_vk
             }
         }
 
+        _animation.ptr_current_node->name       = ptr_node->mName.C_Str();
+        _animation.ptr_current_node->transform  = utils::cast(ptr_node->mTransformation);
+
+        auto ptr_parent_node = _animation.ptr_current_node;
+        
         for (auto i: std::views::iota(0u, ptr_node->mNumChildren))
+        {
+            AnimationHierarchiry::Node child;
+            _animation.ptr_current_node = &child;
+
             processNode(ptr_scene, ptr_node->mChildren[i]);
+
+            ptr_parent_node->children.emplace_back(std::move(child));
+        }
+    }
+
+    void Scene::Importer::getKeyFrames(const aiAnimation* ptr_animation)
+    {
+        for (auto i: std::views::iota(0u, ptr_animation->mNumChannels))
+        {
+            const auto ptr_channel = ptr_animation->mChannels[i];
+            
+            std::string bone_name = ptr_channel->mNodeName.C_Str();
+
+            if (auto res = _animation.bone_infos.get(bone_name); res)
+            {
+                auto id = res->bone_id;
+
+                std::vector<PositionKey> position_keys;
+                position_keys.reserve(ptr_channel->mNumPositionKeys);
+                for (auto j: std::views::iota(0u, ptr_channel->mNumPositionKeys))
+                {
+                    auto time = static_cast<float>(ptr_channel->mPositionKeys[j].mTime);
+                    position_keys.emplace_back(utils::cast(ptr_channel->mPositionKeys[j].mValue), time);
+                }
+
+                std::vector<RotationKey> rotation_keys;
+                rotation_keys.reserve(ptr_channel->mNumRotationKeys);
+                for (auto j: std::views::iota(0u, ptr_channel->mNumRotationKeys))
+                {
+                    auto time = static_cast<float>(ptr_channel->mRotationKeys[j].mTime);
+                    rotation_keys.emplace_back(utils::cast(ptr_channel->mRotationKeys[j].mValue), time);
+                }
+
+                std::vector<ScaleKey> scale_keys;
+                scale_keys.reserve(ptr_channel->mNumScalingKeys);
+                for (auto j: std::views::iota(0u, ptr_channel->mNumScalingKeys))
+                {
+                    auto time = static_cast<float>(ptr_channel->mScalingKeys[j].mTime);
+                    scale_keys.emplace_back(utils::cast(ptr_channel->mScalingKeys[j].mValue), time);
+                }
+
+                _animation.bones.push_back(
+                    Bone::Builder()
+                        .name(bone_name)
+                        .id(id)
+                        .positionKeys(std::move(position_keys))
+                        .rotationKeys(std::move(rotation_keys))
+                        .scaleKeys(std::move(scale_keys))
+                        .build()
+                );
+            }
+        }
+    }
+
+    void Scene::Importer::getAnimation(const aiScene* ptr_scene)
+    {
+        if (ptr_scene->mNumAnimations > 0)
+        {
+#if 0
+            for (auto i: std::views::iota(0u, ptr_scene->mNumAnimations))
+                getKeyFrames(ptr_scene->mAnimations[i]);
+#else
+            const auto ptr_animation = ptr_scene->mAnimations[0];
+            getKeyFrames(ptr_animation);
+#endif
+
+            auto duration           = static_cast<float>(ptr_animation->mDuration);
+            auto ticks_per_second   = static_cast<float>(ptr_animation->mTicksPerSecond);
+
+            _animation.animator = Animator::Builder()
+                .bones(std::move(_animation.bones))
+                .boneRegistry(std::move(_animation.bone_infos))
+                .animationHierarchiryRootNode(std::move(_animation.root_node))
+                .time(duration, ticks_per_second)
+                .build();
+        }
     }
 
     Scene Scene::Importer::import()
@@ -681,11 +766,13 @@ namespace sample_vk
 
         log::appInfo("[Scene::Importer] Start import scene: {}.", ptr_scene->mName.C_Str());
 
-        for (auto ptr_light: std::views::iota(ptr_scene->mLights, ptr_scene->mLights + ptr_scene->mNumLights))
-            _scene_lights.insert(std::make_pair((*ptr_light)->mName.C_Str(), *ptr_light));
+        const std::span lights (ptr_scene->mLights, ptr_scene->mNumLights);
+        for (const auto& light: lights)
+            _scene_lights.emplace(light->mName.C_Str(), light);
 
         _ptr_root_node = std::make_unique<Node>(ptr_scene->mName.C_Str(), glm::mat4(1.0f));
         processNode(ptr_scene, ptr_scene->mRootNode);
+        getAnimation(ptr_scene);
 
         Camera camera (_width, _height);
 
@@ -693,7 +780,7 @@ namespace sample_vk
 
         return Scene
         (
-            Model(std::move(_ptr_root_node), std::move(_material_manager)), 
+            Model(std::move(_ptr_root_node), std::move(_material_manager), _animation.animator), 
             std::move(_processed_lights),
             camera
         );

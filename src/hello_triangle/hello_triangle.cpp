@@ -6,7 +6,7 @@
 
 #include <ranges>
 
-using namespace std;
+using namespace hello_triangle;
 
 HelloTriangle::~HelloTriangle()
 {

@@ -5,10 +5,16 @@
 
 namespace sample_vk
 {
-    Model::Model(std::unique_ptr<Node>&& ptr_node, MaterialManager&& material_manager) :
+    Model::Model(
+        std::unique_ptr<Node>&&     ptr_node,
+        MaterialManager&&           material_manager,
+        std::optional<Animator>&    animator
+    ) :
         _ptr_node           (std::move(ptr_node)),
         _material_manager   (std::move(material_manager))
-    { }
+    { 
+        std::swap(_animator, animator);
+    }
 
     std::optional<VkAccelerationStructureKHR> Model::getRootTLAS() const noexcept
     {

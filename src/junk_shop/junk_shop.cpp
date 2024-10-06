@@ -6,6 +6,8 @@
 
 #include <ranges>
 
+using namespace junk_shop;
+
 JunkShop::~JunkShop()
 {
 	destroyPipeline();
@@ -306,8 +308,7 @@ void JunkShop::show()
 	}
 }
 
-auto JunkShop::getPipelineDescriptorSetsBindings() const
-	-> std::array<VkDescriptorSetLayoutBinding, DescriptorSets::count>
+DescriptorSetsBindings JunkShop::getPipelineDescriptorSetsBindings() const
 {
 	auto& materials = _scene->getModel().getMaterialManager().getMaterials();
 
@@ -591,8 +592,7 @@ void JunkShop::createShaderBindingTable()
 	_sbt.raygen_region.size 			= handle_size_aligned;
 }
 
-auto JunkShop::getPoolSizes() const
-	-> std::array<VkDescriptorPoolSize, DescriptorSets::count>
+PoolSizes JunkShop::getPoolSizes() const
 {
 	const auto& materials = _scene->getModel().getMaterialManager().getMaterials();
 

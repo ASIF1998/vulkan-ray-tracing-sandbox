@@ -6,26 +6,29 @@
 
 using namespace sample_vk;
 
-struct Mesh
+namespace sample_vk::hello_triangle
 {
-    std::vector<glm::vec3>  vertices;
-    std::vector<uint32_t>   indices;
-
-    std::optional<Buffer> vertex_buffer;
-    std::optional<Buffer> index_buffer;
-};
-
-struct ShaderID
-{
-    enum : size_t
+    struct Mesh
     {
-        ray_gen,
-        miss,
-        chit,
+        std::vector<glm::vec3>  vertices;
+        std::vector<uint32_t>   indices;
 
-        count
+        std::optional<Buffer> vertex_buffer;
+        std::optional<Buffer> index_buffer;
     };
-};
+
+    struct ShaderID
+    {
+        enum : size_t
+        {
+            ray_gen,
+            miss,
+            chit,
+
+            count
+        };
+    };
+}
 
 class HelloTriangle final :
     public RayTracingBase
@@ -66,7 +69,7 @@ public:
     HelloTriangle& operator = (const HelloTriangle& sample) = delete;
 
 private:
-    Mesh _mesh;
+    hello_triangle::Mesh _mesh;
 
     std::optional<AccelerationStructure> _blas;
     std::optional<AccelerationStructure> _tlas;
@@ -75,7 +78,7 @@ private:
     VkDescriptorPool                                        _descriptor_pool_handle         = VK_NULL_HANDLE;
     std::array<VkDescriptorSet, NUM_IMAGES_IN_SWAPCHAIN>    _descriptor_set_handles         = { VK_NULL_HANDLE };
 
-    std::array<VkShaderModule, ShaderID::count> _shader_modules = { VK_NULL_HANDLE };
+    std::array<VkShaderModule, hello_triangle::ShaderID::count> _shader_modules = { VK_NULL_HANDLE };
 
     VkPipeline          _pipeline_handle        = VK_NULL_HANDLE;
     VkPipelineLayout    _pipeline_layout_handle = VK_NULL_HANDLE;

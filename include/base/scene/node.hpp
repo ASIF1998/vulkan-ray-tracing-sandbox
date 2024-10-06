@@ -23,7 +23,7 @@ namespace sample_vk
     class Node
     {
     public:
-        Node(const std::string_view name, const glm::mat4& transform);
+        explicit Node(const std::string_view name, const glm::mat4& transform);
 
         Node(Node&& node)       = delete;
         Node(const Node& node)  = delete;

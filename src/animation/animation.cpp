@@ -7,7 +7,7 @@
 
 #include <base/shader_compiler.hpp>
 
-using namespace animation_sample;
+using namespace animation;
 
 Animation::~Animation()
 {

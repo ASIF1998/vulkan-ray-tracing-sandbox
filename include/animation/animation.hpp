@@ -5,7 +5,7 @@
 
 using namespace sample_vk;
 
-namespace sample_vk::animation_sample
+namespace sample_vk::animation
 {
     struct StageId
     {
@@ -37,8 +37,8 @@ namespace sample_vk::animation_sample
         {
             struct CameraData
             {
-                glm::mat4 inv_view;
-                glm::mat4 inv_projection;
+                glm::mat4 inv_view          = glm::mat4(1.0f);
+                glm::mat4 inv_projection    = glm::mat4(1.0f);
             } camera_data;
         } rgen;
     };
@@ -115,7 +115,7 @@ private:
         std::optional<Buffer> scene_info_reference;
     } _vertex_buffers_references;
 
-    animation_sample::PushConstants _push_constants;
+    animation::PushConstants _push_constants;
 
     constexpr static uint32_t _max_ray_tracing_recursive = 1u;
 };

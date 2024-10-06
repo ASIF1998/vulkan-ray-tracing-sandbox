@@ -2,8 +2,6 @@
 #include <junk_shop/junk_shop.hpp>
 #include <animation/animation.hpp>
 
-#include <base/logger/logger.hpp>
-
 enum class Samples 
 {
     HelloTriangle,

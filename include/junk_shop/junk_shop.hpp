@@ -8,36 +8,35 @@
 
 using namespace sample_vk;
 
-struct CameraData
+namespace sample_vk::junk_shop
 {
-    glm::mat4 inv_view_matrix;
-    glm::mat4 inv_projection_matrix;
-};
-
-enum class DrawStay :
-    uint32_t
-{
-    draw,
-    clear
-};
-
-struct PushConstants
-{
-    struct RayGen
+    struct CameraData
     {
-        CameraData  camera_data;
-        uint32_t    accumulated_frames_count    = 0;
-    } rgen_consts;
+        glm::mat4 inv_view_matrix       = glm::mat4(1.0f);
+        glm::mat4 inv_projection_matrix = glm::mat4(1.0f);
+    };
 
-    struct ClosestHit
+    enum class DrawStay :
+        uint32_t
     {
-        float eye_to_pixel_cone_spread_angle = 0.0f;
-    } chit_consts;
-};
+        draw,
+        clear
+    };
 
-class JunkShop final :
-    public RayTracingBase
-{
+    struct PushConstants
+    {
+        struct RayGen
+        {
+            CameraData  camera_data;
+            uint32_t    accumulated_frames_count    = 0;
+        } rgen_consts;
+
+        struct ClosestHit
+        {
+            float eye_to_pixel_cone_spread_angle = 0.0f;
+        } chit_consts;
+    };
+
     struct ShaderId
     {
         enum : size_t
@@ -71,6 +70,13 @@ class JunkShop final :
         };
     };
 
+    using PoolSizes                 = std::array<VkDescriptorPoolSize, junk_shop::DescriptorSets::count>;
+    using DescriptorSetsBindings    = std::array<VkDescriptorSetLayoutBinding, junk_shop::DescriptorSets::count>;
+}
+
+class JunkShop final :
+    public RayTracingBase
+{
     void init() override;
     void show() override;
 
@@ -100,21 +106,31 @@ private:
 
     void updateDescriptorSet(uint32_t image_index);
 
-    PushConstants getPushConstantData();
+    [[nodiscard]]
+    junk_shop::PushConstants getPushConstantData();
 
+    [[nodiscard]]
     bool processEvents();
 
-    [[nodiscard]] std::array<VkDescriptorSetLayoutBinding, DescriptorSets::count> getPipelineDescriptorSetsBindings()   const;
-    [[nodiscard]] std::array<VkDescriptorPoolSize, DescriptorSets::count>         getPoolSizes()                        const;
+    [[nodiscard]] 
+    junk_shop::DescriptorSetsBindings getPipelineDescriptorSetsBindings() const;
 
-    static [[nodiscard]] VkDescriptorImageInfo   createDescriptorImageInfo(const Image& image);
-    static [[nodiscard]] VkDescriptorImageInfo   createDescriptorImageInfo(VkImageView image_view_handle);
-    static [[nodiscard]] VkDescriptorBufferInfo  createDescriptorBufferInfo(VkBuffer buffer_handle, VkDeviceSize size, VkDeviceSize offset = 0);
+    [[nodiscard]] 
+    junk_shop::PoolSizes getPoolSizes() const;
+
+    [[nodiscard]]
+    static VkDescriptorImageInfo createDescriptorImageInfo(const Image& image);
+
+    [[nodiscard]]
+    static VkDescriptorImageInfo createDescriptorImageInfo(VkImageView image_view_handle);
+
+    [[nodiscard]]
+    static VkDescriptorBufferInfo createDescriptorBufferInfo(VkBuffer buffer_handle, VkDeviceSize size, VkDeviceSize offset = 0);
 
 private:
     std::optional<Scene> _scene;
 
-    std::array<VkShaderModule, ShaderId::count> _shader_modules;
+    std::array<VkShaderModule, junk_shop::ShaderId::count> _shader_modules;
 
     VkPipelineLayout    _pipeline_layout    = VK_NULL_HANDLE;
     VkPipeline          _pipeline           = VK_NULL_HANDLE;
@@ -145,7 +161,7 @@ private:
         std::optional<Buffer> scene_info_reference;
     } _vertex_buffers_references;
 
-    DrawStay _draw_stay = DrawStay::draw;
+    junk_shop::DrawStay _draw_stay = junk_shop::DrawStay::draw;
     
     std::optional<Image> _accumulation_buffer;
 
