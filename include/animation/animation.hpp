@@ -44,6 +44,25 @@ namespace sample_vk::animation
     };
 }
 
+// namespace sample_vk::animation
+// {
+//     class SkinnedMesh
+//     {
+//     public:
+//         explicit SkinnedMesh(const Context* ptr_context, const Mesh& source_mesh);
+
+//         // SkinnedMesh(SkinnedMesh&& skinned_mesh)         = delete;
+//         SkinnedMesh(const SkinnedMesh& skinned_mesh)    = delete;
+
+//         // SkinnedMesh& operator = (SkinnedMesh&& skinned_mesh)        = delete;
+//         SkinnedMesh& operator = (const SkinnedMesh& skinned_mesh)   = delete;
+
+//     private:
+//         const Mesh& _source_mesh;
+//         Mesh        _animated_mesh;
+//     };
+// }
+
 class Animation final :
     public RayTracingBase
 {

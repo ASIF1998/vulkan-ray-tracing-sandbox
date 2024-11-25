@@ -2,6 +2,8 @@
 #include <junk_shop/junk_shop.hpp>
 #include <animation/animation.hpp>
 
+#include <base/math.hpp>
+
 enum class Samples 
 {
     HelloTriangle,
@@ -11,7 +13,7 @@ enum class Samples
 
 int main(int argc, char* argv[])
 {
-    constexpr auto sample = Samples::Animation;
+    constexpr auto sample = Samples::JunkShop;
 
     try
     {
@@ -35,8 +37,8 @@ int main(int argc, char* argv[])
     }
     catch (...)
     {
-
+        return EXIT_FAILURE;
     }
     
-    return 0;
+    return EXIT_SUCCESS;
 }
