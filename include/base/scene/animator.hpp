@@ -151,7 +151,10 @@ namespace sample_vk
 
     class Animator
     {
-        void calculateBoneTransform(AnimationHierarchiry::Node& node, const glm::mat4& parent_transform);
+        void calculateBoneTransform(
+            AnimationHierarchiry::Node& node, 
+            const glm::mat4&            parent_transform
+        );
 
         explicit Animator
         (

@@ -13,7 +13,7 @@ enum class Samples
 
 int main(int argc, char* argv[])
 {
-    constexpr auto sample = Samples::JunkShop;
+    constexpr auto sample = Samples::Animation;
 
     try
     {

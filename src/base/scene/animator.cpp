@@ -19,7 +19,7 @@ namespace sample_vk
 
     float Bone::getScaleFactor(float t1, float t2, float t)
     {
-        if (constexpr auto eps = 0.0001; t1 - t2 < eps) 
+        if (constexpr auto eps = 0.0001; std::abs(t1 - t2) < eps) 
             log::appError("[Animator::Bone] Failed calculate scale factor because t1 and t2 is equal");
         
         return (t - t1) / (t2 - t1);
