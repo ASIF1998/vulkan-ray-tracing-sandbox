@@ -7,6 +7,8 @@
 
 #include <base/shader_compiler.hpp>
 
+#include <animation/animation_pass.hpp>
+
 using namespace animation;
 
 Animation::~Animation()
@@ -28,10 +30,11 @@ void Animation::initScene()
             .viewport(width, height)
             .import();
 
-        auto ptr_as_builder = std::make_unique<ASBuilder>(getContext());
+        auto ptr_animation_pass_builder = std::make_unique<AnimationPass::Builder>(getContext());
 
-        auto& model = _scene->getModel();
-        model.visit(ptr_as_builder);
+        _scene->getModel().visit(ptr_animation_pass_builder);
+
+        _animation_pass = ptr_animation_pass_builder->build();
     }
 }
 
@@ -498,17 +501,29 @@ void Animation::updateTime()
     begin = end;
 }
 
+void Animation::animationPass()
+{
+    _scene->getAnimator().update(_time.delta);
+
+    _animation_pass->process();
+
+    /// @todo build AS from skinned mesh
+    auto ptr_as_builder = std::make_unique<ASBuilder>(getContext());
+
+    auto& model = _scene->getModel();
+    model.visit(ptr_as_builder);
+}
+
 void Animation::show()
 {
-    auto& animator = _scene->getAnimator();
     
     while (processEvents())
     {
         updateTime();
 
-        animator.update(_time.delta);
-
         _window->setTitle(std::format("Animation, {}ms", _time.delta));
+
+        animationPass();
 
         auto image_index = getNextImageIndex();
 

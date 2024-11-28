@@ -3,6 +3,8 @@
 #include <base/raytracing_base.hpp>
 #include <base/scene/scene.hpp>
 
+#include <animation/animation_pass.hpp>
+
 using namespace sample_vk;
 
 namespace sample_vk::animation
@@ -76,6 +78,8 @@ class Animation final :
     void updateDescriptorSets(uint32_t image_index);
 
     void updateTime();
+
+    void animationPass();
     
 public:
     Animation() = default;
@@ -123,6 +127,8 @@ private:
     } _time;
 
     animation::PushConstants _push_constants;
+
+    std::optional<animation::AnimationPass> _animation_pass;
 
     constexpr static uint32_t _max_ray_tracing_recursive = 1u;
 };

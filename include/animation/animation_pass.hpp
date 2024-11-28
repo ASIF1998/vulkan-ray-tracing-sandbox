@@ -14,25 +14,26 @@ namespace sample_vk::animation
     class SkinnedMesh
     {
     public:
-        explicit SkinnedMesh(const Context* ptr_context, const Mesh& source_mesh);
+        explicit SkinnedMesh(const Context* ptr_context, const Mesh* ptr_source_mesh);
 
-        SkinnedMesh(SkinnedMesh&& skinned_mesh)         = delete;
-        SkinnedMesh(const SkinnedMesh& skinned_mesh)    = delete;
+        SkinnedMesh(SkinnedMesh&& skinned_mesh);
+        SkinnedMesh(const SkinnedMesh& skinned_mesh) = delete;
 
-        SkinnedMesh& operator = (SkinnedMesh&& skinned_mesh)        = delete;
+        SkinnedMesh& operator = (SkinnedMesh&& skinned_mesh);
         SkinnedMesh& operator = (const SkinnedMesh& skinned_mesh)   = delete;
 
     private:
-        const Mesh& _source_mesh;
+        const Mesh* _ptr_source_mesh;
         Mesh        _animated_mesh;
     };
 }
 
-#if 0
 namespace sample_vk::animation
 {
     class AnimationPass
     {
+        explicit AnimationPass(std::vector<SkinnedMesh>&& meshes);
+
     public:
         class Builder;
 
@@ -42,16 +43,25 @@ namespace sample_vk::animation
         AnimationPass& operator = (AnimationPass&& animation_pass);
         AnimationPass& operator = (const AnimationPass& animation_pass) = delete;
 
-    private:
+        void process();
 
+    private:
+        std::vector<SkinnedMesh> _meshes;
     };
 
-    class AnimationPass::Builder: 
+    class AnimationPass::Builder : 
         public NodeVisitor
     {
-        /// @todo implement
         void process(Node* ptr_node) override;
         void process(MeshNode* ptr_node) override;
+    
+    public:
+        Builder(const Context* ptr_context);
+
+        AnimationPass build();
+
+    private:
+        std::vector<SkinnedMesh>    _meshes;
+        const Context*               _ptr_context;
     };
 }
-#endif
