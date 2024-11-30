@@ -14,9 +14,20 @@ struct attribute_t
     vec4 uv;
 };
 
+struct skinning_data_t
+{
+    ivec4   bone_ids;
+    vec4    weights;
+};
+
 layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer vertex_buffer_t
 {
     attribute_t attributes[];
+};
+
+layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer skinning_buffer_t
+{
+    skinning_data_t skinning_datas[];
 };
 
 layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer index_buffer_t
@@ -24,11 +35,18 @@ layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly b
     uint indices[];
 };
 
-layout(std430, set = 0, binding = 0) uniform scene_geometry_u
+layout(std430, set = 0, binding = 0) uniform source_mesh_u
+{
+    vertex_buffer_t     vertex_buffer;
+    skinning_buffer_t   skinning_buffer;
+    index_buffer_t      index_buffer;
+} source_mesh;
+
+layout(std430, set = 0, binding = 1) uniform destination_mesh_u
 {
     vertex_buffer_t vertex_buffer;
     index_buffer_t  index_buffer;
-} scene_info;
+} destination_mesh;
 
 void main()
 {

@@ -56,7 +56,8 @@ namespace sample_vk::animation
         VkDescriptorPool    _descriptor_pool_handle = VK_NULL_HANDLE;
         VkDescriptorSet     _descriptor_set_handle  = VK_NULL_HANDLE;
 
-        std::optional<Buffer> _meshBuffersRefs;
+        std::optional<Buffer> _src_mesh_buffers_refs;
+        std::optional<Buffer> _dst_mesh_buffers_refs;
 
         const Context* _ptr_context;
     };

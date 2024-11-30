@@ -118,52 +118,95 @@ namespace sample_vk::animation
 
     void AnimationPass::writeMeshBufferRefs(const SkinnedMesh& mesh)
     {
-        std::array source_geometry_refs {
+        std::array src_geometry_refs {
             mesh.ptr_source_mesh->vertex_buffer->getAddress(),
+            mesh.ptr_source_mesh->skinning_buffer->getAddress(),
             mesh.ptr_source_mesh->index_buffer->getAddress()
         };
+        
+        std::array dst_geometry_refs {
+            mesh.animated_mesh.vertex_buffer->getAddress(),
+            mesh.animated_mesh.index_buffer->getAddress()
+        };
 
-        auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
+        auto src_command_buffer = VkUtils::getCommandBuffer(_ptr_context);
+        auto dst_command_buffer = VkUtils::getCommandBuffer(_ptr_context);
 
-        Buffer::writeData(_meshBuffersRefs.value(), std::span(source_geometry_refs), command_buffer);
+        Buffer::writeData<VkDeviceAddress>(
+            _src_mesh_buffers_refs.value(), 
+            std::span(src_geometry_refs), 
+            src_command_buffer
+        );
+        
+        Buffer::writeData<VkDeviceAddress>(
+            _dst_mesh_buffers_refs.value(), 
+            std::span(dst_geometry_refs), 
+            dst_command_buffer
+        );
     }
 
     void AnimationPass::bindBufferWithRefs()
     {
-        if (!_meshBuffersRefs)
+        if (!_src_mesh_buffers_refs && !_dst_mesh_buffers_refs)
         {
-            constexpr auto usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+            constexpr auto usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
             auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
             if (!memory_index)
                 log::vkError("[AnimationPass] Failed get memroy type index");
             
-            _meshBuffersRefs = Buffer::make(
+            _src_mesh_buffers_refs = Buffer::make(
                 _ptr_context, 
-                sizeof(VkDeviceSize) * 2, 
+                sizeof(VkDeviceSize) * 3,
                 *memory_index, 
                 usage, 
-                "[AnimationPass] Mesh buffers refs"
+                "[AnimationPass] Source mesh buffers refs"
+            );
+            
+            _dst_mesh_buffers_refs = Buffer::make(
+                _ptr_context, 
+                sizeof(VkDeviceSize) * 2,
+                *memory_index, 
+                usage, 
+                "[AnimationPass] Destination mesh buffers refs"
             );
         }
 
-        VkDescriptorBufferInfo buffer_info = { };
-        buffer_info.buffer  = _meshBuffersRefs->vk_handle;
-        buffer_info.range   = _meshBuffersRefs->size_in_bytes;        
-        buffer_info.offset  = 0;
+        std::array<VkDescriptorBufferInfo, 2> buffers_info;
 
-        VkWriteDescriptorSet write_descriptor_set = { };
-        write_descriptor_set.sType              = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_set.descriptorCount    = 1;
-        write_descriptor_set.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_set.dstArrayElement    = 0;
-        write_descriptor_set.dstBinding         = 0;
-        write_descriptor_set.dstSet             = _descriptor_set_handle;
-        write_descriptor_set.pBufferInfo        = &buffer_info;
+        buffers_info[0] = { };
+        buffers_info[0].buffer  = _src_mesh_buffers_refs->vk_handle;
+        buffers_info[0].range   = _src_mesh_buffers_refs->size_in_bytes;
+        buffers_info[0].offset  = 0;
         
+        buffers_info[1] = { };
+        buffers_info[1].buffer  = _dst_mesh_buffers_refs->vk_handle;
+        buffers_info[1].range   = _dst_mesh_buffers_refs->size_in_bytes;
+        buffers_info[1].offset  = 0;
+        
+        std::array<VkWriteDescriptorSet, 2> write_infos;
+
+        write_infos[0] = { };
+        write_infos[0].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_infos[0].descriptorCount  = 1;
+        write_infos[0].descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_infos[0].dstArrayElement  = 0;
+        write_infos[0].dstBinding       = 0;
+        write_infos[0].dstSet           = _descriptor_set_handle;
+        write_infos[0].pBufferInfo      = &buffers_info[0];
+        
+        write_infos[1] = { };
+        write_infos[1].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_infos[1].descriptorCount  = 1;
+        write_infos[1].descriptorType   = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_infos[1].dstArrayElement  = 0;
+        write_infos[1].dstBinding       = 1;
+        write_infos[1].dstSet           = _descriptor_set_handle;
+        write_infos[1].pBufferInfo      = &buffers_info[1];
+
         vkUpdateDescriptorSets(
             _ptr_context->device_handle,
-            1, &write_descriptor_set,
+            static_cast<uint32_t>(write_infos.size()), write_infos.data(),
             0, nullptr
         );
     }
@@ -228,15 +271,23 @@ namespace sample_vk::animation
     void AnimationPass::Builder::createPipelineLayout()
     {
         log::vkInfo("[AnimationPass::Builder] Create pipeline layout");
-        VkDescriptorSetLayoutBinding binding_info = { };
-        binding_info.binding            = 0;
-        binding_info.descriptorCount    = 1;
-        binding_info.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings_info;
+
+        bindings_info[0] = { };
+        bindings_info[0].binding            = 0;
+        bindings_info[0].descriptorCount    = 1;
+        bindings_info[0].descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        
+        bindings_info[1] = { };
+        bindings_info[1].binding            = 1;
+        bindings_info[1].descriptorCount    = 1;
+        bindings_info[1].descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
         VkDescriptorSetLayoutCreateInfo descriptor_set_info = { };
         descriptor_set_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_set_info.bindingCount    = 1;
-        descriptor_set_info.pBindings       = &binding_info;
+        descriptor_set_info.bindingCount    = static_cast<uint32_t>(bindings_info.size());
+        descriptor_set_info.pBindings       = bindings_info.data();
 
         VK_CHECK(vkCreateDescriptorSetLayout(
             _ptr_context->device_handle,
@@ -294,7 +345,7 @@ namespace sample_vk::animation
     {
         VkDescriptorPoolSize descriptor_size = { };
         descriptor_size.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptor_size.descriptorCount = 1;
+        descriptor_size.descriptorCount = 2;
 
         VkDescriptorPoolCreateInfo descriptor_pool_info = { };
         descriptor_pool_info.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
