@@ -1,5 +1,33 @@
 #version 450
 
+#extension GL_GOOGLE_include_directive	: enable
+#extension GL_EXT_buffer_reference      : enable
+#extension GL_EXT_scalar_block_layout   : enable
+
+struct attribute_t
+{
+    vec4 pos;
+    vec4 normal;
+    vec4 tangent;
+    vec4 uv;
+};
+
+layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer vertex_buffer_t
+{
+    attribute_t attributes[];
+};
+
+layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer index_buffer_t
+{
+    uint indices[];
+};
+
+layout(std430, set = 0, binding = 0) uniform scene_geometry_b
+{
+    vertex_buffer_t vertex_buffer;
+    index_buffer_t  index_buffer;
+} scene_info;
+
 void main()
 {
     

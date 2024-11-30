@@ -69,21 +69,18 @@ namespace sample_vk::animation
 
 namespace sample_vk::animation
 {
-    AnimationPass::AnimationPass(
-        const Context*              ptr_context,
-        std::vector<SkinnedMesh>&&  meshes, 
-        VkPipeline                  pipeline_handle, 
-        VkPipelineLayout            pipeline_layout
-    ) :
-        _meshes             (std::move(meshes)),
-        _pipeline_handle    (pipeline_handle),
-        _pipeline_layout    (pipeline_layout),
+    AnimationPass::AnimationPass(const Context* ptr_context) :
         _ptr_context        (ptr_context)
     { }
 
     AnimationPass::AnimationPass(AnimationPass&& animation_pass) :
-        _meshes(std::move(animation_pass._meshes))
-    { }
+        _meshes         (std::move(animation_pass._meshes)),
+        _ptr_context    (animation_pass._ptr_context)
+    { 
+        std::swap(_pipeline_handle, animation_pass._pipeline_handle);
+        std::swap(_pipeline_layout, animation_pass._pipeline_layout);
+        std::swap(_descriptor_set_layout, animation_pass._descriptor_set_layout);
+    }
 
     AnimationPass::~AnimationPass()
     {
@@ -92,11 +89,19 @@ namespace sample_vk::animation
 
         if (_pipeline_handle != VK_NULL_HANDLE)
             vkDestroyPipeline(_ptr_context->device_handle, _pipeline_handle, nullptr);
+
+        if (_descriptor_set_layout != VK_NULL_HANDLE)
+            vkDestroyDescriptorSetLayout(_ptr_context->device_handle, _descriptor_set_layout, nullptr);
     }
 
     AnimationPass& AnimationPass::operator = (AnimationPass&& animation_pass)
     {
         _meshes = std::move(animation_pass._meshes);
+
+        std::swap(_pipeline_handle, animation_pass._pipeline_handle);
+        std::swap(_pipeline_layout, animation_pass._pipeline_layout);
+        std::swap(_descriptor_set_layout, animation_pass._descriptor_set_layout);
+
         return *this;
     }
 
@@ -131,31 +136,52 @@ namespace sample_vk::animation
         SkinnedMesh skinned_mesg (_ptr_context, &ptr_node->mesh);
     }
 
-    VkPipelineLayout AnimationPass::Builder::createPipelineLayout()
+    void AnimationPass::Builder::createPipelineLayout()
     {
         log::vkInfo("[AnimationPass::Builder] Create pipeline layout");
-        VkPipelineLayout layout_handle = VK_NULL_HANDLE;
+        VkDescriptorSetLayoutBinding binding_info = { };
+        binding_info.binding            = 0;
+        binding_info.descriptorCount    = 1;
+        binding_info.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+        VkDescriptorSetLayoutCreateInfo descriptor_set_info = { };
+        descriptor_set_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptor_set_info.bindingCount    = 1;
+        descriptor_set_info.pBindings       = &binding_info;
+
+        VK_CHECK(
+            vkCreateDescriptorSetLayout(
+                _ptr_context->device_handle,
+                &descriptor_set_info,
+                nullptr,
+                &_descriptor_set_layout
+            )
+        );
 
         VkPipelineLayoutCreateInfo layout_info = { };
-        layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        layout_info.sType           = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        layout_info.pSetLayouts     = &_descriptor_set_layout;
+        layout_info.setLayoutCount  = 1;
         
         VK_CHECK(vkCreatePipelineLayout(
             _ptr_context->device_handle,
             &layout_info,
             nullptr,
-            &layout_handle
+            &_pipeline_layout
         ));
-
-        return layout_handle;
     }
 
-    VkPipelineShaderStageCreateInfo AnimationPass::Builder::compileComputeShader()
+    void AnimationPass::Builder::createPipeline()
     {
-        log::vkInfo("[AnimationPass::Builder] Compile shader");
+        log::vkInfo("[AnimationPass::Builder] Create compute pipeline");
 
         const auto shader_name = project_dir / "shaders/animation/animation_pass.glsl.comp";
 
-        _compute_shader_handle = shader::Compiler::createShaderModule(_ptr_context->device_handle, shader_name, shader::Type::compute);
+        _compute_shader_handle = shader::Compiler::createShaderModule(
+            _ptr_context->device_handle, 
+            shader_name, 
+            shader::Type::compute
+        );
 
         VkPipelineShaderStageCreateInfo stage = { };
         stage.sType     = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -163,34 +189,32 @@ namespace sample_vk::animation
         stage.pName     = "main";
         stage.stage     = VK_SHADER_STAGE_COMPUTE_BIT;
 
-        return stage;
-    }
-
-    VkPipeline AnimationPass::Builder::createPipeline(VkPipelineLayout layout)
-    {
-        log::vkInfo("[AnimationPass::Builder] Create compute pipeline");
-
-        VkPipeline pipeline_handle = VK_NULL_HANDLE;
-
         VkComputePipelineCreateInfo pipeline_info = { };
         pipeline_info.sType     = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-        pipeline_info.layout    = layout;
-        pipeline_info.stage     = compileComputeShader();
+        pipeline_info.layout    = _pipeline_layout;
+        pipeline_info.stage     = stage;
         
         VK_CHECK(vkCreateComputePipelines(
             _ptr_context->device_handle,
             VK_NULL_HANDLE,
             1, &pipeline_info,
             nullptr,
-            &pipeline_handle
+            &_pipeline_handle
         ));
-
-        return pipeline_handle;
     }
 
     AnimationPass AnimationPass::Builder::build()
     {
-        auto layout = createPipelineLayout();
-        return AnimationPass(_ptr_context, std::move(_meshes), createPipeline(layout), layout);
+        createPipelineLayout();
+        createPipeline();
+
+        AnimationPass animation_pass (_ptr_context);
+
+        animation_pass._meshes                  = std::move(_meshes);
+        animation_pass._pipeline_handle         = _pipeline_handle;
+        animation_pass._pipeline_layout         = _pipeline_layout;
+        animation_pass._descriptor_set_layout   = _descriptor_set_layout;
+
+        return animation_pass;
     }
 }

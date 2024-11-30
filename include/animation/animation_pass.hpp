@@ -29,12 +29,7 @@ namespace sample_vk::animation
 
     class AnimationPass
     {
-        explicit AnimationPass(
-            const Context*              ptr_context,
-            std::vector<SkinnedMesh>&&  meshes, 
-            VkPipeline                  pipeline_handle, 
-            VkPipelineLayout            pipeline_layout
-        );
+        explicit AnimationPass(const Context* ptr_context);
 
     public:
         class Builder;
@@ -52,8 +47,9 @@ namespace sample_vk::animation
     private:
         std::vector<SkinnedMesh> _meshes;
 
-        VkPipeline          _pipeline_handle;
-        VkPipelineLayout    _pipeline_layout;
+        VkPipeline              _pipeline_handle = VK_NULL_HANDLE;
+        VkPipelineLayout        _pipeline_layout = VK_NULL_HANDLE;
+        VkDescriptorSetLayout   _descriptor_set_layout  = VK_NULL_HANDLE;
 
         const Context* _ptr_context;
     };
@@ -64,11 +60,8 @@ namespace sample_vk::animation
         void process(Node* ptr_node)        override;
         void process(MeshNode* ptr_node)    override;
 
-        [[nodiscard]] VkPipelineLayout    createPipelineLayout();
-        [[nodiscard]] VkPipeline          createPipeline(VkPipelineLayout layout);
-        
-        [[nodiscard]] 
-        VkPipelineShaderStageCreateInfo compileComputeShader();
+        void createPipelineLayout();
+        void createPipeline();
     
     public:
         Builder(const Context* ptr_context);
@@ -86,6 +79,10 @@ namespace sample_vk::animation
     private:
         std::vector<SkinnedMesh>    _meshes;
         const Context*              _ptr_context;
+
+        VkPipeline              _pipeline_handle        = VK_NULL_HANDLE;
+        VkPipelineLayout        _pipeline_layout        = VK_NULL_HANDLE;
+        VkDescriptorSetLayout   _descriptor_set_layout  = VK_NULL_HANDLE;
 
         VkShaderModule _compute_shader_handle = VK_NULL_HANDLE;
     };
