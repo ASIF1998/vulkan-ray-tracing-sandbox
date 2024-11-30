@@ -106,6 +106,8 @@ void Animation::createDescriptorSets()
     descriptor_set_allocate_info.pSetLayouts        = &_descriptor_set_layout_handle;
 
     VK_CHECK(vkAllocateDescriptorSets(_context.device_handle, &descriptor_set_allocate_info, &_descriptor_set_handle));
+
+    VkUtils::setName(_context.device_handle, _descriptor_set_handle, VK_OBJECT_TYPE_DESCRIPTOR_SET, "Descritor set for ray tracing");
 }
 
 void Animation::createPipeline()
@@ -516,7 +518,6 @@ void Animation::animationPass()
 
 void Animation::show()
 {
-    
     while (processEvents())
     {
         updateTime();

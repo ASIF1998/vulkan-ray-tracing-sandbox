@@ -47,11 +47,12 @@ namespace sample_vk
     template<typename T>
     concept IsVulkanHandle =
     (
-        std::is_same_v<VkImage, T>                       ||
-        std::is_same_v<VkImageView, T>                   ||
-        std::is_same_v<VkBuffer, T>                      ||
-        std::is_same_v<VkShaderModule, T>                ||
-        std::is_same_v<VkAccelerationStructureKHR, T>
+        std::is_same_v<VkImage, T>                      ||
+        std::is_same_v<VkImageView, T>                  ||
+        std::is_same_v<VkBuffer, T>                     ||
+        std::is_same_v<VkShaderModule, T>               ||
+        std::is_same_v<VkAccelerationStructureKHR, T>   ||
+        std::is_same_v<VkDescriptorSet, T>
     );
 
     class VkUtils

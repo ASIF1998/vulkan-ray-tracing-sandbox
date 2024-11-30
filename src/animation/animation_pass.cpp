@@ -80,6 +80,8 @@ namespace sample_vk::animation
         std::swap(_pipeline_handle, animation_pass._pipeline_handle);
         std::swap(_pipeline_layout, animation_pass._pipeline_layout);
         std::swap(_descriptor_set_layout, animation_pass._descriptor_set_layout);
+        std::swap(_descriptor_pool_handle, animation_pass._descriptor_pool_handle);
+        std::swap(_descriptor_set_handle, animation_pass._descriptor_set_handle);
     }
 
     AnimationPass::~AnimationPass()
@@ -108,13 +110,93 @@ namespace sample_vk::animation
         std::swap(_pipeline_handle, animation_pass._pipeline_handle);
         std::swap(_pipeline_layout, animation_pass._pipeline_layout);
         std::swap(_descriptor_set_layout, animation_pass._descriptor_set_layout);
+        std::swap(_descriptor_pool_handle, animation_pass._descriptor_pool_handle);
+        std::swap(_descriptor_set_handle, animation_pass._descriptor_set_handle);
 
         return *this;
     }
 
+    void AnimationPass::writeMeshBufferRefs(const SkinnedMesh& mesh)
+    {
+        std::array source_geometry_refs {
+            mesh.ptr_source_mesh->vertex_buffer->getAddress(),
+            mesh.ptr_source_mesh->index_buffer->getAddress()
+        };
+
+        auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
+
+        Buffer::writeData(_meshBuffersRefs.value(), std::span(source_geometry_refs), command_buffer);
+    }
+
+    void AnimationPass::bindBufferWithRefs()
+    {
+        if (!_meshBuffersRefs)
+        {
+            constexpr auto usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+
+            auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+            if (!memory_index)
+                log::vkError("[AnimationPass] Failed get memroy type index");
+            
+            _meshBuffersRefs = Buffer::make(
+                _ptr_context, 
+                sizeof(VkDeviceSize) * 2, 
+                *memory_index, 
+                usage, 
+                "[AnimationPass] Mesh buffers refs"
+            );
+        }
+
+        VkDescriptorBufferInfo buffer_info = { };
+        buffer_info.buffer  = _meshBuffersRefs->vk_handle;
+        buffer_info.range   = _meshBuffersRefs->size_in_bytes;        
+        buffer_info.offset  = 0;
+
+        VkWriteDescriptorSet write_descriptor_set = { };
+        write_descriptor_set.sType              = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write_descriptor_set.descriptorCount    = 1;
+        write_descriptor_set.descriptorType     = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        write_descriptor_set.dstArrayElement    = 0;
+        write_descriptor_set.dstBinding         = 0;
+        write_descriptor_set.dstSet             = _descriptor_set_handle;
+        write_descriptor_set.pBufferInfo        = &buffer_info;
+        
+        vkUpdateDescriptorSets(
+            _ptr_context->device_handle,
+            1, &write_descriptor_set,
+            0, nullptr
+        );
+    }
+
     void AnimationPass::process()
     {
-        /// @todo
+        bindBufferWithRefs();
+
+        for (const auto& skinned_mesh: _meshes)
+        {
+            writeMeshBufferRefs(skinned_mesh);
+
+            auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
+            command_buffer.write([this, &skinned_mesh] (VkCommandBuffer command_buffer_handle)
+            {
+                const auto x_group_size = static_cast<uint32_t>(skinned_mesh.ptr_source_mesh->index_count);
+
+                vkCmdBindPipeline(command_buffer_handle, VK_PIPELINE_BIND_POINT_COMPUTE, _pipeline_handle);
+                
+                vkCmdBindDescriptorSets(
+                    command_buffer_handle, 
+                    VK_PIPELINE_BIND_POINT_COMPUTE, 
+                    _pipeline_layout, 
+                    0, 
+                    1, &_descriptor_set_handle, 
+                    0, nullptr
+                );
+                
+                vkCmdDispatch(command_buffer_handle, x_group_size, 1, 1); 
+            });
+
+            command_buffer.upload(_ptr_context);
+        }
     }
 }
 
@@ -135,12 +217,12 @@ namespace sample_vk::animation
     void AnimationPass::Builder::process(Node* ptr_node)
     {
         for (const auto& ptr_child: ptr_node->children)
-            process(ptr_child.get());
+            ptr_child->visit(this);
     }
 
     void AnimationPass::Builder::process(MeshNode* ptr_node)
     {
-        SkinnedMesh skinned_mesg (_ptr_context, &ptr_node->mesh);
+        _meshes.emplace_back(_ptr_context, &ptr_node->mesh);
     }
 
     void AnimationPass::Builder::createPipelineLayout()
@@ -237,25 +319,13 @@ namespace sample_vk::animation
         allocate_info.pSetLayouts           = &_descriptor_set_layout;
 
         VK_CHECK(vkAllocateDescriptorSets(_ptr_context->device_handle, &allocate_info, &_descriptor_set_handle));
-    }
 
-    void AnimationPass::Builder::bindDescriptorSet()
-    {
-        auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
-
-        command_buffer.write([this](VkCommandBuffer command_buffer_handle)
-        {
-            vkCmdBindDescriptorSets(
-                command_buffer_handle, 
-                VK_PIPELINE_BIND_POINT_COMPUTE, 
-                _pipeline_layout, 
-                0, 
-                1, &_descriptor_set_handle, 
-                0, nullptr
-            );
-        });
-
-        command_buffer.upload(_ptr_context);
+        VkUtils::setName(
+            _ptr_context->device_handle, 
+            _descriptor_set_handle, 
+            VK_OBJECT_TYPE_DESCRIPTOR_SET, 
+            "Descritptor set for animation pass"
+        );
     }
 
     AnimationPass AnimationPass::Builder::build()
@@ -264,8 +334,6 @@ namespace sample_vk::animation
         createPipeline();
         createDescriptorPool();
         allocateDescriptorSet();
-
-        bindDescriptorSet();
 
         AnimationPass animation_pass (_ptr_context);
 

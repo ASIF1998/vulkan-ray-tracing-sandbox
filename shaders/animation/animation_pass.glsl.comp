@@ -4,6 +4,8 @@
 #extension GL_EXT_buffer_reference      : enable
 #extension GL_EXT_scalar_block_layout   : enable
 
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
 struct attribute_t
 {
     vec4 pos;
@@ -22,7 +24,7 @@ layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly b
     uint indices[];
 };
 
-layout(std430, set = 0, binding = 0) uniform scene_geometry_b
+layout(std430, set = 0, binding = 0) uniform scene_geometry_u
 {
     vertex_buffer_t vertex_buffer;
     index_buffer_t  index_buffer;

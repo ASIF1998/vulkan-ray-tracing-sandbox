@@ -30,6 +30,9 @@ namespace sample_vk::animation
     {
         explicit AnimationPass(const Context* ptr_context);
 
+        void bindBufferWithRefs();
+        void writeMeshBufferRefs(const SkinnedMesh& mesh);
+
     public:
         class Builder;
 
@@ -53,6 +56,8 @@ namespace sample_vk::animation
         VkDescriptorPool    _descriptor_pool_handle = VK_NULL_HANDLE;
         VkDescriptorSet     _descriptor_set_handle  = VK_NULL_HANDLE;
 
+        std::optional<Buffer> _meshBuffersRefs;
+
         const Context* _ptr_context;
     };
 
@@ -68,8 +73,6 @@ namespace sample_vk::animation
         void createDescriptorPool();
         void allocateDescriptorSet();
 
-        void bindDescriptorSet();
-    
     public:
         Builder(const Context* ptr_context);
 
