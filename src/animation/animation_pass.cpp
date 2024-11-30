@@ -9,13 +9,13 @@
 namespace sample_vk::animation
 {
     SkinnedMesh::SkinnedMesh(const Context* ptr_context, const Mesh* ptr_source_mesh) :
-        _ptr_source_mesh(ptr_source_mesh)
+        ptr_source_mesh(ptr_source_mesh)
     {
         if (!ptr_source_mesh)
             log::vkError("[SkinnedMesh::SkinnedMesh] Pointer to source mesh is null");
 
-        _animated_mesh.index_count  = _ptr_source_mesh->index_count;
-        _animated_mesh.vertex_count = _ptr_source_mesh->vertex_count;
+        animated_mesh.index_count   = ptr_source_mesh->index_count;
+        animated_mesh.vertex_count  = ptr_source_mesh->vertex_count;
 
         constexpr auto shared_usage_flags = 
                     VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
@@ -37,17 +37,17 @@ namespace sample_vk::animation
         static int index_for_current_buffers = 0;
         ++index_for_current_buffers;
 
-        _animated_mesh.index_buffer = Buffer::make(
+        animated_mesh.index_buffer = Buffer::make(
             ptr_context, 
-            _animated_mesh.index_count, 
+            animated_mesh.index_count, 
             memory_index,
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags, 
             std::format("[SkinnedMesh][IndexBuffer]: {}", index_for_current_buffers)
         );
 
-        _animated_mesh.vertex_buffer = Buffer::make(
+        animated_mesh.vertex_buffer = Buffer::make(
             ptr_context, 
-            _animated_mesh.vertex_count, 
+            animated_mesh.vertex_count, 
             memory_index,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags,
             std::format("[SkinnedMesh][VertexBuffer]: {}", index_for_current_buffers)
@@ -55,14 +55,14 @@ namespace sample_vk::animation
     }
 
     SkinnedMesh::SkinnedMesh(SkinnedMesh&& skinned_mesh) :
-        _ptr_source_mesh    (skinned_mesh._ptr_source_mesh),
-        _animated_mesh      (std::move(skinned_mesh._animated_mesh))
+        ptr_source_mesh (skinned_mesh.ptr_source_mesh),
+        animated_mesh   (std::move(skinned_mesh.animated_mesh))
     { }
 
     SkinnedMesh& SkinnedMesh::operator = (SkinnedMesh&& skinned_mesh)
     {
-        _ptr_source_mesh    = skinned_mesh._ptr_source_mesh;
-        _animated_mesh      = std::move(skinned_mesh._animated_mesh);
+        ptr_source_mesh = skinned_mesh.ptr_source_mesh;
+        animated_mesh   = std::move(skinned_mesh.animated_mesh);
         return *this;
     }
 }
@@ -84,14 +84,21 @@ namespace sample_vk::animation
 
     AnimationPass::~AnimationPass()
     {
+        if (_descriptor_set_handle != VK_NULL_HANDLE && _descriptor_pool_handle != VK_NULL_HANDLE)
+        {
+            vkFreeDescriptorSets(_ptr_context->device_handle, _descriptor_pool_handle, 1, &_descriptor_set_handle);
+            vkDestroyDescriptorPool(_ptr_context->device_handle, _descriptor_pool_handle, nullptr);
+        }
+
+        if (_descriptor_set_layout != VK_NULL_HANDLE)
+            vkDestroyDescriptorSetLayout(_ptr_context->device_handle, _descriptor_set_layout, nullptr);
+
         if (_pipeline_layout != VK_NULL_HANDLE)
             vkDestroyPipelineLayout(_ptr_context->device_handle, _pipeline_layout, nullptr);
 
         if (_pipeline_handle != VK_NULL_HANDLE)
             vkDestroyPipeline(_ptr_context->device_handle, _pipeline_handle, nullptr);
 
-        if (_descriptor_set_layout != VK_NULL_HANDLE)
-            vkDestroyDescriptorSetLayout(_ptr_context->device_handle, _descriptor_set_layout, nullptr);
     }
 
     AnimationPass& AnimationPass::operator = (AnimationPass&& animation_pass)
@@ -149,14 +156,12 @@ namespace sample_vk::animation
         descriptor_set_info.bindingCount    = 1;
         descriptor_set_info.pBindings       = &binding_info;
 
-        VK_CHECK(
-            vkCreateDescriptorSetLayout(
-                _ptr_context->device_handle,
-                &descriptor_set_info,
-                nullptr,
-                &_descriptor_set_layout
-            )
-        );
+        VK_CHECK(vkCreateDescriptorSetLayout(
+            _ptr_context->device_handle,
+            &descriptor_set_info,
+            nullptr,
+            &_descriptor_set_layout
+        ));
 
         VkPipelineLayoutCreateInfo layout_info = { };
         layout_info.sType           = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -203,10 +208,43 @@ namespace sample_vk::animation
         ));
     }
 
+    void AnimationPass::Builder::createDescriptorPool()
+    {
+        VkDescriptorPoolSize descriptor_size = { };
+        descriptor_size.type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptor_size.descriptorCount = 1;
+
+        VkDescriptorPoolCreateInfo descriptor_pool_info = { };
+        descriptor_pool_info.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        descriptor_pool_info.maxSets        = 1;
+        descriptor_pool_info.pPoolSizes     = &descriptor_size;
+        descriptor_pool_info.poolSizeCount  = 1;
+
+        VK_CHECK(vkCreateDescriptorPool(
+            _ptr_context->device_handle,
+            &descriptor_pool_info,
+            nullptr,
+            &_descriptor_pool_handle
+        ));
+    }
+
+    void AnimationPass::Builder::allocateDescriptorSet()
+    {
+        VkDescriptorSetAllocateInfo allocate_info = { };
+        allocate_info.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocate_info.descriptorPool        = _descriptor_pool_handle;
+        allocate_info.descriptorSetCount    = 1;
+        allocate_info.pSetLayouts           = &_descriptor_set_layout;
+
+        VK_CHECK(vkAllocateDescriptorSets(_ptr_context->device_handle, &allocate_info, &_descriptor_set_handle));
+    }
+
     AnimationPass AnimationPass::Builder::build()
     {
         createPipelineLayout();
         createPipeline();
+        createDescriptorPool();
+        allocateDescriptorSet();
 
         AnimationPass animation_pass (_ptr_context);
 
@@ -214,6 +252,8 @@ namespace sample_vk::animation
         animation_pass._pipeline_handle         = _pipeline_handle;
         animation_pass._pipeline_layout         = _pipeline_layout;
         animation_pass._descriptor_set_layout   = _descriptor_set_layout;
+        animation_pass._descriptor_pool_handle  = _descriptor_pool_handle;
+        animation_pass._descriptor_set_handle   = _descriptor_set_handle;
 
         return animation_pass;
     }

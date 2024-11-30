@@ -22,9 +22,8 @@ namespace sample_vk::animation
         SkinnedMesh& operator = (SkinnedMesh&& skinned_mesh);
         SkinnedMesh& operator = (const SkinnedMesh& skinned_mesh) = delete;
 
-    private:
-        const Mesh* _ptr_source_mesh;
-        Mesh        _animated_mesh;
+        const Mesh* ptr_source_mesh;
+        Mesh        animated_mesh;
     };
 
     class AnimationPass
@@ -47,9 +46,12 @@ namespace sample_vk::animation
     private:
         std::vector<SkinnedMesh> _meshes;
 
-        VkPipeline              _pipeline_handle = VK_NULL_HANDLE;
-        VkPipelineLayout        _pipeline_layout = VK_NULL_HANDLE;
+        VkPipeline              _pipeline_handle        = VK_NULL_HANDLE;
+        VkPipelineLayout        _pipeline_layout        = VK_NULL_HANDLE;
         VkDescriptorSetLayout   _descriptor_set_layout  = VK_NULL_HANDLE;
+
+        VkDescriptorPool    _descriptor_pool_handle = VK_NULL_HANDLE;
+        VkDescriptorSet     _descriptor_set_handle  = VK_NULL_HANDLE;
 
         const Context* _ptr_context;
     };
@@ -62,6 +64,9 @@ namespace sample_vk::animation
 
         void createPipelineLayout();
         void createPipeline();
+
+        void createDescriptorPool();
+        void allocateDescriptorSet();
     
     public:
         Builder(const Context* ptr_context);
@@ -83,6 +88,9 @@ namespace sample_vk::animation
         VkPipeline              _pipeline_handle        = VK_NULL_HANDLE;
         VkPipelineLayout        _pipeline_layout        = VK_NULL_HANDLE;
         VkDescriptorSetLayout   _descriptor_set_layout  = VK_NULL_HANDLE;
+
+        VkDescriptorPool    _descriptor_pool_handle = VK_NULL_HANDLE;
+        VkDescriptorSet     _descriptor_set_handle  = VK_NULL_HANDLE;
 
         VkShaderModule _compute_shader_handle = VK_NULL_HANDLE;
     };
