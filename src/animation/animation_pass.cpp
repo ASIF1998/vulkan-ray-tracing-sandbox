@@ -239,12 +239,33 @@ namespace sample_vk::animation
         VK_CHECK(vkAllocateDescriptorSets(_ptr_context->device_handle, &allocate_info, &_descriptor_set_handle));
     }
 
+    void AnimationPass::Builder::bindDescriptorSet()
+    {
+        auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
+
+        command_buffer.write([this](VkCommandBuffer command_buffer_handle)
+        {
+            vkCmdBindDescriptorSets(
+                command_buffer_handle, 
+                VK_PIPELINE_BIND_POINT_COMPUTE, 
+                _pipeline_layout, 
+                0, 
+                1, &_descriptor_set_handle, 
+                0, nullptr
+            );
+        });
+
+        command_buffer.upload(_ptr_context);
+    }
+
     AnimationPass AnimationPass::Builder::build()
     {
         createPipelineLayout();
         createPipeline();
         createDescriptorPool();
         allocateDescriptorSet();
+
+        bindDescriptorSet();
 
         AnimationPass animation_pass (_ptr_context);
 

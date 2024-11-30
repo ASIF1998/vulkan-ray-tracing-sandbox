@@ -67,6 +67,8 @@ namespace sample_vk::animation
 
         void createDescriptorPool();
         void allocateDescriptorSet();
+
+        void bindDescriptorSet();
     
     public:
         Builder(const Context* ptr_context);
