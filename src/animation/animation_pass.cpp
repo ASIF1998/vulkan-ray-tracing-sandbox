@@ -118,7 +118,7 @@ namespace sample_vk::animation
 
     void AnimationPass::bindMesh(const SkinnedMesh& mesh)
     {
-        std::array<VkDescriptorBufferInfo, 3> buffers_info;
+        std::array<VkDescriptorBufferInfo, 4> buffers_info;
 
         buffers_info[0] = { };
         buffers_info[0].buffer  = mesh.ptr_source_mesh->vertex_buffer->vk_handle;
@@ -126,44 +126,31 @@ namespace sample_vk::animation
         buffers_info[0].offset  = 0;
         
         buffers_info[1] = { };
-        buffers_info[1].buffer  = mesh.ptr_source_mesh->skinning_buffer->vk_handle;
-        buffers_info[1].range   = mesh.ptr_source_mesh->skinning_buffer->size_in_bytes;
+        buffers_info[1].buffer  = mesh.animated_mesh.vertex_buffer->vk_handle;
+        buffers_info[1].range   = mesh.animated_mesh.vertex_buffer->size_in_bytes;
         buffers_info[1].offset  = 0;
         
         buffers_info[2] = { };
-        buffers_info[2].buffer  = mesh.ptr_source_mesh->index_buffer->vk_handle;
-        buffers_info[2].range   = mesh.ptr_source_mesh->index_buffer->size_in_bytes;
+        buffers_info[2].buffer  = mesh.ptr_source_mesh->skinning_buffer->vk_handle;
+        buffers_info[2].range   = mesh.ptr_source_mesh->skinning_buffer->size_in_bytes;
         buffers_info[2].offset  = 0;
+        
+        buffers_info[3] = { };
+        buffers_info[3].buffer  = mesh.ptr_source_mesh->index_buffer->vk_handle;
+        buffers_info[3].range   = mesh.ptr_source_mesh->index_buffer->size_in_bytes;
+        buffers_info[3].offset  = 0;
 
-        std::array<VkWriteDescriptorSet, 3> write_infos;
+        std::array<VkWriteDescriptorSet, 1> write_infos;
 
         write_infos[0] = { };
         write_infos[0].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_infos[0].descriptorCount  = 1;
         write_infos[0].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         write_infos[0].dstArrayElement  = 0;
         write_infos[0].dstBinding       = 0;
         write_infos[0].dstSet           = _descriptor_set_handle;
-        write_infos[0].pBufferInfo      = &buffers_info[0];
+        write_infos[0].descriptorCount  = static_cast<uint32_t>(buffers_info.size());
+        write_infos[0].pBufferInfo      = buffers_info.data();
         
-        write_infos[1] = { };
-        write_infos[1].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_infos[1].descriptorCount  = 1;
-        write_infos[1].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        write_infos[1].dstArrayElement  = 0;
-        write_infos[1].dstBinding       = 1;
-        write_infos[1].dstSet           = _descriptor_set_handle;
-        write_infos[1].pBufferInfo      = &buffers_info[1];
-        
-        write_infos[2] = { };
-        write_infos[2].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_infos[2].descriptorCount  = 1;
-        write_infos[2].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        write_infos[2].dstArrayElement  = 0;
-        write_infos[2].dstBinding       = 2;
-        write_infos[2].dstSet           = _descriptor_set_handle;
-        write_infos[2].pBufferInfo      = &buffers_info[2];
-
         vkUpdateDescriptorSets(
             _ptr_context->device_handle,
             static_cast<uint32_t>(write_infos.size()), write_infos.data(),
@@ -230,27 +217,15 @@ namespace sample_vk::animation
     {
         log::vkInfo("[AnimationPass::Builder] Create pipeline layout");
 
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings_info;
-
-        bindings_info[0] = { };
-        bindings_info[0].binding            = 0;
-        bindings_info[0].descriptorCount    = 1;
-        bindings_info[0].descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        VkDescriptorSetLayoutBinding binding_info = { };
+        binding_info.binding            = 0;
+        binding_info.descriptorCount    = 4;
+        binding_info.descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         
-        bindings_info[1] = { };
-        bindings_info[1].binding            = 1;
-        bindings_info[1].descriptorCount    = 1;
-        bindings_info[1].descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        
-        bindings_info[2] = { };
-        bindings_info[2].binding            = 2;
-        bindings_info[2].descriptorCount    = 1;
-        bindings_info[2].descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-
         VkDescriptorSetLayoutCreateInfo descriptor_set_info = { };
         descriptor_set_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_set_info.bindingCount    = static_cast<uint32_t>(bindings_info.size());
-        descriptor_set_info.pBindings       = bindings_info.data();
+        descriptor_set_info.bindingCount    = 1;
+        descriptor_set_info.pBindings       = &binding_info;
 
         VK_CHECK(vkCreateDescriptorSetLayout(
             _ptr_context->device_handle,
@@ -308,7 +283,7 @@ namespace sample_vk::animation
     {
         VkDescriptorPoolSize descriptor_size = { };
         descriptor_size.type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        descriptor_size.descriptorCount = 3;
+        descriptor_size.descriptorCount = 4;
 
         VkDescriptorPoolCreateInfo descriptor_pool_info = { };
         descriptor_pool_info.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

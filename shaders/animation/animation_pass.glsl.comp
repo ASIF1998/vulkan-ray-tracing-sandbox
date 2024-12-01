@@ -20,20 +20,13 @@ struct skinning_data_t
     vec4    weights;
 };
 
-layout(set = 0, binding = 0) readonly buffer src_vertex_sbbo
+layout(set = 0, binding = 0) readonly buffer processed_geometry_b
 {
-    attribute_t vertices[];
-} src_vertex_buffer;
-
-layout(set = 0, binding = 1) readonly buffer src_skinning_data_sbbo
-{
+    attribute_t     src_vertex_buffer[];
+    attribute_t     dst_vertex_buffer[];
     skinning_data_t skinning_data[];
-} src_skinning_buffer;
-
-layout(set = 0, binding = 2) readonly buffer index_sbbo
-{
-    uint indices[];
-} index_buffer;
+    uint            indices[];
+} processed_geometry;
 
 void main()
 {
