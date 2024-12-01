@@ -28,10 +28,8 @@ layout(set = 0, binding = 0) readonly buffer processed_geometry_b
 
 void main()
 {
-    uint gidx = gl_GlobalInvocationID.x;
-
-    uint index = indices[nonuniformEXT(gidx)];
+    uint index = indices[gl_GlobalInvocationID.x];
 
     /// @todo '[' :  array must be redeclared with a size before being indexed with a variable  
-    attribute_t attr = src_vertex_buffer[nonuniformEXT(gidx)];
+    attribute_t attr = src_vertex_buffer[nonuniformEXT(index)];
 }
