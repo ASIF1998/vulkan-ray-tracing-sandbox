@@ -20,35 +20,28 @@ struct skinning_data_t
     vec4    weights;
 };
 
-layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer vertex_buffer_t
+layout(set = 0, binding = 0) readonly buffer src_vertex_sbbo
 {
-    attribute_t attributes[];
-};
+    attribute_t vertices[];
+} src_vertex_buffer;
 
-layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer skinning_buffer_t
+layout(set = 0, binding = 1) readonly buffer src_skinning_data_sbbo
 {
-    skinning_data_t skinning_datas[];
-};
+    skinning_data_t skinning_data[];
+} src_skinning_buffer;
 
-layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer index_buffer_t
+layout(set = 0, binding = 2) readonly buffer index_sbbo
 {
     uint indices[];
-};
-
-layout(std430, set = 0, binding = 0) uniform source_mesh_u
-{
-    vertex_buffer_t     vertex_buffer;
-    skinning_buffer_t   skinning_buffer;
-    index_buffer_t      index_buffer;
-} source_mesh;
-
-layout(std430, set = 0, binding = 1) uniform destination_mesh_u
-{
-    vertex_buffer_t vertex_buffer;
-    index_buffer_t  index_buffer;
-} destination_mesh;
+} index_buffer;
 
 void main()
 {
+    /// @fixme не понятно, меняются ли данные при выполненнии этого шейдера
+
+    // uint vertex_index = source_mesh.index_buffer.indices[gl_WorkGroupID.x];
+
+    // attribute_t attr = source_mesh.vertex_buffer.attributes[vertex_index];
     
+    // destination_mesh.vertex_buffer.attributes[vertex_index] = attr;
 }
