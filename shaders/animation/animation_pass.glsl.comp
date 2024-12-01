@@ -1,5 +1,7 @@
 #version 450
 
+#extension GL_EXT_nonuniform_qualifier : enable
+
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 struct attribute_t
@@ -22,15 +24,14 @@ layout(set = 0, binding = 0) readonly buffer processed_geometry_b
     attribute_t     dst_vertex_buffer[];
     skinning_data_t skinning_data[];
     uint            indices[];
-} processed_geometry;
+};
 
 void main()
 {
-    /// @fixme не понятно, меняются ли данные при выполненнии этого шейдера
+    uint gidx = gl_GlobalInvocationID.x;
 
-    // uint vertex_index = source_mesh.index_buffer.indices[gl_WorkGroupID.x];
+    uint index = indices[nonuniformEXT(gidx)];
 
-    // attribute_t attr = source_mesh.vertex_buffer.attributes[vertex_index];
-    
-    // destination_mesh.vertex_buffer.attributes[vertex_index] = attr;
+    /// @todo '[' :  array must be redeclared with a size before being indexed with a variable  
+    attribute_t attr = src_vertex_buffer[nonuniformEXT(gidx)];
 }
