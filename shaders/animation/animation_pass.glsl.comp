@@ -1,7 +1,5 @@
 #version 450
 
-#extension GL_EXT_nonuniform_qualifier : enable
-
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 struct attribute_t
@@ -18,18 +16,36 @@ struct skinning_data_t
     vec4    weights;
 };
 
-layout(set = 0, binding = 0) readonly buffer processed_geometry_b
+const uint index_buffer_binding_id      = 0u;
+const uint src_vertex_buffer_binding_id = 1u;
+const uint dst_vertex_buffer_binding_id = 2u;
+const uint skinning_data_binding_id     = 3u;
+
+layout(set = 0, binding = index_buffer_binding_id) readonly buffer index_buffer_b
 {
-    attribute_t     src_vertex_buffer[];
-    attribute_t     dst_vertex_buffer[];
+    uint index_buffer[];
+};
+
+layout(set = 0, binding = src_vertex_buffer_binding_id) readonly buffer src_vertex_buffer_b
+{
+    attribute_t src_vertex_buffer[];
+};
+
+layout(set = 0, binding = dst_vertex_buffer_binding_id) buffer dst_vertex_buffer_b
+{
+    attribute_t dst_vertex_buffer[];
+};
+
+layout(set = 0, binding = skinning_data_binding_id) readonly buffer skinning_data_b
+{
     skinning_data_t skinning_data[];
-    uint            indices[];
 };
 
 void main()
 {
-    uint index = indices[gl_GlobalInvocationID.x];
+    uint index = index_buffer[gl_GlobalInvocationID.x];
 
-    /// @todo '[' :  array must be redeclared with a size before being indexed with a variable  
-    attribute_t attr = src_vertex_buffer[nonuniformEXT(index)];
+    dst_vertex_buffer[index] = src_vertex_buffer[index];
+
+    skinning_data[index];
 }

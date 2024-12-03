@@ -28,6 +28,18 @@ namespace sample_vk::animation
 
     class AnimationPass
     {
+        struct Bindings
+        {
+            enum : 
+                size_t 
+            {
+                index_buffer,
+                src_vertex_buffer,
+                dst_vertex_buffer,
+                skinning_data_buffer
+            };
+        };
+        
         explicit AnimationPass(const Context* ptr_context);
 
         void bindMesh(const SkinnedMesh& mesh);
