@@ -45,8 +45,6 @@ namespace sample_vk
 
         auto tlas_name = std::format("[TLAS] '{}'", ptr_node->name);
 
-        log::appInfo("[ASBuilder]: Process {}", tlas_name);
-
         auto memory_index_type = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         if (!memory_index_type.has_value())
@@ -206,8 +204,6 @@ namespace sample_vk
     void ASBuilder::process(MeshNode* ptr_node)
     {
         auto blas_name = std::format("[BLAS] {}", ptr_node->name);
-
-        log::appInfo("[ASBuilder]: Process '{}'", blas_name);
 
         auto& mesh = ptr_node->mesh;
 
