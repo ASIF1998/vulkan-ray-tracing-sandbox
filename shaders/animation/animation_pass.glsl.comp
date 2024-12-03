@@ -1,5 +1,9 @@
 #version 450
 
+#extension GL_GOOGLE_include_directive : enable
+
+#include <shaders/animation/shared.glsl>
+
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 struct attribute_t
@@ -16,27 +20,22 @@ struct skinning_data_t
     vec4    weights;
 };
 
-const uint index_buffer_binding_id      = 0u;
-const uint src_vertex_buffer_binding_id = 1u;
-const uint dst_vertex_buffer_binding_id = 2u;
-const uint skinning_data_binding_id     = 3u;
-
-layout(set = 0, binding = index_buffer_binding_id) readonly buffer index_buffer_b
+layout(set = 0, binding = index_buffer_binding) readonly buffer index_buffer_b
 {
     uint index_buffer[];
 };
 
-layout(set = 0, binding = src_vertex_buffer_binding_id) readonly buffer src_vertex_buffer_b
+layout(set = 0, binding = src_vertex_buffer_binding) readonly buffer src_vertex_buffer_b
 {
     attribute_t src_vertex_buffer[];
 };
 
-layout(set = 0, binding = dst_vertex_buffer_binding_id) buffer dst_vertex_buffer_b
+layout(set = 0, binding = dst_vertex_buffer_binding) buffer dst_vertex_buffer_b
 {
     attribute_t dst_vertex_buffer[];
 };
 
-layout(set = 0, binding = skinning_data_binding_id) readonly buffer skinning_data_b
+layout(set = 0, binding = skinning_data_binding) readonly buffer skinning_data_b
 {
     skinning_data_t skinning_data[];
 };
