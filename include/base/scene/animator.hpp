@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <map>
+#include <span>
 
 #include <optional>
 
@@ -156,8 +157,7 @@ namespace sample_vk
             const glm::mat4&            parent_transform
         );
 
-        explicit Animator
-        (
+        explicit Animator(
             std::vector<Bone>&&             bones, 
             BoneRegistry&&                  bone_registry,
             AnimationHierarchiry::Node&&    root_node,
@@ -169,7 +169,6 @@ namespace sample_vk
         class Builder;
 
     public:
-
         Animator(Animator&& animator)       = default;
         Animator(const Animator& animator)  = delete;
 
@@ -178,10 +177,12 @@ namespace sample_vk
 
         void update(float delta_time);
 
+        std::span<const glm::mat4> getFinalBoneMatrices() const;
+
     private:
         std::vector<Bone>       _bones;
         BoneRegistry            _bone_registry;
-        std::vector<glm::mat4>  _final_bone_matrices;
+        std::vector<glm::mat4>  _final_bones_matrices;
 
         AnimationHierarchiry::Node _root_node;
         

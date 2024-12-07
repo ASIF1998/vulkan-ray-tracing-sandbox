@@ -86,11 +86,8 @@ namespace sample_vk::animation
 
     AnimationPass::~AnimationPass()
     {
-        if (_descriptor_set_handle != VK_NULL_HANDLE && _descriptor_pool_handle != VK_NULL_HANDLE)
-        {
-            vkFreeDescriptorSets(_ptr_context->device_handle, _descriptor_pool_handle, 1, &_descriptor_set_handle);
+        if (_descriptor_pool_handle != VK_NULL_HANDLE)
             vkDestroyDescriptorPool(_ptr_context->device_handle, _descriptor_pool_handle, nullptr);
-        }
 
         if (_descriptor_set_layout != VK_NULL_HANDLE)
             vkDestroyDescriptorSetLayout(_ptr_context->device_handle, _descriptor_set_layout, nullptr);
@@ -157,8 +154,48 @@ namespace sample_vk::animation
         );
     }
 
-    void AnimationPass::process()
+    void AnimationPass::updateMatrices(std::span<const glm::mat4> matrices)
     {
+        if (matrices.empty())
+            return ;
+
+        const auto size = static_cast<VkDeviceSize>(sizeof(glm::mat4) * matrices.size());
+
+        auto memory_type_index = *MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        constexpr auto buffer_usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+        constexpr std::string_view buffer_name = "[AnimationPass] Final bone matrices";
+
+        if (!_final_bones_matrices || _final_bones_matrices->size_in_bytes < size)
+        {
+            _final_bones_matrices = Buffer::make(_ptr_context, size, memory_type_index, buffer_usage, buffer_name);
+
+            VkDescriptorBufferInfo buffer_info = { };
+            buffer_info.buffer  = _final_bones_matrices->vk_handle;
+            buffer_info.range   = _final_bones_matrices->size_in_bytes;
+
+            VkWriteDescriptorSet write_info = { };
+            write_info.sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_info.descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            write_info.dstArrayElement  = 0;
+            write_info.dstBinding       = static_cast<uint32_t>(Bindings::final_bones_matrices);
+            write_info.dstSet           = _descriptor_set_handle;
+            write_info.descriptorCount  = 1;
+            write_info.pBufferInfo      = &buffer_info;
+
+            vkUpdateDescriptorSets(_ptr_context->device_handle, 1, &write_info, 0, nullptr);
+        }
+
+        auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
+
+        Buffer::writeData(*_final_bones_matrices, matrices, command_buffer);
+    }
+
+    void AnimationPass::process(std::span<const glm::mat4> final_bones_matrices)
+    {
+        updateMatrices(final_bones_matrices);
+
         for (const auto& skinned_mesh: _meshes)
         {
             bindMesh(skinned_mesh);
@@ -216,7 +253,7 @@ namespace sample_vk::animation
     {
         log::vkInfo("[AnimationPass::Builder] Create pipeline layout");
 
-        std::array<VkDescriptorSetLayoutBinding, 4> bindings_info;
+        std::array<VkDescriptorSetLayoutBinding, 5> bindings_info;
 
         for (size_t i = 0; i < bindings_info.size(); ++i)
         {
@@ -224,6 +261,7 @@ namespace sample_vk::animation
             bindings_info[i].binding            = static_cast<uint32_t>(i);
             bindings_info[i].descriptorCount    = 1;
             bindings_info[i].descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            bindings_info[i].stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT;
         }
 
         VkDescriptorSetLayoutCreateInfo descriptor_set_info = { };
@@ -287,7 +325,7 @@ namespace sample_vk::animation
     {
         VkDescriptorPoolSize descriptor_size = { };
         descriptor_size.type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        descriptor_size.descriptorCount = 4;
+        descriptor_size.descriptorCount = 5;
 
         VkDescriptorPoolCreateInfo descriptor_pool_info = { };
         descriptor_pool_info.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -317,7 +355,7 @@ namespace sample_vk::animation
             _ptr_context->device_handle, 
             _descriptor_set_handle, 
             VK_OBJECT_TYPE_DESCRIPTOR_SET, 
-            "Descritptor set for animation pass"
+            "[AnimationPass] Descritptor set"
         );
     }
 

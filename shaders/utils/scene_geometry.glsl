@@ -64,8 +64,6 @@ surface_t get_surface (
     vec3                barycentric_coordinates
 ) 
 {
-    mat3 normal_matrix = inverse(transpose(mat3(gl_ObjectToWorldEXT)));
-
     uint index_1 = scene_indices.index_buffers[gl_InstanceCustomIndexEXT].indices[gl_PrimitiveID * 3 + 0];
     uint index_2 = scene_indices.index_buffers[gl_InstanceCustomIndexEXT].indices[gl_PrimitiveID * 3 + 1];
     uint index_3 = scene_indices.index_buffers[gl_InstanceCustomIndexEXT].indices[gl_PrimitiveID * 3 + 2];

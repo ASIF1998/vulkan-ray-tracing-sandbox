@@ -212,21 +212,21 @@ namespace sample_vk
 
 namespace sample_vk
 {
-    Animator::Animator
-    (
+    Animator::Animator(
         std::vector<Bone>&&             bones,
         BoneRegistry&&                  bone_registry,
         AnimationHierarchiry::Node&&    root_node, 
         float                           duration, 
         float                           ticks_per_second
     ) :
-        _bones              (std::move(bones)),
-        _bone_registry      (std::move(_bone_registry)),
         _root_node          (std::move(root_node)),
         _duration           (duration),
         _ticks_per_second   (ticks_per_second)
     {
-        _final_bone_matrices.resize(_bone_registry.boneCount());
+        std::swap(_bones, bones);
+        std::swap(_bone_registry, bone_registry);
+
+        _final_bones_matrices.resize(_bone_registry.boneCount());
     }
 
     void Animator::update(float delta_time)
@@ -235,6 +235,11 @@ namespace sample_vk
         _current_time = std::fmod(_current_time, _duration);
 
         calculateBoneTransform(_root_node, glm::mat4(1.0f));
+    }
+
+    std::span<const glm::mat4> Animator::getFinalBoneMatrices() const
+    {
+        return _final_bones_matrices;
     }
 
     void Animator::calculateBoneTransform(AnimationHierarchiry::Node& node, const glm::mat4& parent_transform)
@@ -256,7 +261,7 @@ namespace sample_vk
         auto global_transform = parent_transform * node_transform;
 
         if (auto bone = _bone_registry.get(node_name); bone)
-            _final_bone_matrices[bone->bone_id] = global_transform * bone->offset;
+            _final_bones_matrices[bone->bone_id] = global_transform * bone->offset;
 
         for (auto& child: node.children)
             calculateBoneTransform(child, global_transform);
@@ -307,6 +312,13 @@ namespace sample_vk
     Animator Animator::Builder::build()
     {
         validate();
-        return Animator(std::move(_bones), std::move(_bone_registry), std::move(_root_node), _duration, _ticks_per_second);
+
+        return Animator (
+            std::move(_bones), 
+            std::move(_bone_registry), 
+            std::move(_root_node), 
+            _duration, 
+            _ticks_per_second
+        );
     }
 }

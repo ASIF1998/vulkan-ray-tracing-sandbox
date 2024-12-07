@@ -1,8 +1,13 @@
 #pragma once
 
 #include <base/scene/mesh.hpp>
-
 #include <base/scene/visitors/node_visitor.hpp>
+
+#include <base/math.hpp>
+
+#include <base/vulkan/buffer.hpp>
+
+#include <span>
 
 namespace sample_vk
 {
@@ -36,13 +41,16 @@ namespace sample_vk::animation
                 index_buffer,
                 src_vertex_buffer,
                 dst_vertex_buffer,
-                skinning_data_buffer
+                skinning_data_buffer,
+                final_bones_matrices
             };
         };
         
         explicit AnimationPass(const Context* ptr_context);
 
         void bindMesh(const SkinnedMesh& mesh);
+
+        void updateMatrices(std::span<const glm::mat4> matrices);
 
     public:
         class Builder;
@@ -55,7 +63,7 @@ namespace sample_vk::animation
         AnimationPass& operator = (AnimationPass&& animation_pass);
         AnimationPass& operator = (const AnimationPass& animation_pass) = delete;
 
-        void process();
+        void process(std::span<const glm::mat4> final_bones_matrices);
 
     private:
         std::vector<SkinnedMesh> _meshes;
@@ -66,6 +74,8 @@ namespace sample_vk::animation
 
         VkDescriptorPool    _descriptor_pool_handle = VK_NULL_HANDLE;
         VkDescriptorSet     _descriptor_set_handle  = VK_NULL_HANDLE;
+
+        std::optional<Buffer> _final_bones_matrices;
 
         const Context* _ptr_context;
     };

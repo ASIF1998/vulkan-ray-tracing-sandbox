@@ -484,7 +484,7 @@ void Animation::initVertexBufferReferences()
 
 	Buffer::writeData<VkDeviceAddress>(
 		*_vertex_buffers_references.scene_info_reference, 
-		std::span(references),
+		references,
 		command_buffer
 	);
 }
@@ -505,9 +505,10 @@ void Animation::updateTime()
 
 void Animation::animationPass()
 {
-    _scene->getAnimator().update(_time.delta);
+    auto& animator = _scene->getAnimator();
 
-    _animation_pass->process();
+    animator.update(_time.delta);
+    _animation_pass->process(animator.getFinalBoneMatrices());
 
     /// @todo build AS from skinned mesh
     auto ptr_as_builder = std::make_unique<ASBuilder>(getContext());
