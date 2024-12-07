@@ -49,6 +49,7 @@ void main()
 {
     uint index = index_buffer[gl_GlobalInvocationID.x];
 
+#if 0
     skinning_data_t skin_data = skinning_data[index];
 
     mat4 final_matrix = mat4(1);
@@ -65,4 +66,7 @@ void main()
     dst_vertex_buffer[index].normal     = vec4(normla_matrix * normal, 1.0);
     dst_vertex_buffer[index].tangent    = vec4(normla_matrix * tangent, 1.0);
     dst_vertex_buffer[index].uv         = src_vertex_buffer[index].uv;
+#else 
+    dst_vertex_buffer[index] = src_vertex_buffer[index];
+#endif
 }
