@@ -78,6 +78,26 @@ namespace sample_vk::utils
 
         return buffer;
     }
+    
+    Buffer createBuffer(
+        const Context*          ptr_context,
+        const std::string_view  name,
+        VkDeviceSize            size,
+        VkBufferUsageFlags      bits
+    )
+    {
+        assert(bits & VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+
+        auto buffer = Buffer::make(
+            ptr_context,
+            size,
+            *MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+            bits,
+            name
+        );
+
+        return buffer;
+    }
 }
 
 namespace sample_vk
@@ -379,8 +399,7 @@ namespace sample_vk
     Mesh Scene::Importer::createMesh(
         const std::string_view              name,
         const std::span<uint32_t>           indices,
-        const std::span<Mesh::Attributes>   attributes,
-        const std::span<Mesh::SkinningData> skinning_data
+        const std::span<Mesh::Attributes>   attributes
     ) const
     {
         Mesh mesh;
@@ -410,16 +429,54 @@ namespace sample_vk
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
         );
 
-        if (!skinning_data.empty())
-        {
-            mesh.skinning_buffer = utils::createBuffer
-            (
-                _ptr_context,
-                std::format("[Skinning buffer]: {}", name), 
-                skinning_data, 
-                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
-            );   
-        }
+        return mesh;
+    }
+
+    SkinnedMesh Scene::Importer::createMesh(
+        const std::string_view              name,
+        const std::span<uint32_t>           indices,
+        const std::span<Mesh::Attributes>   attributes,
+        const std::span<Mesh::SkinningData> skinning_data
+    ) const
+    {
+        constexpr auto shared_usage_flags = 
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
+            |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
+            |   VK_BUFFER_USAGE_TRANSFER_DST_BIT 
+            |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+
+        static int skinned_mesh_index = 0;
+        ++skinned_mesh_index;
+
+        SkinnedMesh mesh;
+
+        mesh.static_mesh = createMesh(name, indices, attributes);
+        mesh.static_mesh.skinning_buffer = utils::createBuffer
+        (
+            _ptr_context,
+            std::format("[Skinning buffer]: {}", name), 
+            skinning_data, 
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags 
+        );
+
+        /// @bug copy data - use shared indices for processed and static meshes
+        mesh.processed_mesh.index_count     = indices.size(); 
+        mesh.processed_mesh.index_buffer    = utils::createBuffer
+        (
+            _ptr_context,
+            std::format("[SkinnedMesh][IndexBuffer]: {}", skinned_mesh_index),
+            indices,
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags
+        );
+
+        mesh.processed_mesh.vertex_count    = attributes.size();
+        mesh.processed_mesh.vertex_buffer   = utils::createBuffer
+        (
+            _ptr_context,
+            std::format("[SkinnedMesh][VertexBuffer]: {}", skinned_mesh_index),
+            static_cast<VkDeviceSize>(attributes.size() * sizeof(Mesh::Attributes)),
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
+        );
 
         return mesh;
     }
@@ -431,13 +488,26 @@ namespace sample_vk
         const std::span<Mesh::SkinningData> skinning_data
     )
     {
-        _ptr_root_node->children.push_back(
-            std::make_unique<MeshNode>(
-                name, 
-                _current_state.transform, 
-                createMesh(name, indices, attributes, skinning_data)
-            )
-        );
+        if (skinning_data.empty())
+        {
+            _ptr_root_node->children.push_back(
+                std::make_unique<MeshNode>(
+                    name, 
+                    _current_state.transform, 
+                    createMesh(name, indices, attributes)
+                )
+            );
+        }
+        else 
+        {
+            _ptr_root_node->children.push_back(
+                std::make_unique<SkinnedMeshNode>(
+                    name, 
+                    _current_state.transform, 
+                    createMesh(name, indices, attributes, skinning_data)
+                )
+            );
+        }
     }
 
     void Scene::Importer::add(const aiLight* ptr_light)

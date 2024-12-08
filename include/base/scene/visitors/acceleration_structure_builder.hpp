@@ -1,15 +1,21 @@
 #pragma once
 
+#include <base/vulkan/acceleration_structure.hpp>
+
 #include <base/scene/visitors/node_visitor.hpp>
 
 #include <base/vulkan/buffer.hpp>
+
+#include <string_view>
 
 namespace sample_vk
 {
     struct Context;
 
-    class Node;
-    class MeshNode;
+    class   Node;
+    struct  MeshNode;
+
+    struct Mesh;
 }
 
 namespace sample_vk
@@ -17,8 +23,11 @@ namespace sample_vk
     class ASBuilder final :
         public NodeVisitor
     {
-        void process(Node* ptr_node)        override;
-        void process(MeshNode* ptr_node)    override;
+        AccelerationStructure buildBLAS(std::string_view name, const Mesh& mesh);
+
+        void process(Node* ptr_node)            override;
+        void process(MeshNode* ptr_node)        override;
+        void process(SkinnedMeshNode* ptr_node) override;
 
     public:
         ASBuilder(const Context* ptr_context);

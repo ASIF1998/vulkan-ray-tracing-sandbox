@@ -19,8 +19,8 @@
 
 namespace sample_vk
 {
-    struct  Context;
-    class   MeshNode;
+    struct Context;
+    struct MeshNode;
 }
 
 namespace sample_vk
@@ -119,6 +119,13 @@ namespace sample_vk
 
         [[nodiscard]]
         Mesh createMesh (
+            const std::string_view              name,
+            const std::span<uint32_t>           indices,
+            const std::span<Mesh::Attributes>   attributes
+        ) const;
+        
+        [[nodiscard]]
+        SkinnedMesh createMesh (
             const std::string_view              name,
             const std::span<uint32_t>           indices,
             const std::span<Mesh::Attributes>   attributes,

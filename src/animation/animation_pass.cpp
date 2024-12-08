@@ -1,71 +1,11 @@
 #include <animation/animation_pass.hpp>
 
 #include <base/scene/node.hpp>
+#include <base/scene/mesh.hpp>
 
 #include <base/logger/logger.hpp>
 
 #include <base/shader_compiler.hpp>
-
-namespace sample_vk::animation
-{
-    SkinnedMesh::SkinnedMesh(const Context* ptr_context, const Mesh* ptr_source_mesh) :
-        ptr_source_mesh(ptr_source_mesh)
-    {
-        if (!ptr_source_mesh)
-            log::vkError("[SkinnedMesh::SkinnedMesh] Pointer to source mesh is null");
-
-        animated_mesh.index_count   = ptr_source_mesh->index_count;
-        animated_mesh.vertex_count  = ptr_source_mesh->vertex_count;
-
-        constexpr auto shared_usage_flags = 
-                    VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
-                |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
-                |   VK_BUFFER_USAGE_TRANSFER_DST_BIT 
-                |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
-
-        const auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-            .or_else([]
-            {
-                constexpr std::optional invalid_memory_index = std::numeric_limits<uint32_t>::infinity();
-                
-                log::appError("[SkinnedMesh::SkinnedMesh] Failed get memory index for create buffers");
-
-                return invalid_memory_index;
-            })
-            .value();
-
-        static int index_for_current_buffers = 0;
-        ++index_for_current_buffers;
-
-        animated_mesh.index_buffer = Buffer::make(
-            ptr_context, 
-            animated_mesh.index_count, 
-            memory_index,
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags, 
-            std::format("[SkinnedMesh][IndexBuffer]: {}", index_for_current_buffers)
-        );
-
-        animated_mesh.vertex_buffer = Buffer::make(
-            ptr_context, 
-            animated_mesh.vertex_count, 
-            memory_index,
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags,
-            std::format("[SkinnedMesh][VertexBuffer]: {}", index_for_current_buffers)
-        );
-    }
-
-    SkinnedMesh::SkinnedMesh(SkinnedMesh&& skinned_mesh) :
-        ptr_source_mesh (skinned_mesh.ptr_source_mesh),
-        animated_mesh   (std::move(skinned_mesh.animated_mesh))
-    { }
-
-    SkinnedMesh& SkinnedMesh::operator = (SkinnedMesh&& skinned_mesh)
-    {
-        ptr_source_mesh = skinned_mesh.ptr_source_mesh;
-        animated_mesh   = std::move(skinned_mesh.animated_mesh);
-        return *this;
-    }
-}
 
 namespace sample_vk::animation
 {
@@ -113,25 +53,25 @@ namespace sample_vk::animation
         return *this;
     }
 
-    void AnimationPass::bindMesh(const SkinnedMesh& mesh)
+    void AnimationPass::bindMesh(const SkinnedMesh* ptr_mesh)
     {
         std::array<VkDescriptorBufferInfo, 4> buffers_info;
 
         buffers_info[Bindings::src_vertex_buffer] = { };
-        buffers_info[Bindings::src_vertex_buffer].buffer  = mesh.ptr_source_mesh->vertex_buffer->vk_handle;
-        buffers_info[Bindings::src_vertex_buffer].range   = mesh.ptr_source_mesh->vertex_buffer->size_in_bytes;
+        buffers_info[Bindings::src_vertex_buffer].buffer  = ptr_mesh->static_mesh.vertex_buffer->vk_handle;
+        buffers_info[Bindings::src_vertex_buffer].range   = ptr_mesh->static_mesh.vertex_buffer->size_in_bytes;
         
         buffers_info[Bindings::dst_vertex_buffer] = { };
-        buffers_info[Bindings::dst_vertex_buffer].buffer  = mesh.animated_mesh.vertex_buffer->vk_handle;
-        buffers_info[Bindings::dst_vertex_buffer].range   = mesh.animated_mesh.vertex_buffer->size_in_bytes;
+        buffers_info[Bindings::dst_vertex_buffer].buffer  = ptr_mesh->processed_mesh.vertex_buffer->vk_handle;
+        buffers_info[Bindings::dst_vertex_buffer].range   = ptr_mesh->processed_mesh.vertex_buffer->size_in_bytes;
         
         buffers_info[Bindings::skinning_data_buffer] = { };
-        buffers_info[Bindings::skinning_data_buffer].buffer  = mesh.ptr_source_mesh->skinning_buffer->vk_handle;
-        buffers_info[Bindings::skinning_data_buffer].range   = mesh.ptr_source_mesh->skinning_buffer->size_in_bytes;
+        buffers_info[Bindings::skinning_data_buffer].buffer  = ptr_mesh->static_mesh.skinning_buffer->vk_handle;
+        buffers_info[Bindings::skinning_data_buffer].range   = ptr_mesh->static_mesh.skinning_buffer->size_in_bytes;
         
         buffers_info[Bindings::index_buffer]  = { };
-        buffers_info[Bindings::index_buffer] .buffer  = mesh.ptr_source_mesh->index_buffer->vk_handle;
-        buffers_info[Bindings::index_buffer] .range   = mesh.ptr_source_mesh->index_buffer->size_in_bytes;
+        buffers_info[Bindings::index_buffer] .buffer  = ptr_mesh->static_mesh.index_buffer->vk_handle;
+        buffers_info[Bindings::index_buffer] .range   = ptr_mesh->static_mesh.index_buffer->size_in_bytes;
 
         std::array<VkWriteDescriptorSet, 4> write_infos;
 
@@ -196,14 +136,14 @@ namespace sample_vk::animation
     {
         updateMatrices(final_bones_matrices);
 
-        for (const auto& skinned_mesh: _meshes)
+        for (const auto ptr_skinned_mesh: _meshes)
         {
-            bindMesh(skinned_mesh);
+            bindMesh(ptr_skinned_mesh);
 
             auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
-            command_buffer.write([this, &skinned_mesh] (VkCommandBuffer command_buffer_handle)
+            command_buffer.write([this, ptr_skinned_mesh] (VkCommandBuffer command_buffer_handle)
             {
-                const auto x_group_size = static_cast<uint32_t>(skinned_mesh.ptr_source_mesh->index_count);
+                const auto x_group_size = static_cast<uint32_t>(ptr_skinned_mesh->static_mesh.index_count);
 
                 vkCmdBindPipeline(command_buffer_handle, VK_PIPELINE_BIND_POINT_COMPUTE, _pipeline_handle);
                 
@@ -246,7 +186,11 @@ namespace sample_vk::animation
 
     void AnimationPass::Builder::process(MeshNode* ptr_node)
     {
-        _meshes.emplace_back(_ptr_context, &ptr_node->mesh);
+    }
+    
+    void AnimationPass::Builder::process(SkinnedMeshNode* ptr_node)
+    {
+        _meshes.push_back(&ptr_node->mesh);
     }
 
     void AnimationPass::Builder::createPipelineLayout()

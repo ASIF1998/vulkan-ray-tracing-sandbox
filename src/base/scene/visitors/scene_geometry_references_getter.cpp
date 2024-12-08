@@ -27,6 +27,14 @@ namespace sample_vk
         process(static_cast<Node*>(ptr_node));
     }
 
+    void SceneGeometryReferencesGetter::process(SkinnedMeshNode* ptr_node)
+    {
+        _vertex_buffers_references.push_back(ptr_node->mesh.processed_mesh.vertex_buffer->getAddress());
+        _index_buffers_references.push_back(ptr_node->mesh.processed_mesh.index_buffer->getAddress());
+
+        process(static_cast<Node*>(ptr_node));
+    }
+
     size_t SceneGeometryReferencesGetter::getGeometryCount() const
     {
         return _vertex_buffers_references.size();

@@ -203,10 +203,16 @@ namespace sample_vk
 
     void ASBuilder::process(MeshNode* ptr_node)
     {
-        auto blas_name = std::format("[BLAS] {}", ptr_node->name);
+        ptr_node->acceleation_structure = buildBLAS(ptr_node->name, ptr_node->mesh);
+    }
+    
+    void ASBuilder::process(SkinnedMeshNode* ptr_node)
+    {
+        ptr_node->acceleation_structure = buildBLAS(ptr_node->name, ptr_node->mesh.processed_mesh);
+    }
 
-        auto& mesh = ptr_node->mesh;
-
+    AccelerationStructure ASBuilder::buildBLAS(std::string_view name, const Mesh& mesh)
+    {
         auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         if (!memory_type_index.has_value())
@@ -263,7 +269,7 @@ namespace sample_vk
             as_size.accelerationStructureSize,
             *memory_type_index,
             VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-            std::format("[BLAS] Buffer: {}", ptr_node->name) 
+            std::format("[BLAS] Buffer: {}", name) 
         );
 
         VkAccelerationStructureCreateInfoKHR as_info = { };
@@ -285,7 +291,7 @@ namespace sample_vk
             _ptr_context->device_handle, 
             acceleration_structure_handle, 
             VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR, 
-            blas_name
+            std::format("[BLAS] {}", name)
         );
 
         auto scratch_buffer = Buffer::make(
@@ -323,10 +329,6 @@ namespace sample_vk
 
         command_buffer_for_build.upload(_ptr_context);
 
-        ptr_node->acceleation_structure = std::make_optional<AccelerationStructure>(
-            _ptr_context, 
-            acceleration_structure_handle, 
-            std::move(blas_buffer)
-        );
+        return AccelerationStructure(_ptr_context, acceleration_structure_handle, std::move(blas_buffer));
     }
 }

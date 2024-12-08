@@ -6,6 +6,7 @@
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
+/// @todo move to another file and use everywhere
 struct attribute_t
 {
     vec4 pos;
@@ -14,6 +15,7 @@ struct attribute_t
     vec4 uv;
 };
 
+/// @todo move to another file and use everywhere
 struct skinning_data_t
 {
     ivec4   bone_ids;

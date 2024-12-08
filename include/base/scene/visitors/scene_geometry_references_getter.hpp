@@ -13,8 +13,8 @@ namespace sample_vk
 {
     struct Context;
 
-    class Node;
-    class MeshNode;
+    class   Node;
+    struct  MeshNode;
 }
 
 namespace sample_vk
@@ -22,8 +22,9 @@ namespace sample_vk
     class SceneGeometryReferencesGetter final :
         public NodeVisitor
     {
-        void process(Node* ptr_node)        override;
-        void process(MeshNode* ptr_node)    override;
+        void process(Node* ptr_node)            override;
+        void process(MeshNode* ptr_node)        override;
+        void process(SkinnedMeshNode* ptr_node) override;
 
         Buffer createBuffer(const std::vector<VkDeviceAddress>& references, const std::string_view name) const;
 

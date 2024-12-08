@@ -11,26 +11,12 @@
 
 namespace sample_vk
 {
-    struct Context;   
+    struct Context;
+    struct SkinnedMesh;
 }
 
 namespace sample_vk::animation
 {
-    class SkinnedMesh
-    {
-    public:
-        explicit SkinnedMesh(const Context* ptr_context, const Mesh* ptr_source_mesh);
-
-        SkinnedMesh(SkinnedMesh&& skinned_mesh);
-        SkinnedMesh(const SkinnedMesh& skinned_mesh) = delete;
-
-        SkinnedMesh& operator = (SkinnedMesh&& skinned_mesh);
-        SkinnedMesh& operator = (const SkinnedMesh& skinned_mesh) = delete;
-
-        const Mesh* ptr_source_mesh;
-        Mesh        animated_mesh;
-    };
-
     class AnimationPass
     {
         struct Bindings
@@ -48,7 +34,7 @@ namespace sample_vk::animation
         
         explicit AnimationPass(const Context* ptr_context);
 
-        void bindMesh(const SkinnedMesh& mesh);
+        void bindMesh(const SkinnedMesh* ptr_mesh);
 
         void updateMatrices(std::span<const glm::mat4> matrices);
 
@@ -66,7 +52,7 @@ namespace sample_vk::animation
         void process(std::span<const glm::mat4> final_bones_matrices);
 
     private:
-        std::vector<SkinnedMesh> _meshes;
+        std::vector<SkinnedMesh*> _meshes;
 
         VkPipeline              _pipeline_handle        = VK_NULL_HANDLE;
         VkPipelineLayout        _pipeline_layout        = VK_NULL_HANDLE;
@@ -83,8 +69,9 @@ namespace sample_vk::animation
     class AnimationPass::Builder : 
         public NodeVisitor
     {
-        void process(Node* ptr_node)        override;
-        void process(MeshNode* ptr_node)    override;
+        void process(Node* ptr_node)            override;
+        void process(MeshNode* ptr_node)        override;
+        void process(SkinnedMeshNode* ptr_node) override;
 
         void createPipelineLayout();
         void createPipeline();
@@ -106,8 +93,9 @@ namespace sample_vk::animation
         AnimationPass build();
 
     private:
-        std::vector<SkinnedMesh>    _meshes;
-        const Context*              _ptr_context;
+        const Context* _ptr_context;
+
+        std::vector<SkinnedMesh*> _meshes;
 
         VkPipeline              _pipeline_handle        = VK_NULL_HANDLE;
         VkPipelineLayout        _pipeline_layout        = VK_NULL_HANDLE;

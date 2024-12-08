@@ -510,7 +510,6 @@ void Animation::animationPass()
     animator.update(_time.delta);
     _animation_pass->process(animator.getFinalBoneMatrices());
 
-    /// @todo build AS from skinned mesh
     auto ptr_as_builder = std::make_unique<ASBuilder>(getContext());
 
     auto& model = _scene->getModel();

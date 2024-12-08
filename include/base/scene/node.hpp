@@ -17,7 +17,8 @@ namespace sample_vk
     enum class NodeType
     {
         Base,
-        Mesh
+        Mesh,
+        SkinnedMesh
     };
 
     class Node
@@ -51,13 +52,19 @@ namespace sample_vk
         std::optional<AccelerationStructure>    acceleation_structure;
     };
 
-    class MeshNode :
+    struct MeshNode :
         public Node
     {
-    public:
-        MeshNode(const std::string_view name, const glm::mat4& transform, Mesh&& mesh);
+        explicit MeshNode(const std::string_view name, const glm::mat4& transform, Mesh&& mesh);
 
-    public:
         Mesh mesh;
+    };
+
+    struct SkinnedMeshNode :
+        public Node
+    {
+        explicit SkinnedMeshNode(const std::string_view name, const glm::mat4& transform, SkinnedMesh&& mesh);
+
+        SkinnedMesh mesh;
     };
 }

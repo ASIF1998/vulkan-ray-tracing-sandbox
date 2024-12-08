@@ -44,4 +44,10 @@ namespace sample_vk
 
         std::optional<Buffer> skinning_buffer;
     };
+
+    struct SkinnedMesh
+    {
+        Mesh static_mesh;
+        Mesh processed_mesh;
+    };
 }
