@@ -10,18 +10,18 @@ namespace sample_vk
         transform   (transform)
     { }
 
-    void Node::visit(NodeVisitor* ptr_visiter)
+    void Node::visit(NodeVisitor* ptr_visitor)
     {
         switch(_type)
         {
             case NodeType::Base:
-                ptr_visiter->process(this);
+                ptr_visitor->process(this);
                 break;
             case NodeType::Mesh:
-                ptr_visiter->process(static_cast<MeshNode*>(this));
+                ptr_visitor->process(static_cast<MeshNode*>(this));
                 break;
             case NodeType::SkinnedMesh:
-                ptr_visiter->process(static_cast<SkinnedMeshNode*>(this));
+                ptr_visitor->process(static_cast<SkinnedMeshNode*>(this));
                 break;
             default:
                 log::appError("Undefined node type");

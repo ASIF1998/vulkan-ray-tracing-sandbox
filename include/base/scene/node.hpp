@@ -40,7 +40,7 @@ namespace sample_vk
             visit(static_cast<NodeVisitor*>(ptr_visitor.get()));   
         }
 
-        void visit(NodeVisitor* ptr_visiter);
+        void visit(NodeVisitor* ptr_visitor);
     
     protected:
         NodeType _type;
