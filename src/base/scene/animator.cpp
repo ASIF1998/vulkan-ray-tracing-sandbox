@@ -19,10 +19,10 @@ namespace sample_vk
 
     float Bone::getScaleFactor(float t1, float t2, float t)
     {
-        if (constexpr auto eps = 0.0001; std::abs(t1 - t2) < eps) 
+        if (constexpr auto eps = 0.0001f; std::abs(t1 - t2) < eps) 
             log::appError("[Animator::Bone] Failed calculate scale factor because t1 and t2 is equal");
         
-        return (t - t1) / (t2 - t1);
+        return glm::clamp((t - t1) / (t2 - t1), 0.0f, 1.0f);
     }
 
     size_t Bone::getPositionIndex(float time) const
@@ -38,6 +38,8 @@ namespace sample_vk
 
     size_t Bone::getRotationIndex(float time) const
     {
+        /// @todo try use binary search
+
         for (size_t i = 0; i < _rotation_keys.size() - 1; ++i)
         {
             if (_rotation_keys[i + 1].time_stamp > time)
@@ -63,17 +65,17 @@ namespace sample_vk
         if (_position_keys.size() == 1)
             return glm::translate(glm::mat4(1.0f), _position_keys[0].pos);
 
-        auto index0 = getPositionIndex(time);
-        auto index1 = index0 + 1;
+        const auto index0 = getPositionIndex(time);
+        const auto index1 = index0 + 1;
 
         if (index1 == _position_keys.size())
             return glm::translate(glm::mat4(1.0f), _position_keys[0].pos);
 
-        auto t0 = _position_keys[index0].time_stamp;
-        auto t1 = _position_keys[index1].time_stamp;
+        const auto t0 = _position_keys[index0].time_stamp;
+        const auto t1 = _position_keys[index1].time_stamp;
 
-        auto pos0 = _position_keys[index0].pos;
-        auto pos1 = _position_keys[index1].pos;
+        const auto pos0 = _position_keys[index0].pos;
+        const auto pos1 = _position_keys[index1].pos;
 
         return glm::translate(glm::mat4(1.0f), glm::mix(pos0, pos1, getScaleFactor(t0, t1, time)));
     }
@@ -83,19 +85,19 @@ namespace sample_vk
         if (_rotation_keys.size() == 1)
             return glm::mat4_cast(_rotation_keys[0].rotate);
 
-        auto index0 = getRotationIndex(time);
-        auto index1 = index0 + 1;
+        const auto index0 = getRotationIndex(time);
+        const auto index1 = index0 + 1;
 
         if (index1 == _rotation_keys.size())
             return glm::mat4_cast(_rotation_keys[0].rotate);
 
-        auto t0 = _rotation_keys[index0].time_stamp;
-        auto t1 = _rotation_keys[index1].time_stamp;
+        const auto t0 = _rotation_keys[index0].time_stamp;
+        const auto t1 = _rotation_keys[index1].time_stamp;
 
-        auto rot0 = _rotation_keys[index0].rotate;
-        auto rot1 = _rotation_keys[index1].rotate;
+        const auto rot0 = _rotation_keys[index0].rotate;
+        const auto rot1 = _rotation_keys[index1].rotate;
 
-        return glm::mat4_cast(glm::slerp(rot0, rot1, getScaleFactor(t0, t1, time)));
+        return glm::mat4(glm::normalize(glm::slerp(rot0, rot1, getScaleFactor(t0, t1, time))));
     }
 
     glm::mat4 Bone::getKeyScale(float time) const
@@ -103,26 +105,26 @@ namespace sample_vk
         if (_scale_keys.size() == 1)
             return glm::scale(glm::mat4(1.0f), _scale_keys[0].scale);
 
-        auto index0 = getScaleIndex(time);
-        auto index1 = index0 + 1;
+        const auto index0 = getScaleIndex(time);
+        const auto index1 = index0 + 1;
 
         if (index1 == _scale_keys.size())
             return glm::scale(glm::mat4(1.0f), _scale_keys[0].scale);
 
-        auto t0 = _scale_keys[index0].time_stamp;
-        auto t1 = _scale_keys[index1].time_stamp;
+        const auto t0 = _scale_keys[index0].time_stamp;
+        const auto t1 = _scale_keys[index1].time_stamp;
 
-        auto scale0 = _scale_keys[index0].scale;
-        auto scale1 = _scale_keys[index1].scale;
+        const auto scale0 = _scale_keys[index0].scale;
+        const auto scale1 = _scale_keys[index1].scale;
 
         return glm::scale(glm::mat4(1.0f), glm::mix(scale0, scale1, getScaleFactor(t0, t1, time)));
     }
 
     void Bone::update(float time)
     {
-        auto translation    = getKeyPosition(time);
-        auto rotation       = getKeyRotation(time);
-        auto scale          = getKeyScale(time);
+        const auto translation  = glm::transpose(getKeyPosition(time));
+        const auto rotation     = getKeyRotation(time);
+        const auto scale        = getKeyScale(time);
 
         _local_transform = translation * rotation * scale;
     }
@@ -212,27 +214,12 @@ namespace sample_vk
 
 namespace sample_vk
 {
-    Animator::Animator(
-        std::vector<Bone>&&             bones,
-        BoneRegistry&&                  bone_registry,
-        AnimationHierarchiry::Node&&    root_node, 
-        float                           duration, 
-        float                           ticks_per_second
-    ) :
-        _root_node          (std::move(root_node)),
-        _duration           (duration),
-        _ticks_per_second   (ticks_per_second)
-    {
-        std::swap(_bones, bones);
-        std::swap(_bone_registry, bone_registry);
-
-        _final_bones_matrices.resize(_bone_registry.boneCount());
-    }
-
     void Animator::update(float delta_time)
     {
         _current_time += _ticks_per_second * delta_time;
         _current_time = std::fmod(_current_time, _duration);
+
+        _global_inverse_transform = glm::inverse(_root_node.transform);
 
         calculateBoneTransform(_root_node, glm::mat4(1.0f));
     }
@@ -261,7 +248,7 @@ namespace sample_vk
         auto global_transform = parent_transform * node_transform;
 
         if (auto bone = _bone_registry.get(node_name); bone)
-            _final_bones_matrices[bone->bone_id] = global_transform * bone->offset;
+            _final_bones_matrices[bone->bone_id] = global_transform; // * bone->offset;
 
         for (auto& child: node.children)
             calculateBoneTransform(child, global_transform);
@@ -295,6 +282,12 @@ namespace sample_vk
         return *this;
     }
 
+    Animator::Builder& Animator::Builder::globalTransform(const glm::mat4& global_transform)
+    {
+        _global_transform = global_transform;
+        return *this;
+    }
+
     void Animator::Builder::validate() const
     {
         if (_bones.empty()) 
@@ -313,12 +306,16 @@ namespace sample_vk
     {
         validate();
 
-        return Animator (
-            std::move(_bones), 
-            std::move(_bone_registry), 
-            std::move(_root_node), 
-            _duration, 
-            _ticks_per_second
-        );
+        Animator animator;
+        animator._bones                     = std::move(_bones);
+        animator._bone_registry             = std::move(_bone_registry);
+        animator._root_node                 = std::move(_root_node);
+        animator._duration                  = _duration;
+        animator._ticks_per_second          = _ticks_per_second;
+        animator._global_inverse_transform  = glm::inverse(_global_transform);
+
+        animator._final_bones_matrices.resize(animator._bone_registry.boneCount(), glm::mat4(1.0f));
+
+        return animator;
     }
 }

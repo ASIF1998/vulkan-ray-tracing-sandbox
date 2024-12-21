@@ -730,7 +730,6 @@ namespace sample_vk
 
                 indices.clear();
                 attributes.clear();
-
             }
         }
 
@@ -741,12 +740,9 @@ namespace sample_vk
         
         for (auto i: std::views::iota(0u, ptr_node->mNumChildren))
         {
-            AnimationHierarchiry::Node child;
-            _animation.ptr_current_node = &child;
+            _animation.ptr_current_node = &ptr_parent_node->children.emplace_back();
 
             processNode(ptr_scene, ptr_node->mChildren[i]);
-
-            ptr_parent_node->children.emplace_back(std::move(child));
         }
     }
 
@@ -760,7 +756,7 @@ namespace sample_vk
 
             if (auto res = _animation.bone_infos.get(bone_name); res)
             {
-                auto id = res->bone_id;
+                const auto id = res->bone_id;
 
                 std::vector<PositionKey>    position_keys;
                 std::vector<RotationKey>    rotation_keys;
@@ -815,6 +811,7 @@ namespace sample_vk
                 .boneRegistry(std::move(_animation.bone_infos))
                 .animationHierarchiryRootNode(std::move(_animation.root_node))
                 .time(duration, ticks_per_second)
+                .globalTransform(utils::cast(ptr_scene->mRootNode->mTransformation))
                 .build();
         }
     }
