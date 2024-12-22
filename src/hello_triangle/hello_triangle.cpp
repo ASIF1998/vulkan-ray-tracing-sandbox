@@ -67,7 +67,7 @@ void HelloTriangle::createPipeline()
     pipeline_layout_create_info.setLayoutCount  = 1;
     pipeline_layout_create_info.pSetLayouts     = &_descriptor_set_layout_handle;
 
-    log::appInfo("Create pipeline layout");
+    log::info("Create pipeline layout");
 
     VK_CHECK(
         vkCreatePipelineLayout(
@@ -89,7 +89,7 @@ void HelloTriangle::createPipeline()
 
     auto func_table = VkUtils::getVulkanFunctionPointerTable();
 
-    log::appInfo("Create ray tracing pipeline");
+    log::info("Create ray tracing pipeline");
 
     VK_CHECK(
         func_table.vkCreateRayTracingPipelinesKHR(
@@ -114,7 +114,7 @@ void HelloTriangle::createBLAS()
     auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     if (!memory_type_index.has_value())
-        log::appError("Not memory index for create buffers.");
+        log::error("Not memory index for create buffers.");
 
     auto transform_matrix_buffer = Buffer::make(
         getContext(), 
@@ -185,7 +185,7 @@ void HelloTriangle::createBLAS()
 
     VkAccelerationStructureKHR blas_handle = VK_NULL_HANDLE;
 
-    log::appInfo("Create BLAS");
+    log::info("Create BLAS");
 
     VK_CHECK(
         func_table.vkCreateAccelerationStructureKHR(
@@ -249,7 +249,7 @@ void HelloTriangle::createTLAS()
     auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     if (!memory_type_index.has_value())
-        log::appError("Not memory index for create buffers.");
+        log::error("Not memory index for create buffers.");
     
     auto instance_buffer = Buffer::make(
         getContext(), 
@@ -326,7 +326,7 @@ void HelloTriangle::createTLAS()
 
     VkAccelerationStructureKHR tlas_handle = VK_NULL_HANDLE;
     
-    log::appInfo("Create TLAS");
+    log::info("Create TLAS");
 
     VK_CHECK(
         func_table.vkCreateAccelerationStructureKHR(
@@ -412,7 +412,7 @@ void HelloTriangle::compileShaders()
 
 void HelloTriangle::createShaderBindingTable()
 {
-    log::appInfo("Create SBT");
+    log::info("Create SBT");
 
     auto handle_size_aligned = VkUtils::getAlignedSize(
         _ray_tracing_pipeline_properties.shaderGroupHandleSize, 
@@ -444,7 +444,7 @@ void HelloTriangle::createShaderBindingTable()
     auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     if (!memory_type_index.has_value())
-        log::appError("Not memory index for create SBT.");
+        log::error("Not memory index for create SBT.");
 
     auto createBufferForSBT = [this, &memory_type_index] (
 		std::optional<Buffer>&      buffer, 
@@ -605,7 +605,7 @@ struct RgbaChannelIds
 
 void HelloTriangle::initMesh()
 {
-    log::appInfo("Create triangle");
+    log::info("Create triangle");
     
     _mesh.vertices.push_back(glm::vec3(1, 1, 0));
     _mesh.vertices.push_back(glm::vec3(-1, 1, 0));
@@ -642,7 +642,7 @@ void HelloTriangle::initMesh()
         );
     }
     else 
-        log::appError("Not memory index for create mesh index and vertex buffers.");
+        log::error("Not memory index for create mesh index and vertex buffers.");
 
     auto command_buffer_for_copy_vertices   = getCommandBuffer();
     auto command_buffer_for_copy_indices    = getCommandBuffer();

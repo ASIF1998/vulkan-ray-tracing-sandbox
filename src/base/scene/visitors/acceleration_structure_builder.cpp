@@ -11,7 +11,7 @@ namespace sample_vk
         _ptr_context (ptr_context)
     {
         if (!ptr_context)
-            log::vkError("[ASBuilder]: ptr_context is null.");
+            log::error("[ASBuilder]: ptr_context is null.");
 
         auto identity_matrix = VkUtils::cast(glm::mat4(1.0f));
 
@@ -28,7 +28,7 @@ namespace sample_vk
             );
         }
         else
-            log::vkError("[ASBuilder]: Not memory index for create identity matrix.");
+            log::error("[ASBuilder]: Not memory index for create identity matrix.");
 
         auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
 
@@ -48,7 +48,7 @@ namespace sample_vk
         auto memory_index_type = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         if (!memory_index_type.has_value())
-            log::vkError("[ASBuilder]: Not memory index for create buffers.");
+            log::error("[ASBuilder]: Not memory index for create buffers.");
 
         auto func_table = VkUtils::getVulkanFunctionPointerTable();
 
@@ -216,7 +216,7 @@ namespace sample_vk
         auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         if (!memory_type_index.has_value())
-            log::vkError("[ASBuilder]: Not memory index for create buffers.");
+            log::error("[ASBuilder]: Not memory index for create buffers.");
         
         VkAccelerationStructureGeometryKHR mesh_info = { };
         mesh_info.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;

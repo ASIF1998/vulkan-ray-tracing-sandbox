@@ -7,7 +7,7 @@ namespace sample_vk
         _ptr_context(ptr_context)
     {
         if (!ptr_context)
-            log::vkError("[SceneGeometryReferencesGetter]: ptr_context is null.");
+            log::error("[SceneGeometryReferencesGetter]: ptr_context is null.");
     }
 
     void SceneGeometryReferencesGetter::process(Node* ptr_node)
@@ -43,12 +43,12 @@ namespace sample_vk
     Buffer SceneGeometryReferencesGetter::createBuffer(const std::vector<VkDeviceAddress>& references, const std::string_view name) const
     {
         if (references.empty())
-            log::vkError("[SceneGeometryReferencesGetter]: Not references.");
+            log::error("[SceneGeometryReferencesGetter]: Not references.");
 
         auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         if (!memory_index.has_value())
-            log::vkError("[SceneGeometryReferencesGetter]: Not memory index for create references buffer.");
+            log::error("[SceneGeometryReferencesGetter]: Not memory index for create references buffer.");
 
         auto references_buffer = Buffer::make(
             _ptr_context,

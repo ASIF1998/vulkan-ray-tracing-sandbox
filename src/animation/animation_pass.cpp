@@ -175,7 +175,7 @@ namespace sample_vk::animation
         _ptr_context(ptr_context)
     {
         if (!ptr_context)
-            log::vkError("[AnimationPass::Builder] Vulkan context is null");
+            log::error("[AnimationPass::Builder] Vulkan context is null");
     }
 
     void AnimationPass::Builder::process(Node* ptr_node)
@@ -195,7 +195,7 @@ namespace sample_vk::animation
 
     void AnimationPass::Builder::createPipelineLayout()
     {
-        log::vkInfo("[AnimationPass::Builder] Create pipeline layout");
+        log::info("[AnimationPass::Builder] Create pipeline layout");
 
         std::array<VkDescriptorSetLayoutBinding, 5> bindings_info;
 
@@ -235,7 +235,7 @@ namespace sample_vk::animation
 
     void AnimationPass::Builder::createPipeline()
     {
-        log::vkInfo("[AnimationPass::Builder] Create compute pipeline");
+        log::info("[AnimationPass::Builder] Create compute pipeline");
 
         const auto shader_name = project_dir / "shaders/animation/animation_pass.glsl.comp";
 

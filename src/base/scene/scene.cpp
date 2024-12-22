@@ -361,13 +361,13 @@ namespace sample_vk
     void Scene::Importer::validate() const
     {
         if (!_ptr_context)
-            log::appError("[Scene::Importer] Not driver.");
+            log::error("[Scene::Importer] Not driver.");
 
         if (!std::filesystem::exists(_path))
-            log::appError("[Scene::Importer] Not find file: {}.", _path.string());
+            log::error("[Scene::Importer] Not find file: {}.", _path.string());
         
         if (!_width || !_height)
-            log::appError("[Scene::Importer] Viewport can't be with empty sizes.");
+            log::error("[Scene::Importer] Viewport can't be with empty sizes.");
     }
 
     static auto getVertexAndIndexCount(const aiScene* ptr_scene, const aiNode* ptr_node)
@@ -512,7 +512,7 @@ namespace sample_vk
 
     void Scene::Importer::add(const aiLight* ptr_light)
     {
-        log::appInfo("[Scene::Importer]\t - Process light: {}", ptr_light->mName.C_Str());
+        log::info("[Scene::Importer]\t - Process light: {}", ptr_light->mName.C_Str());
 
         glm::vec3 pos (
             _current_state.transform[0][3],
@@ -633,12 +633,12 @@ namespace sample_vk
             std::string bone_name   = bone->mName.C_Str();
 
             if (auto info = _animation.bone_infos.get(bone_name); info)
-                bone_id = info->bone_id;
+                bone_id = info->id;
             else
             {
                 BoneInfo bone_info;
                 bone_id             = static_cast<uint32_t>(_animation.bone_infos.boneCount());
-                bone_info.bone_id   = bone_id;
+                bone_info.id        = bone_id;
                 bone_info.offset    = glm::transpose(utils::cast(bone->mOffsetMatrix));
 
                 _animation.bone_infos.add(bone_name, bone_info);
@@ -652,7 +652,7 @@ namespace sample_vk
 
                 if (vertex_id >= ptr_mesh->mNumVertices)
                 {
-                    log::appWarning("[Scene::Importer] failed load bone weight: {} >= {}", vertex_id, ptr_mesh->mNumVertices);
+                    log::warning("[Scene::Importer] failed load bone weight: {} >= {}", vertex_id, ptr_mesh->mNumVertices);
                     continue;
                 }
 
@@ -669,12 +669,12 @@ namespace sample_vk
             }
         }
 
-        log::appInfo("[Scene::Importer]\t\t - Bone count: {}", _animation.bone_infos.boneCount());
+        log::info("[Scene::Importer]\t\t - Bone count: {}", _animation.bone_infos.boneCount());
     }
 
     void Scene::Importer::processNode(const aiScene* ptr_scene, const aiNode* ptr_node)
     {
-        log::appInfo("[Scene::Importer]\t - Process node: {}", ptr_node->mName.C_Str());
+        log::info("[Scene::Importer]\t - Process node: {}", ptr_node->mName.C_Str());
 
         ScopedTransform scoped_transform (this, utils::cast(ptr_node->mTransformation));
 
@@ -685,8 +685,8 @@ namespace sample_vk
 
         if (index_count && vertex_count)
         {
-            log::appInfo("[Scene::Importer]\t\t - Index count: {}", index_count);
-            log::appInfo("[Scene::Importer]\t\t - Vertex count: {}", vertex_count);
+            log::info("[Scene::Importer]\t\t - Index count: {}", index_count);
+            log::info("[Scene::Importer]\t\t - Vertex count: {}", vertex_count);
 
             std::vector<uint32_t>           indices;
             std::vector<Mesh::Attributes>   attributes;
@@ -756,7 +756,7 @@ namespace sample_vk
 
             if (auto res = _animation.bone_infos.get(bone_name); res)
             {
-                const auto id = res->bone_id;
+                const auto id = res->id;
 
                 std::vector<PositionKey>    position_keys;
                 std::vector<RotationKey>    rotation_keys;
@@ -840,12 +840,12 @@ namespace sample_vk
         const auto ptr_scene = importer.ReadFile(_path.string(), assimp_read_flags);
 
         if (!ptr_scene || !ptr_scene->mRootNode)
-            log::appError("[Scene::Importer]: {}", importer.GetErrorString());
+            log::error("[Scene::Importer]: {}", importer.GetErrorString());
 
         if (!ptr_scene->HasMaterials())
-            log::appError("[Scene::Importer]: Not materials.");
+            log::error("[Scene::Importer]: Not materials.");
 
-        log::appInfo("[Scene::Importer] Start import scene: {}.", ptr_scene->mName.C_Str());
+        log::info("[Scene::Importer] Start import scene: {}.", ptr_scene->mName.C_Str());
 
         const std::span lights (ptr_scene->mLights, ptr_scene->mNumLights);
         for (const auto& light: lights)

@@ -17,13 +17,13 @@ namespace sample_vk
     void AccelerationStructure::validate() const
     {
         if (!_ptr_context)
-            log::vkError("[AccelerationStructure]: Not driver.");
+            log::error("[AccelerationStructure]: Not driver.");
 
         if (vk_handle == VK_NULL_HANDLE)
-            log::vkError("[AccelerationStructure]: acceleration structure handle is null.");
+            log::error("[AccelerationStructure]: acceleration structure handle is null.");
 
         if (buffer == std::nullopt)
-            log::vkError("[AccelerationStructure]: buffer not initialize.");
+            log::error("[AccelerationStructure]: buffer not initialize.");
     }
 
     AccelerationStructure::AccelerationStructure(AccelerationStructure&& acceleration_structure) :

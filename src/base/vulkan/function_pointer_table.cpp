@@ -15,9 +15,9 @@ namespace sample_vk
         );
 
         if (ptr_function)
-            log::vkInfo("[Load function]: {}", function_name);
+            log::info("[Load function]: {}", function_name);
         else
-            log::vkError("[Load function]: {}", function_name);
+            log::error("[Load function]: {}", function_name);
 
         return ptr_function;
     }

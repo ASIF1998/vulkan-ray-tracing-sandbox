@@ -22,13 +22,13 @@
 #define VK_CHECK(fn)                            \
     do {                                        \
         if (auto res = fn; res != VK_SUCCESS)   \
-            log::vkError(#fn);                  \
+            log::error(#fn);                    \
     } while (false)
 
 #define SDL_CHECK(fn)                       \
     do {                                    \
         if (auto res = fn; res != SDL_TRUE) \
-            log::appError(#fn);             \
+            log::error(#fn);                \
     } while (false)
 
 namespace sample_vk

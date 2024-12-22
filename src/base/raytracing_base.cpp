@@ -14,7 +14,7 @@ namespace sample_vk
 {
     Window::Window(const std::string_view title, uint32_t width, uint32_t height)
     {
-        log::windowInfo("Create window.");
+        log::info("Create window.");
 
          _ptr_window = SDL_CreateWindow(
             title.data(), 
@@ -24,7 +24,7 @@ namespace sample_vk
         );
 
         if (!_ptr_window)
-            log::windowError("Failed create window.");
+            log::error("Failed create window.");
     }
 
     Window::Window(Window&& window)
@@ -128,7 +128,7 @@ namespace sample_vk
         {
             std::string error_msg = SDL_GetError();
             SDL_ClearError();
-            log::windowError("SDL init error: {}.", error_msg);
+            log::error("SDL init error: {}.", error_msg);
         }
 
         _window = Window(app_name, DEFAULT_WINDOW_WIDTH, DEFAULT_WDINDOW_HEIGHT);
@@ -167,7 +167,7 @@ namespace sample_vk
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
         for (auto extension: extensions)
-            log::vkInfo("Instance extension: {}", extension);
+            log::info("Instance extension: {}", extension);
 
 #if 0
         VkDebugUtilsMessengerCreateInfoEXT debug_messenger_create_info = { };
@@ -194,7 +194,7 @@ namespace sample_vk
         instance_create_info.ppEnabledLayerNames        = layers.data();
         instance_create_info.enabledLayerCount          = static_cast<uint32_t>(layers.size());
 
-        log::vkInfo("Create instance");
+        log::info("Create instance");
 
         VK_CHECK(vkCreateInstance(&instance_create_info, nullptr, &_context.instance_handle));
     }
@@ -260,7 +260,7 @@ namespace sample_vk
         }
 
         if (_context.physical_device_handle == VK_NULL_HANDLE)
-            log::vkError("Ray tracing is not supported.");
+            log::error("Ray tracing is not supported.");
 
         _ray_tracing_pipeline_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
 
@@ -270,7 +270,7 @@ namespace sample_vk
 
         vkGetPhysicalDeviceProperties2(_context.physical_device_handle, &phyical_device_properties);
 
-        log::vkInfo("Use GPU: {}", phyical_device_properties.properties.deviceName);
+        log::info("Use GPU: {}", phyical_device_properties.properties.deviceName);
     }
 
     bool RayTracingBase::isRayTracingSupported(std::span<const VkExtensionProperties> properties) const
@@ -308,7 +308,7 @@ namespace sample_vk
                 return family_index;
         }
 
-        log::vkError("Failed find queue family index");
+        log::error("Failed find queue family index");
         return std::numeric_limits<uint32_t>::max();
     }
 
@@ -354,7 +354,7 @@ namespace sample_vk
         };
 
         for (auto extension: extensions)
-            log::vkInfo("Device extension: {}", extension);
+            log::info("Device extension: {}", extension);
 
         VkPhysicalDeviceVulkan12Features device_vulkan12_features = { };
         device_vulkan12_features.sType                  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
@@ -395,7 +395,7 @@ namespace sample_vk
         device_create_info.enabledExtensionCount    = static_cast<uint32_t>(extensions.size());
         device_create_info.ppEnabledExtensionNames  = extensions.data();
 
-        log::vkInfo("Create device");
+        log::info("Create device");
 
         VK_CHECK(
             vkCreateDevice(
@@ -456,7 +456,7 @@ namespace sample_vk
 {
     void RayTracingBase::createSurface()
     {
-        log::vkInfo("Create surface");
+        log::info("Create surface");
 
         SDL_CHECK( 
             SDL_Vulkan_CreateSurface(
@@ -478,7 +478,7 @@ namespace sample_vk
         );
 
         if (is_supported == VK_FALSE)
-            log::vkError("Surface is not support.");
+            log::error("Surface is not support.");
     }
 
     void RayTracingBase::destroySurface()
@@ -594,7 +594,7 @@ namespace sample_vk
         for(const auto& format: formats | std::views::filter(is_valid_format))
             return format;
 
-        log::vkError("Failed find surface format.");
+        log::error("Failed find surface format.");
         return { VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_MAX_ENUM_KHR };
     }
 

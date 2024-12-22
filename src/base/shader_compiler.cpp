@@ -10,11 +10,11 @@
 #include <fstream>
 #include <codecvt>
 
-#define CHECK(fn, log_fn, log_fn_arg)                                                           \
-    do                                                                                          \
-    {                                                                                           \
-        if(!fn)                                                                                 \
-            log::vkError("[Shader::Compiler]: {}", log_fn(log_fn_arg));                         \
+#define CHECK(fn, log_fn, log_fn_arg)                                   \
+    do                                                                  \
+    {                                                                   \
+        if(!fn)                                                         \
+            log::error("[Shader::Compiler]: {}", log_fn(log_fn_arg));   \
     } while (false)
 
 #define CHECK_SHADER(fn)    CHECK(fn, glslang_shader_get_info_log, ptr_shader)
@@ -34,12 +34,12 @@ namespace sample_vk::shader
         static std::string getSource(const std::filesystem::path file_path)
         {
             if (!std::filesystem::exists(file_path))
-                log::vkError("Not find file: {}", file_path.string());
+                log::error("Not find file: {}", file_path.string());
 
             std::ifstream file(file_path);
 
             if (!file)
-                log::vkError("Failed open file: {}", file_path.string());
+                log::error("Failed open file: {}", file_path.string());
 
             std::ostringstream contents;
             contents << file.rdbuf();
@@ -54,7 +54,7 @@ namespace sample_vk::shader
             size_t      include_depth
         )
         {
-            log::vkError("[Sahder Compiler]: We not processe local include files.");
+            log::error("[Sahder Compiler]: We not processe local include files.");
             return nullptr;
         }
 
@@ -120,7 +120,7 @@ namespace sample_vk::shader
     void Compiler::init()
     {
         if (!glslang_initialize_process())
-            log::vkError("[Sahder Compiler]: Failed initialize glslang.");
+            log::error("[Sahder Compiler]: Failed initialize glslang.");
         
         _is_init = true;
     }
@@ -157,7 +157,7 @@ namespace sample_vk::shader
             case Type::callable:
                 return GLSLANG_STAGE_CALLABLE;
             default:
-                log::vkError("[Shader::Compiler]: invalid stage type");
+                log::error("[Shader::Compiler]: invalid stage type");
         };
 
         return invalid_type;
@@ -203,7 +203,7 @@ namespace sample_vk::shader
         glslang_program_SPIRV_generate(ptr_program, stage);
 
         if (auto spirv_message = glslang_program_SPIRV_get_messages(ptr_program))
-            log::vkError("[Sahder Compiler]: {}", spirv_message);
+            log::error("[Sahder Compiler]: {}", spirv_message);
 
         std::vector<uint32_t> il (glslang_program_SPIRV_get_size(ptr_program));
 
@@ -217,7 +217,7 @@ namespace sample_vk::shader
 
     VkShaderModule Compiler::createShaderModule(VkDevice device_handle, const std::filesystem::path& filename, Type type)
     {
-        log::vkInfo("[Shader Compiler]: Compile shader: {}", filename.filename().string());
+        log::info("[Shader Compiler]: Compile shader: {}", filename.filename().string());
 
         auto il = createIL(filename, type);
 

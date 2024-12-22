@@ -10,7 +10,7 @@ namespace sample_vk
         _ptr_context (ptr_context)
     { 
         if (!ptr_context)
-            log::vkError("[Buffer]: ptr_context is null.");
+            log::error("[Buffer]: ptr_context is null.");
     }
 
     Buffer::Buffer(Buffer&& buffer)
@@ -67,10 +67,10 @@ namespace sample_vk
     )
     {
         if (!ptr_context)
-            log::vkError("[Buffer]: ptr_context is null.");
+            log::error("[Buffer]: ptr_context is null.");
 
         if (!size)
-            log::vkError("[Buffer]: size is 0.");
+            log::error("[Buffer]: size is 0.");
 
         Buffer buffer (ptr_context);
 

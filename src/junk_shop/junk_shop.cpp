@@ -92,7 +92,7 @@ void JunkShop::updateDescriptorSet(uint32_t image_index)
 	if (auto root_tlas_handle = _scene->getModel().getRootTLAS())
 		write_acceleration_structure_info.pAccelerationStructures = &(*root_tlas_handle);
 	else 
-		log::appError("Acceleartion structure not created.");
+		log::error("Acceleartion structure not created.");
 	
 	/*	--------------- rendering result ----------------------	*/
 	auto result_image_info = createDescriptorImageInfo(_swapchain_image_view_handles[image_index]);
@@ -215,7 +215,7 @@ bool JunkShop::processEvents()
 
 void JunkShop::show()
 {
-	log::appInfo("Sample running !!!");
+	log::info("Sample running !!!");
 
 	while (processEvents())
 	{
@@ -546,7 +546,7 @@ void JunkShop::createShaderBindingTable()
 	auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	if (!memory_type_index.has_value())
-		log::appError("Not memory index for create SBT.");
+		log::error("Not memory index for create SBT.");
 
 	auto createBufferForSBT = [this, &memory_type_index] (
 		std::optional<Buffer>&		buffer, 
@@ -723,7 +723,7 @@ void JunkShop::importScene()
 		);
 	}
 	else 
-		log::appError("Not memory index for scene importer.");
+		log::error("Not memory index for scene importer.");
 
 	_scene->applyTransform(glm::scale(glm::mat4(1), glm::vec3(100)));
 
@@ -750,7 +750,7 @@ void JunkShop::initVertexBuffersReferences()
 		);
 	}
 	else 
-		log::appError("Not memory index for create vertex buffers references.");
+		log::error("Not memory index for create vertex buffers references.");
 
 	auto command_buffer = getCommandBuffer();
 

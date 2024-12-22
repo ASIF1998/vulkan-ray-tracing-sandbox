@@ -24,7 +24,7 @@ namespace sample_vk
                 ptr_visitor->process(static_cast<SkinnedMeshNode*>(this));
                 break;
             default:
-                log::appError("Undefined node type");
+                log::error("Undefined node type");
                 break;
         };
     }

@@ -20,7 +20,7 @@ namespace sample_vk
     float Bone::getScaleFactor(float t1, float t2, float t)
     {
         if (constexpr auto eps = 0.0001f; std::abs(t1 - t2) < eps) 
-            log::appError("[Animator::Bone] Failed calculate scale factor because t1 and t2 is equal");
+            log::error("[Animator::Bone] Failed calculate scale factor because t1 and t2 is equal");
         
         return glm::clamp((t - t1) / (t2 - t1), 0.0f, 1.0f);
     }
@@ -176,13 +176,13 @@ namespace sample_vk
     void Bone::Builder::validate() const
     {
         if (_position_keys.empty())
-            log::appError("[Bone::Builder] Position keys is empty");
+            log::error("[Bone::Builder] Position keys is empty");
 
         if (_rotation_keys.empty())
-            log::appError("[Bone::Builder] Rotation keys is empty");
+            log::error("[Bone::Builder] Rotation keys is empty");
         
         if (_scale_keys.empty())
-            log::appError("[Bone::Builder] Scale keys is empty");
+            log::error("[Bone::Builder] Scale keys is empty");
     }
 
     Bone Bone::Builder::build()
@@ -247,7 +247,7 @@ namespace sample_vk
         const auto transform = parent_transform * node_transform;
 
         if (const auto bone = _bone_registry.get(node_name); bone)
-            _final_bones_matrices[bone->bone_id] = /*_global_inverse_transform **/ transform * bone->offset;
+            _final_bones_matrices[bone->id] = /*_global_inverse_transform **/ transform * bone->offset;
 
         for (const auto& child: node.children)
             calculateBoneTransform(child, transform);
@@ -290,15 +290,15 @@ namespace sample_vk
     void Animator::Builder::validate() const
     {
         if (_bones.empty()) 
-            log::appError("[Animator::Builder] Haven't bones");
+            log::error("[Animator::Builder] Haven't bones");
 
         constexpr auto eps = 0.001f;
 
         if (_duration < eps)
-            log::appError("[Animator::Builder] Duration is invalid: {}", _duration);
+            log::error("[Animator::Builder] Duration is invalid: {}", _duration);
 
         if (_ticks_per_second < eps)
-            log::appError("[Animator::Builder] Tikcs per second is invalid: {}", _ticks_per_second);
+            log::error("[Animator::Builder] Tikcs per second is invalid: {}", _ticks_per_second);
     }
 
     Animator Animator::Builder::build()

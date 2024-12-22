@@ -43,7 +43,7 @@ namespace sample_vk
 
     struct BoneInfo
     {
-        uint32_t    bone_id = std::numeric_limits<uint32_t>::infinity();
+        uint32_t    id      = std::numeric_limits<uint32_t>::infinity();
         glm::mat4   offset  = glm::mat4(1.0f);  /// @brief from local to bone space
     };
 

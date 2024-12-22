@@ -214,7 +214,7 @@ void Animation::createShaderBindingTable()
 	auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	if (!memory_type_index.has_value())
-		log::appError("Not memory index for create SBT.");
+		log::error("Not memory index for create SBT.");
 
 	auto createBufferForSBT = [this, &memory_type_index] (
 		std::optional<Buffer>&		buffer, 
@@ -472,7 +472,7 @@ void Animation::initVertexBufferReferences()
 		);
 	}
 	else 
-		log::appError("Not memory index for create vertex buffers references.");
+		log::error("Not memory index for create vertex buffers references.");
 
 	auto command_buffer = getCommandBuffer();
 

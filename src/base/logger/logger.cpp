@@ -44,7 +44,7 @@ namespace sample_vk
     {
         if (level == Level::Error)
         {
-            std::cout 
+            std::cerr 
                 << std::format(
                     "[{}] [{}]\n{}\n{}", 
                     logger_name,
