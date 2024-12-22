@@ -155,8 +155,8 @@ namespace sample_vk
     class Animator
     {
         void calculateBoneTransform(
-            AnimationHierarchiry::Node& node, 
-            const glm::mat4&            parent_transform
+            const AnimationHierarchiry::Node&   node, 
+            const glm::mat4&                    parent_transform
         );
 
         Animator() = default;

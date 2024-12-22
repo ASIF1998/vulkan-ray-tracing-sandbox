@@ -62,6 +62,7 @@ namespace sample_vk
 
     glm::mat4 Bone::getKeyPosition(float time) const
     {
+        /// @todo the work on finding the intermediate frame should be done in AnimationSampler
         if (_position_keys.size() == 1)
             return glm::translate(glm::mat4(1.0f), _position_keys[0].pos);
 
@@ -122,7 +123,7 @@ namespace sample_vk
 
     void Bone::update(float time)
     {
-        const auto translation  = glm::transpose(getKeyPosition(time));
+        const auto translation  = getKeyPosition(time);
         const auto rotation     = getKeyRotation(time);
         const auto scale        = getKeyScale(time);
 
@@ -219,8 +220,6 @@ namespace sample_vk
         _current_time += _ticks_per_second * delta_time;
         _current_time = std::fmod(_current_time, _duration);
 
-        _global_inverse_transform = glm::inverse(_root_node.transform);
-
         calculateBoneTransform(_root_node, glm::mat4(1.0f));
     }
 
@@ -229,12 +228,12 @@ namespace sample_vk
         return _final_bones_matrices;
     }
 
-    void Animator::calculateBoneTransform(AnimationHierarchiry::Node& node, const glm::mat4& parent_transform)
+    void Animator::calculateBoneTransform(const AnimationHierarchiry::Node& node, const glm::mat4& parent_transform)
     {
-        auto node_name      = node.name;
-        auto node_transform = node.transform;
+        auto node_transform     = node.transform;
+        const auto& node_name   = node.name;
 
-        auto bone = std::find_if(std::begin(_bones), std::end(_bones), [&node_name] (const Bone& bone)
+        const auto bone = std::find_if(std::begin(_bones), std::end(_bones), [&node_name] (const Bone& bone)
         {
             return node_name == bone.getName();
         });
@@ -245,13 +244,13 @@ namespace sample_vk
             node_transform = bone->getLocalTransform();
         }
 
-        auto global_transform = parent_transform * node_transform;
+        const auto transform = parent_transform * node_transform;
 
-        if (auto bone = _bone_registry.get(node_name); bone)
-            _final_bones_matrices[bone->bone_id] = global_transform; // * bone->offset;
+        if (const auto bone = _bone_registry.get(node_name); bone)
+            _final_bones_matrices[bone->bone_id] = /*_global_inverse_transform **/ transform * bone->offset;
 
-        for (auto& child: node.children)
-            calculateBoneTransform(child, global_transform);
+        for (const auto& child: node.children)
+            calculateBoneTransform(child, transform);
     }
 }
 

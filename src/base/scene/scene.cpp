@@ -47,7 +47,7 @@ namespace sample_vk::utils
 
     glm::quat cast(const aiQuaternion& quat)
     {
-        return glm::quat(quat.x, quat.y, quat.z, quat.w);
+        return glm::quat(quat.w, quat.x, quat.y, quat.z);
     }
 
     template<typename T>
@@ -105,7 +105,7 @@ namespace sample_vk
     class ScopedTransform
     {
     public:
-        ScopedTransform(Scene::Importer* ptr_importer, const glm::mat4 transform) :
+        explicit ScopedTransform(Scene::Importer* ptr_importer, const glm::mat4 transform) :
             _ptr_importer   (ptr_importer),
             _prev_transform (ptr_importer->_current_state.transform)
         {
@@ -639,7 +639,7 @@ namespace sample_vk
                 BoneInfo bone_info;
                 bone_id             = static_cast<uint32_t>(_animation.bone_infos.boneCount());
                 bone_info.bone_id   = bone_id;
-                bone_info.offset    = utils::cast(bone->mOffsetMatrix);
+                bone_info.offset    = glm::transpose(utils::cast(bone->mOffsetMatrix));
 
                 _animation.bone_infos.add(bone_name, bone_info);
             }
@@ -806,12 +806,17 @@ namespace sample_vk
             auto duration           = static_cast<float>(ptr_animation->mDuration);
             auto ticks_per_second   = static_cast<float>(ptr_animation->mTicksPerSecond);
 
+            if (constexpr auto eps = 0.001f; ticks_per_second < eps)
+                ticks_per_second = 25.0f;
+
+            const auto global_transform = utils::cast(ptr_scene->mRootNode->mTransformation);
+
             _animation.animator = Animator::Builder()
                 .bones(std::move(_animation.bones))
                 .boneRegistry(std::move(_animation.bone_infos))
                 .animationHierarchiryRootNode(std::move(_animation.root_node))
                 .time(duration, ticks_per_second)
-                .globalTransform(utils::cast(ptr_scene->mRootNode->mTransformation))
+                .globalTransform(global_transform)
                 .build();
         }
     }
