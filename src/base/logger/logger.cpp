@@ -26,11 +26,11 @@ namespace sample_vk
         switch(level)
         {
             case Logger::Level::Info:
-                return "Info";
+                return "info";
             case Logger::Level::Warning:
-                return "Warning";
+                return "warning";
             case Logger::Level::Error:
-                return "Error";
+                return "error";
         }
 
         return "Unknown level";

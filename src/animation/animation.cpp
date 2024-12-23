@@ -493,12 +493,14 @@ void Animation::updateTime()
 {
     static std::chrono::high_resolution_clock timer;
 
+    constexpr auto seconds_per_milisceond = 0.001f;
+    
     static auto begin   = timer.now();
     static auto end     = begin;
 
     end = timer.now();
 
-    _time.delta = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - begin).count();
+    _time.delta = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - begin).count() * seconds_per_milisceond;
 
     begin = end;
 }
@@ -518,11 +520,13 @@ void Animation::animationPass()
 
 void Animation::show()
 {
+    constexpr auto milisceonds_per_second = 1000.0f;
+
     while (processEvents())
     {
         updateTime();
 
-        _window->setTitle(std::format("Animation, {}ms", _time.delta));
+        _window->setTitle(std::format("Animation, {}ms", _time.delta * milisceonds_per_second));
 
         animationPass();
 

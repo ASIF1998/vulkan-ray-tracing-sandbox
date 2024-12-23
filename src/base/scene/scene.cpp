@@ -795,6 +795,8 @@ namespace sample_vk
     {
         if (ptr_scene->mNumAnimations > 0)
         {
+            log::info("[Scene::Importer]:\t - Process animation");
+
 #if 0
             for (auto i: std::views::iota(0u, ptr_scene->mNumAnimations))
                 getKeyFrames(ptr_scene->mAnimations[i]);
@@ -808,6 +810,9 @@ namespace sample_vk
 
             if (constexpr auto eps = 0.001f; ticks_per_second < eps)
                 ticks_per_second = 25.0f;
+
+            log::info("[Scene::Importer]:\t\t - Duration: {}", duration);
+            log::info("[Scene::Importer]:\t\t - Ticks per second: {}", ticks_per_second);
 
             const auto global_transform = utils::cast(ptr_scene->mRootNode->mTransformation);
 
