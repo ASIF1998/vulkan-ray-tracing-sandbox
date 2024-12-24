@@ -44,7 +44,7 @@ namespace sample_vk
     struct BoneInfo
     {
         uint32_t    id      = std::numeric_limits<uint32_t>::infinity();
-        glm::mat4   offset  = glm::mat4(1.0f);  /// @brief from local to bone space
+        glm::mat4   offset  = glm::mat4(1.0f);
     };
 
     class BoneRegistry
@@ -70,25 +70,47 @@ namespace sample_vk
         std::map<std::string, BoneInfo, std::less<void>> _bones;
     };
 
-    class Bone
+    struct BoneTransformTrack
+    {
+        std::vector<PositionKey>    position_keys;
+        std::vector<RotationKey>    rotation_keys;
+        std::vector<ScaleKey>       scale_keys;
+    };
+
+    class AnimationSampler
     {
         [[nodiscard]]
         static float getScaleFactor(float t1, float t2, float t);
 
-        [[nodiscard]] size_t getPositionIndex(float time)   const;
-        [[nodiscard]] size_t getRotationIndex(float time)   const;
-        [[nodiscard]] size_t getScaleIndex(float time)      const;
+        template<typename Keys>
+        [[nodiscard]] size_t getIndex(const Keys& keys, float time) const;
 
-        [[nodiscard]] glm::mat4 getKeyPosition(float time)  const;
+        [[nodiscard]] glm::mat4 getKeyPosition(float time) const;
         [[nodiscard]] glm::mat4 getKeyRotation(float time)  const;
         [[nodiscard]] glm::mat4 getKeyScale(float time)     const;
 
+    public:
+        AnimationSampler(BoneTransformTrack&& track);
+
+        AnimationSampler(AnimationSampler&& sampler)        = default;
+        AnimationSampler(const AnimationSampler& sampler)   = delete;
+
+        AnimationSampler& operator = (AnimationSampler&& sampler)       = default;
+        AnimationSampler& operator = (const AnimationSampler& sampler)  = delete;
+
+
+        [[nodiscard]] glm::mat4 getTransform(float time) const;
+
+    private:
+        BoneTransformTrack _track;
+    };
+
+    class Bone
+    {
         Bone(
-            std::string_view            name,
-            uint32_t                    id,
-            std::vector<PositionKey>&&  position_keys,
-            std::vector<RotationKey>&&  rotation_keys,
-            std::vector<ScaleKey>&&     scale_keys
+            std::string_view        name,
+            uint32_t                id,
+            BoneTransformTrack&&    bone_transform_track
         );
 
     public:
@@ -104,20 +126,18 @@ namespace sample_vk
         void update(float time);
 
         [[nodiscard]]
-        const std::string& getName() const noexcept;
+        std::string_view getName() const;
 
         [[nodiscard]]
-        const glm::mat4& getLocalTransform() const noexcept;
+        const glm::mat4& getTransform() const noexcept;
 
     private:
         std::string _name;
         uint32_t    _id;
 
-        glm::mat4 _local_transform = glm::mat4(1.0f); /// @todo rename to transform
+        glm::mat4 _transform = glm::mat4(1.0f);
 
-        std::vector<PositionKey>    _position_keys;
-        std::vector<RotationKey>    _rotation_keys;
-        std::vector<ScaleKey>       _scale_keys;
+        AnimationSampler _sampler;
     };
 
     class Bone::Builder
@@ -143,13 +163,10 @@ namespace sample_vk
         Bone build();
 
     private:
-        std::string                 _name;
-        uint32_t                    _id;
-
-        /// @todo move to BoneTransformTrack struct
-        std::vector<PositionKey>    _position_keys;
-        std::vector<RotationKey>    _rotation_keys;
-        std::vector<ScaleKey>       _scale_keys;
+        std::string _name;
+        uint32_t    _id;
+        
+        BoneTransformTrack _bone_transform_track;
     };
 
     class Animator
@@ -221,3 +238,5 @@ namespace sample_vk
         glm::mat4 _global_transform = glm::mat4(1.0f);
     };
 }
+
+#include <base/scene/animator.inl>

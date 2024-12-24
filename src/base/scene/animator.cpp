@@ -1,143 +1,33 @@
 #include <base/scene/animator.hpp>
 #include <base/logger/logger.hpp>
 
+#include <algorithm>
+
 namespace sample_vk
 {
     Bone::Bone(
-        std::string_view            name,
-        uint32_t                    id,
-        std::vector<PositionKey>&&  position_keys,
-        std::vector<RotationKey>&&  rotation_keys,
-        std::vector<ScaleKey>&&     scale_keys
+        std::string_view        name,
+        uint32_t                id,
+        BoneTransformTrack&&    bone_transform_track
     ) :
-        _name           (name),
-        _id             (id),
-        _position_keys  (std::move(position_keys)),
-        _rotation_keys  (std::move(rotation_keys)),
-        _scale_keys     (std::move(scale_keys))
+        _name       (name),
+        _id         (id),
+        _sampler    (std::move(bone_transform_track))
     { }
-
-    float Bone::getScaleFactor(float t1, float t2, float t)
-    {
-        if (constexpr auto eps = 0.0001f; std::abs(t1 - t2) < eps) 
-            log::error("[Animator::Bone] Failed calculate scale factor because t1 and t2 is equal");
-        
-        return glm::clamp((t - t1) / (t2 - t1), 0.0f, 1.0f);
-    }
-
-    size_t Bone::getPositionIndex(float time) const
-    {
-        for (size_t i = 0; i < _position_keys.size() - 1; ++i)
-        {
-            if (_position_keys[i + 1].time_stamp > time)
-                return i;
-        }
-
-        return _position_keys.size() - 1;
-    }
-
-    size_t Bone::getRotationIndex(float time) const
-    {
-        /// @todo try use binary search
-
-        for (size_t i = 0; i < _rotation_keys.size() - 1; ++i)
-        {
-            if (_rotation_keys[i + 1].time_stamp > time)
-                return i;
-        }
-
-        return _rotation_keys.size() - 1;
-    }
-
-    size_t Bone::getScaleIndex(float time) const
-    {
-        for (size_t i = 0; i < _scale_keys.size() - 1; ++i)
-        {
-            if (_scale_keys[i + 1].time_stamp > time)
-                return i;
-        }
-
-        return _scale_keys.size() - 1;
-    }
-
-    glm::mat4 Bone::getKeyPosition(float time) const
-    {
-        /// @todo the work on finding the intermediate frame should be done in AnimationSampler
-        if (_position_keys.size() == 1)
-            return glm::translate(glm::mat4(1.0f), _position_keys[0].pos);
-
-        const auto index0 = getPositionIndex(time);
-        const auto index1 = index0 + 1;
-
-        if (index1 == _position_keys.size())
-            return glm::translate(glm::mat4(1.0f), _position_keys[0].pos);
-
-        const auto t0 = _position_keys[index0].time_stamp;
-        const auto t1 = _position_keys[index1].time_stamp;
-
-        const auto pos0 = _position_keys[index0].pos;
-        const auto pos1 = _position_keys[index1].pos;
-
-        return glm::translate(glm::mat4(1.0f), glm::mix(pos0, pos1, getScaleFactor(t0, t1, time)));
-    }
-
-    glm::mat4 Bone::getKeyRotation(float time) const
-    {
-        if (_rotation_keys.size() == 1)
-            return glm::mat4_cast(_rotation_keys[0].rotate);
-
-        const auto index0 = getRotationIndex(time);
-        const auto index1 = index0 + 1;
-
-        if (index1 == _rotation_keys.size())
-            return glm::mat4_cast(_rotation_keys[0].rotate);
-
-        const auto t0 = _rotation_keys[index0].time_stamp;
-        const auto t1 = _rotation_keys[index1].time_stamp;
-
-        const auto rot0 = _rotation_keys[index0].rotate;
-        const auto rot1 = _rotation_keys[index1].rotate;
-
-        return glm::mat4(glm::normalize(glm::slerp(rot0, rot1, getScaleFactor(t0, t1, time))));
-    }
-
-    glm::mat4 Bone::getKeyScale(float time) const
-    {
-        if (_scale_keys.size() == 1)
-            return glm::scale(glm::mat4(1.0f), _scale_keys[0].scale);
-
-        const auto index0 = getScaleIndex(time);
-        const auto index1 = index0 + 1;
-
-        if (index1 == _scale_keys.size())
-            return glm::scale(glm::mat4(1.0f), _scale_keys[0].scale);
-
-        const auto t0 = _scale_keys[index0].time_stamp;
-        const auto t1 = _scale_keys[index1].time_stamp;
-
-        const auto scale0 = _scale_keys[index0].scale;
-        const auto scale1 = _scale_keys[index1].scale;
-
-        return glm::scale(glm::mat4(1.0f), glm::mix(scale0, scale1, getScaleFactor(t0, t1, time)));
-    }
 
     void Bone::update(float time)
     {
-        const auto translation  = getKeyPosition(time);
-        const auto rotation     = getKeyRotation(time);
-        const auto scale        = getKeyScale(time);
-
-        _local_transform = translation * rotation * scale;
+        _transform = _sampler.getTransform(time);
     }
 
-    const std::string& Bone::getName() const noexcept
+    std::string_view Bone::getName() const
     {
         return _name;
     }
 
-    const glm::mat4& Bone::getLocalTransform() const noexcept
+    const glm::mat4& Bone::getTransform() const noexcept
     {
-        return _local_transform;
+        return _transform;
     }
 }
 
@@ -157,38 +47,38 @@ namespace sample_vk
 
     Bone::Builder& Bone::Builder::positionKeys(std::vector<PositionKey>&& position_keys)
     {
-        std::swap(_position_keys, position_keys);
+        std::swap(_bone_transform_track.position_keys, position_keys);
         return *this;
     }
 
     Bone::Builder& Bone::Builder::rotationKeys(std::vector<RotationKey>&& rotation_keys)
     {
-        std::swap(_rotation_keys, rotation_keys);
+        std::swap(_bone_transform_track.rotation_keys, rotation_keys);
         return *this;
     }
     
     Bone::Builder& Bone::Builder::scaleKeys(std::vector<ScaleKey>&& scale_keys)
     {
-        std::swap(_scale_keys, scale_keys);
+        std::swap(_bone_transform_track.scale_keys, scale_keys);
         return *this;
     }
 
     void Bone::Builder::validate() const
     {
-        if (_position_keys.empty())
+        if (_bone_transform_track.position_keys.empty())
             log::error("[Bone::Builder] Position keys is empty");
 
-        if (_rotation_keys.empty())
+        if (_bone_transform_track.rotation_keys.empty())
             log::error("[Bone::Builder] Rotation keys is empty");
         
-        if (_scale_keys.empty())
+        if (_bone_transform_track.scale_keys.empty())
             log::error("[Bone::Builder] Scale keys is empty");
     }
 
     Bone Bone::Builder::build()
     {
         validate();
-        return Bone(_name, _id, std::move(_position_keys), std::move(_rotation_keys), std::move(_scale_keys));
+        return Bone(_name, _id, std::move(_bone_transform_track));
     }
 }
 
@@ -210,6 +100,90 @@ namespace sample_vk
     void BoneRegistry::add(std::string_view name, const BoneInfo& bone)
     {
         _bones.insert(std::make_pair(name, bone));
+    }
+}
+
+namespace sample_vk
+{
+    AnimationSampler::AnimationSampler(BoneTransformTrack&& track) :
+        _track (std::move(track))
+    { }
+
+    float AnimationSampler::getScaleFactor(float t1, float t2, float t)
+    {
+        if (constexpr auto eps = 0.0001f; std::abs(t1 - t2) < eps) 
+            log::error("[Animator::Bone] Failed calculate scale factor because t1 and t2 is equal");
+        
+        return glm::clamp((t - t1) / (t2 - t1), 0.0f, 1.0f);
+    }
+
+    glm::mat4 AnimationSampler::getKeyPosition(float time) const
+    {
+        if (_track.position_keys.size() == 1)
+            return glm::translate(glm::mat4(1.0f), _track.position_keys[0].pos);
+
+        const auto index0 = getIndex(_track.position_keys, time);
+        const auto index1 = index0 + 1;
+
+        if (index1 == _track.position_keys.size())
+            return glm::translate(glm::mat4(1.0f), _track.position_keys[0].pos);
+
+        const auto t0 = _track.position_keys[index0].time_stamp;
+        const auto t1 = _track.position_keys[index1].time_stamp;
+
+        const auto pos0 = _track.position_keys[index0].pos;
+        const auto pos1 = _track.position_keys[index1].pos;
+
+        return glm::translate(glm::mat4(1.0f), glm::mix(pos0, pos1, getScaleFactor(t0, t1, time)));
+    }
+
+    glm::mat4 AnimationSampler::getKeyRotation(float time) const
+    {
+        if (_track.rotation_keys.size() == 1)
+            return glm::mat4_cast(_track.rotation_keys[0].rotate);
+
+        const auto index0 = getIndex(_track.rotation_keys, time);
+        const auto index1 = index0 + 1;
+
+        if (index1 == _track.rotation_keys.size())
+            return glm::mat4_cast(_track.rotation_keys[0].rotate);
+
+        const auto t0 = _track.rotation_keys[index0].time_stamp;
+        const auto t1 = _track.rotation_keys[index1].time_stamp;
+
+        const auto rot0 = _track.rotation_keys[index0].rotate;
+        const auto rot1 = _track.rotation_keys[index1].rotate;
+
+        return glm::mat4(glm::normalize(glm::slerp(rot0, rot1, getScaleFactor(t0, t1, time))));
+    }
+
+    glm::mat4 AnimationSampler::getKeyScale(float time) const
+    {
+        if (_track.scale_keys.size() == 1)
+            return glm::scale(glm::mat4(1.0f), _track.scale_keys[0].scale);
+
+        const auto index0 = getIndex(_track.scale_keys, time);
+        const auto index1 = index0 + 1;
+
+        if (index1 == _track.scale_keys.size())
+            return glm::scale(glm::mat4(1.0f), _track.scale_keys[0].scale);
+
+        const auto t0 = _track.scale_keys[index0].time_stamp;
+        const auto t1 = _track.scale_keys[index1].time_stamp;
+
+        const auto scale0 = _track.scale_keys[index0].scale;
+        const auto scale1 = _track.scale_keys[index1].scale;
+
+        return glm::scale(glm::mat4(1.0f), glm::mix(scale0, scale1, getScaleFactor(t0, t1, time)));
+    }
+
+    glm::mat4 AnimationSampler::getTransform(float time) const
+    {
+        const auto translation  = getKeyPosition(time);
+        const auto rotation     = getKeyRotation(time);
+        const auto scale        = getKeyScale(time);
+
+        return translation * rotation * scale;
     }
 }
 
@@ -241,7 +215,7 @@ namespace sample_vk
         if (bone != std::end(_bones)) 
         {
             bone->update(_current_time);
-            node_transform = bone->getLocalTransform();
+            node_transform = bone->getTransform();
         }
 
         const auto transform = parent_transform * node_transform;
