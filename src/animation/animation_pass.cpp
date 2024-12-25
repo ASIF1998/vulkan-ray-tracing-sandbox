@@ -58,20 +58,20 @@ namespace sample_vk::animation
         std::array<VkDescriptorBufferInfo, 4> buffers_info;
 
         buffers_info[Bindings::src_vertex_buffer] = { };
-        buffers_info[Bindings::src_vertex_buffer].buffer  = ptr_mesh->static_mesh.vertex_buffer->vk_handle;
-        buffers_info[Bindings::src_vertex_buffer].range   = ptr_mesh->static_mesh.vertex_buffer->size_in_bytes;
+        buffers_info[Bindings::src_vertex_buffer].buffer  = ptr_mesh->source_vertex_buffer->vk_handle;
+        buffers_info[Bindings::src_vertex_buffer].range   = ptr_mesh->source_vertex_buffer->size_in_bytes;
         
         buffers_info[Bindings::dst_vertex_buffer] = { };
-        buffers_info[Bindings::dst_vertex_buffer].buffer  = ptr_mesh->processed_mesh.vertex_buffer->vk_handle;
-        buffers_info[Bindings::dst_vertex_buffer].range   = ptr_mesh->processed_mesh.vertex_buffer->size_in_bytes;
+        buffers_info[Bindings::dst_vertex_buffer].buffer  = ptr_mesh->processed_vertex_buffer->vk_handle;
+        buffers_info[Bindings::dst_vertex_buffer].range   = ptr_mesh->processed_vertex_buffer->size_in_bytes;
         
         buffers_info[Bindings::skinning_data_buffer] = { };
-        buffers_info[Bindings::skinning_data_buffer].buffer  = ptr_mesh->static_mesh.skinning_buffer->vk_handle;
-        buffers_info[Bindings::skinning_data_buffer].range   = ptr_mesh->static_mesh.skinning_buffer->size_in_bytes;
+        buffers_info[Bindings::skinning_data_buffer].buffer  = ptr_mesh->skinning_buffer->vk_handle;
+        buffers_info[Bindings::skinning_data_buffer].range   = ptr_mesh->skinning_buffer->size_in_bytes;
         
         buffers_info[Bindings::index_buffer]  = { };
-        buffers_info[Bindings::index_buffer] .buffer  = ptr_mesh->static_mesh.index_buffer->vk_handle;
-        buffers_info[Bindings::index_buffer] .range   = ptr_mesh->static_mesh.index_buffer->size_in_bytes;
+        buffers_info[Bindings::index_buffer] .buffer  = ptr_mesh->index_buffer->vk_handle;
+        buffers_info[Bindings::index_buffer] .range   = ptr_mesh->index_buffer->size_in_bytes;
 
         std::array<VkWriteDescriptorSet, 4> write_infos;
 
@@ -143,7 +143,7 @@ namespace sample_vk::animation
             auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
             command_buffer.write([this, ptr_skinned_mesh] (VkCommandBuffer command_buffer_handle)
             {
-                const auto x_group_size = static_cast<uint32_t>(ptr_skinned_mesh->static_mesh.index_count);
+                const auto x_group_size = static_cast<uint32_t>(ptr_skinned_mesh->index_count);
 
                 vkCmdBindPipeline(command_buffer_handle, VK_PIPELINE_BIND_POINT_COMPUTE, _pipeline_handle);
                 

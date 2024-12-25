@@ -450,30 +450,37 @@ namespace sample_vk
 
         SkinnedMesh mesh;
 
-        mesh.static_mesh = createMesh(name, indices, attributes);
-        mesh.static_mesh.skinning_buffer = utils::createBuffer
+        mesh.index_count    = indices.size();
+        mesh.vertex_count   = attributes.size();
+
+        mesh.index_buffer = utils::createBuffer
         (
             _ptr_context,
-            std::format("[Skinning buffer]: {}", name), 
+            std::format("[SkinnedMesh][Index buffer]: {}", name), 
+            indices, 
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags
+        );
+
+        mesh.source_vertex_buffer = utils::createBuffer
+        (
+            _ptr_context,
+            std::format("[SkinnedMesh][Source vertex buffer]: {}", name), 
+            attributes, 
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
+        );
+
+        mesh.skinning_buffer = utils::createBuffer
+        (
+            _ptr_context,
+            std::format("[SkinnedMesh][Skinning buffer]: {}", name), 
             skinning_data, 
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags 
         );
 
-        /// @bug copy data - use shared indices for processed and static meshes
-        mesh.processed_mesh.index_count     = indices.size(); 
-        mesh.processed_mesh.index_buffer    = utils::createBuffer
+        mesh.processed_vertex_buffer = utils::createBuffer
         (
             _ptr_context,
-            std::format("[SkinnedMesh][IndexBuffer]: {}", skinned_mesh_index),
-            indices,
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags
-        );
-
-        mesh.processed_mesh.vertex_count    = attributes.size();
-        mesh.processed_mesh.vertex_buffer   = utils::createBuffer
-        (
-            _ptr_context,
-            std::format("[SkinnedMesh][VertexBuffer]: {}", skinned_mesh_index),
+            std::format("[SkinnedMesh][Processed vertex buffer]: {}", skinned_mesh_index),
             static_cast<VkDeviceSize>(attributes.size() * sizeof(Mesh::Attributes)),
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
         );

@@ -29,8 +29,8 @@ namespace sample_vk
 
     void SceneGeometryReferencesGetter::process(SkinnedMeshNode* ptr_node)
     {
-        _vertex_buffers_references.push_back(ptr_node->mesh.processed_mesh.vertex_buffer->getAddress());
-        _index_buffers_references.push_back(ptr_node->mesh.processed_mesh.index_buffer->getAddress());
+        _vertex_buffers_references.push_back(ptr_node->mesh.processed_vertex_buffer->getAddress());
+        _index_buffers_references.push_back(ptr_node->mesh.index_buffer->getAddress());
 
         process(static_cast<Node*>(ptr_node));
     }

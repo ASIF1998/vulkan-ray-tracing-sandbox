@@ -3,6 +3,8 @@
 
 #include <base/vulkan/context.hpp>
 
+#include <base/vulkan/buffer.hpp>
+
 #include <ranges>
 
 namespace sample_vk
@@ -203,15 +205,33 @@ namespace sample_vk
 
     void ASBuilder::process(MeshNode* ptr_node)
     {
-        ptr_node->acceleation_structure = buildBLAS(ptr_node->name, ptr_node->mesh);
+        ptr_node->acceleation_structure = buildBLAS(
+            ptr_node->name, 
+            *ptr_node->mesh.vertex_buffer,
+            static_cast<uint32_t>(ptr_node->mesh.vertex_count),
+            *ptr_node->mesh.index_buffer,
+            static_cast<uint32_t>(ptr_node->mesh.index_count)
+        );
     }
     
     void ASBuilder::process(SkinnedMeshNode* ptr_node)
     {
-        ptr_node->acceleation_structure = buildBLAS(ptr_node->name, ptr_node->mesh.processed_mesh);
+        ptr_node->acceleation_structure = buildBLAS(
+            ptr_node->name, 
+            *ptr_node->mesh.processed_vertex_buffer,
+            static_cast<uint32_t>(ptr_node->mesh.vertex_count),
+            *ptr_node->mesh.index_buffer,
+            static_cast<uint32_t>(ptr_node->mesh.index_count)
+        );
     }
 
-    AccelerationStructure ASBuilder::buildBLAS(std::string_view name, const Mesh& mesh)
+    AccelerationStructure ASBuilder::buildBLAS(
+        std::string_view    name,
+        const Buffer&       vertex_buffer,
+        uint32_t            vertex_count,
+        const Buffer&       index_buffer,
+        uint32_t            index_count
+    )
     {
         auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
@@ -229,11 +249,11 @@ namespace sample_vk
             triangles = { };
             triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 
-            triangles.indexData.deviceAddress   = mesh.index_buffer->getAddress();
+            triangles.indexData.deviceAddress   = index_buffer.getAddress();
             triangles.indexType                 = VK_INDEX_TYPE_UINT32;
 
-            triangles.maxVertex                 = static_cast<uint32_t>(mesh.vertex_count);
-            triangles.vertexData.deviceAddress  = mesh.vertex_buffer->getAddress();
+            triangles.maxVertex                 = vertex_count;
+            triangles.vertexData.deviceAddress  = vertex_buffer.getAddress();
             triangles.vertexFormat              = VK_FORMAT_R32G32B32_SFLOAT;
             triangles.vertexStride              = sizeof(Mesh::Attributes);
 
@@ -247,7 +267,7 @@ namespace sample_vk
         build_geometry_info.mode            = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
         build_geometry_info.type            = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 
-        const auto primitive_count =  static_cast<uint32_t>(mesh.index_count / 3);
+        const auto primitive_count =  index_count / 3;
 
         VkAccelerationStructureBuildSizesInfoKHR as_size = { };
         as_size.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;

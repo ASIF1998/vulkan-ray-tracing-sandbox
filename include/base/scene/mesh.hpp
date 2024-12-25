@@ -47,7 +47,12 @@ namespace sample_vk
 
     struct SkinnedMesh
     {
-        Mesh static_mesh;
-        Mesh processed_mesh;
+        std::optional<Buffer> source_vertex_buffer;
+        std::optional<Buffer> processed_vertex_buffer;
+        std::optional<Buffer> skinning_buffer;
+        size_t vertex_count = 0;
+        
+        std::optional<Buffer> index_buffer;
+        size_t index_count = 0;
     };
 }
