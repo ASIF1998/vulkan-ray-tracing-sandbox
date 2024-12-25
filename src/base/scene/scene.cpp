@@ -20,6 +20,12 @@
 
 namespace sample_vk::utils
 {
+    static constexpr auto buffer_usage_flags = 
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
+            |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
+            |   VK_BUFFER_USAGE_TRANSFER_DST_BIT 
+            |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+
     glm::mat4 cast(const aiMatrix4x4& matrix)
     {
         return glm::mat4(
@@ -301,18 +307,12 @@ namespace sample_vk
         mesh.index_count    = indices.size();
         mesh.vertex_count   = attributes.size();
 
-        constexpr auto shared_usage_flags = 
-                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
-            |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
-            |   VK_BUFFER_USAGE_TRANSFER_DST_BIT 
-            |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
-
         mesh.index_buffer = utils::createBuffer
         (
             ptr_context,
             std::format("[Index buffer]: {}", name), 
             std::span<uint32_t>(indices), 
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
         mesh.vertex_buffer = utils::createBuffer
@@ -320,7 +320,7 @@ namespace sample_vk
             ptr_context,
             std::format("[Vertex buffer]: {}", name), 
             std::span(attributes), 
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
         return new MeshNode(name, transform, std::move(mesh));
@@ -407,18 +407,12 @@ namespace sample_vk
         mesh.index_count    = indices.size();
         mesh.vertex_count   = attributes.size();
 
-        constexpr auto shared_usage_flags = 
-                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
-            |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
-            |   VK_BUFFER_USAGE_TRANSFER_DST_BIT 
-            |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
-
         mesh.index_buffer = utils::createBuffer
         (
             _ptr_context,
             std::format("[Index buffer]: {}", name), 
             indices, 
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
         mesh.vertex_buffer = utils::createBuffer
@@ -426,7 +420,7 @@ namespace sample_vk
             _ptr_context,
             std::format("[Vertex buffer]: {}", name), 
             attributes, 
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
         return mesh;
@@ -439,12 +433,6 @@ namespace sample_vk
         const std::span<Mesh::SkinningData> skinning_data
     ) const
     {
-        constexpr auto shared_usage_flags = 
-                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
-            |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
-            |   VK_BUFFER_USAGE_TRANSFER_DST_BIT 
-            |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
-
         static int skinned_mesh_index = 0;
         ++skinned_mesh_index;
 
@@ -458,7 +446,7 @@ namespace sample_vk
             _ptr_context,
             std::format("[SkinnedMesh][Index buffer]: {}", name), 
             indices, 
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
         mesh.source_vertex_buffer = utils::createBuffer
@@ -466,7 +454,7 @@ namespace sample_vk
             _ptr_context,
             std::format("[SkinnedMesh][Source vertex buffer]: {}", name), 
             attributes, 
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
         mesh.skinning_buffer = utils::createBuffer
@@ -474,7 +462,7 @@ namespace sample_vk
             _ptr_context,
             std::format("[SkinnedMesh][Skinning buffer]: {}", name), 
             skinning_data, 
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags 
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | utils::buffer_usage_flags 
         );
 
         mesh.processed_vertex_buffer = utils::createBuffer
@@ -482,7 +470,7 @@ namespace sample_vk
             _ptr_context,
             std::format("[SkinnedMesh][Processed vertex buffer]: {}", skinned_mesh_index),
             static_cast<VkDeviceSize>(attributes.size() * sizeof(Mesh::Attributes)),
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
         return mesh;
