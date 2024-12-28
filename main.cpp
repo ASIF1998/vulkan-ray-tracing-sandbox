@@ -1,6 +1,6 @@
 #include <hello_triangle/hello_triangle.hpp>
 #include <junk_shop/junk_shop.hpp>
-#include <animation/animation.hpp>
+#include <dancing_penguin/dancing_penguin.hpp>
 
 #include <base/math.hpp>
 
@@ -8,12 +8,12 @@ enum class Samples
 {
     HelloTriangle,
     JunkShop,
-    Animation
+    DancingPenguin
 };
 
 int main(int argc, char* argv[])
 {
-    constexpr auto sample = Samples::Animation;
+    constexpr auto sample = Samples::DancingPenguin;
 
     try
     {
@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
             case Samples::JunkShop:
                 pApp = std::make_unique<JunkShop>();
                 break;
-            case Samples::Animation:
-                pApp = std::make_unique<Animation>();
+            case Samples::DancingPenguin:
+                pApp = std::make_unique<DancingPenguin>();
                 break;
         }
 

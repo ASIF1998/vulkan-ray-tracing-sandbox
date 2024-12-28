@@ -15,7 +15,7 @@ namespace vrts
     struct SkinnedMesh;
 }
 
-namespace vrts::animation
+namespace vrts::dancing_penguin
 {
     class AnimationPass
     {

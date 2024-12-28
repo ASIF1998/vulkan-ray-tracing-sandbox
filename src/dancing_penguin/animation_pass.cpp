@@ -1,4 +1,4 @@
-#include <animation/animation_pass.hpp>
+#include <dancing_penguin/animation_pass.hpp>
 
 #include <base/scene/node.hpp>
 #include <base/scene/mesh.hpp>
@@ -7,7 +7,7 @@
 
 #include <base/shader_compiler.hpp>
 
-namespace vrts::animation
+namespace vrts::dancing_penguin
 {
     AnimationPass::AnimationPass(const Context* ptr_context) :
         _ptr_context        (ptr_context)
@@ -164,7 +164,7 @@ namespace vrts::animation
     }
 }
 
-namespace vrts::animation
+namespace vrts::dancing_penguin
 {
     AnimationPass::Builder::~Builder()
     {
@@ -237,7 +237,7 @@ namespace vrts::animation
     {
         log::info("[AnimationPass::Builder] Create compute pipeline");
 
-        const auto shader_name = project_dir / "shaders/animation/animation_pass.glsl.comp";
+        const auto shader_name = project_dir / "shaders/dancing_penguin/animation_pass.glsl.comp";
 
         _compute_shader_handle = shader::Compiler::createShaderModule(
             _ptr_context->device_handle, 

@@ -1,4 +1,5 @@
-#include <animation/animation.hpp>
+#include <dancing_penguin/dancing_penguin.hpp>
+#include <dancing_penguin/animation_pass.hpp>
 
 #include <base/vulkan/memory.hpp>
 
@@ -7,20 +8,18 @@
 
 #include <base/shader_compiler.hpp>
 
-#include <animation/animation_pass.hpp>
-
 #include <ranges>
 
-using namespace animation;
+using namespace dancing_penguin;
 
-Animation::~Animation()
+DancingPenguin::~DancingPenguin()
 {
     destroyPipelineLayout();
     destroyPipeline();
     destroyDescriptorSets();
 }
 
-void Animation::initScene()
+void DancingPenguin::initScene()
 {
     if (auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
     {
@@ -40,14 +39,14 @@ void Animation::initScene()
     }
 }
 
-void Animation::initCamera()
+void DancingPenguin::initCamera()
 {
     auto& camera = _scene->getCameraController().getCamera();
     camera.setDepthRange(0.0001f, 1000.0f);
     camera.lookaAt(glm::vec3(0, 200, 500), glm::vec3(0, 0, 1));
 }
 
-void Animation::createPipelineLayout()
+void DancingPenguin::createPipelineLayout()
 {
     auto materials = _scene->getModel().getMaterialManager().getMaterials();
     
@@ -95,7 +94,7 @@ void Animation::createPipelineLayout()
     VK_CHECK(vkCreatePipelineLayout(_context.device_handle, &pipeline_layout_info, nullptr, &_pipeline_layout_handle));
 }
 
-void Animation::createDescriptorSets()
+void DancingPenguin::createDescriptorSets()
 {
     auto material = _scene->getModel().getMaterialManager().getMaterials();
 
@@ -123,16 +122,16 @@ void Animation::createDescriptorSets()
     VkUtils::setName(_context.device_handle, _descriptor_set_handle, VK_OBJECT_TYPE_DESCRIPTOR_SET, "Descritor set for ray tracing");
 }
 
-void Animation::createPipeline()
+void DancingPenguin::createPipeline()
 {
     const auto ptr_context = getContext();
 
-    const auto animation_shaders_root = project_dir / "shaders/animation";
+    const auto animation_shaders_root = project_dir / "shaders/dancing_penguin";
 
     std::array<VkShaderModule, StageId::count> shader_modules = { VK_NULL_HANDLE };
-    shader_modules[StageId::ray_gen] = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rgen", shader::Type::raygen);
-    shader_modules[StageId::miss]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rmiss", shader::Type::miss);
-    shader_modules[StageId::chit]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "animation.glsl.rchit", shader::Type::closesthit);
+    shader_modules[StageId::ray_gen] = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "dancing_penguin.glsl.rgen", shader::Type::raygen);
+    shader_modules[StageId::miss]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "dancing_penguin.glsl.rmiss", shader::Type::miss);
+    shader_modules[StageId::chit]    = shader::Compiler::createShaderModule(ptr_context->device_handle, animation_shaders_root / "dancing_penguin.glsl.rchit", shader::Type::closesthit);
 
     std::array<VkShaderStageFlagBits, StageId::count> stages = { };
     stages[StageId::ray_gen] = VK_SHADER_STAGE_RAYGEN_BIT_KHR; 
@@ -197,7 +196,7 @@ void Animation::createPipeline()
         vkDestroyShaderModule(ptr_context->device_handle, shader_module, nullptr);
 }
 
-void Animation::createShaderBindingTable()
+void DancingPenguin::createShaderBindingTable()
 {
     constexpr uint32_t miss_count 	= 1;
 	constexpr uint32_t hit_count 	= 1;
@@ -273,13 +272,13 @@ void Animation::createShaderBindingTable()
 	_sbt.raygen_region.size 			= handle_size_aligned;
 }
 
-void Animation::destroyPipelineLayout()
+void DancingPenguin::destroyPipelineLayout()
 {
     if (_pipeline_layout_handle != VK_NULL_HANDLE)
         vkDestroyPipelineLayout(getContext()->device_handle, _pipeline_layout_handle, nullptr);
 }
 
-void Animation::destroyDescriptorSets()
+void DancingPenguin::destroyDescriptorSets()
 {
     if (_descriptor_set_layout_handle != VK_NULL_HANDLE)
         vkDestroyDescriptorSetLayout(_context.device_handle, _descriptor_set_layout_handle, nullptr);
@@ -288,15 +287,15 @@ void Animation::destroyDescriptorSets()
         vkDestroyDescriptorPool(_context.device_handle, _descriptor_pool_handle, nullptr);
 }
 
-void Animation::destroyPipeline()
+void DancingPenguin::destroyPipeline()
 {
     if (_pipeline_handle != VK_NULL_HANDLE)
         vkDestroyPipeline(getContext()->device_handle, _pipeline_handle, nullptr);
 }
 
-void Animation::init() 
+void DancingPenguin::init() 
 {
-    RayTracingBase::init("Animation");
+    RayTracingBase::init("DancingPenguin");
 
     initScene();
     initCamera();
@@ -309,7 +308,7 @@ void Animation::init()
     bindAlbedos();
 }
 
-bool Animation::processEvents()
+bool DancingPenguin::processEvents()
 {
     SDL_Event event;
 
@@ -335,7 +334,7 @@ bool Animation::processEvents()
     return true;
 }
 
-void Animation::processPushConstants()
+void DancingPenguin::processPushConstants()
 {
     const auto& camera = _scene->getCameraController().getCamera();
 
@@ -345,7 +344,7 @@ void Animation::processPushConstants()
     _push_constants.rchit.eye_to_pixel_cone_spread_angle = camera.getEyeToPixelConeSpreadAngle();
 }
 
-void Animation::swapchainImageToPresentUsage(uint32_t image_index)
+void DancingPenguin::swapchainImageToPresentUsage(uint32_t image_index)
 {
     auto command_buffer = getCommandBuffer();
 
@@ -382,7 +381,7 @@ void Animation::swapchainImageToPresentUsage(uint32_t image_index)
     command_buffer.upload(getContext());
 }
 
-void Animation::swapchainImageToGeneralUsage(uint32_t image_index)
+void DancingPenguin::swapchainImageToGeneralUsage(uint32_t image_index)
 {
     auto command_buffer = getCommandBuffer();
 
@@ -419,7 +418,7 @@ void Animation::swapchainImageToGeneralUsage(uint32_t image_index)
     command_buffer.upload(getContext());
 }
 
-void Animation::updateDescriptorSets(uint32_t image_index)
+void DancingPenguin::updateDescriptorSets(uint32_t image_index)
 {
     std::array<VkWriteDescriptorSet, 3> write_infos = { };
 
@@ -472,7 +471,7 @@ void Animation::updateDescriptorSets(uint32_t image_index)
     );
 }
 
-void Animation::initVertexBufferReferences()
+void DancingPenguin::initVertexBufferReferences()
 {
     auto ptr_visitor = std::make_unique<SceneGeometryReferencesGetter>(getContext());
 
@@ -509,7 +508,7 @@ void Animation::initVertexBufferReferences()
 	);
 }
 
-void Animation::updateTime()
+void DancingPenguin::updateTime()
 {
     static std::chrono::high_resolution_clock timer;
 
@@ -525,7 +524,7 @@ void Animation::updateTime()
     begin = end;
 }
 
-void Animation::animationPass()
+void DancingPenguin::animationPass()
 {
     auto& animator = _scene->getAnimator();
 
@@ -538,15 +537,13 @@ void Animation::animationPass()
     model.visit(ptr_as_builder);
 }
 
-void Animation::show()
+void DancingPenguin::show()
 {
     constexpr auto milisceonds_per_second = 1000.0f;
 
     while (processEvents())
     {
         updateTime();
-
-        _window->setTitle(std::format("Animation, {}ms", _time.delta * milisceonds_per_second));
 
         animationPass();
 
@@ -619,7 +616,7 @@ void Animation::show()
     }
 } 
 
-void Animation::resizeWindow()
+void DancingPenguin::resizeWindow()
 {
     VK_CHECK(vkDeviceWaitIdle(_context.device_handle));
 
@@ -634,7 +631,7 @@ void Animation::resizeWindow()
 	createSwapchainImageViews();
 } 
 
-void Animation::bindAlbedos()
+void DancingPenguin::bindAlbedos()
 {
     auto materials = _scene->getModel().getMaterialManager().getMaterials();
 

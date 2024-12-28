@@ -3,11 +3,11 @@
 #include <base/raytracing_base.hpp>
 #include <base/scene/scene.hpp>
 
-#include <animation/animation_pass.hpp>
+#include <dancing_penguin/animation_pass.hpp>
 
 using namespace vrts;
 
-namespace vrts::animation
+namespace vrts::dancing_penguin
 {
     struct StageId
     {
@@ -52,7 +52,7 @@ namespace vrts::animation
     };
 }
 
-class Animation final :
+class DancingPenguin final :
     public RayTracingBase
 {
     void init() override;
@@ -90,15 +90,15 @@ class Animation final :
     void bindAlbedos();
     
 public:
-    Animation() = default;
+    DancingPenguin() = default;
 
-    Animation(Animation&& animation)        = delete;
-    Animation(const Animation& animation)   = delete;
+    DancingPenguin(DancingPenguin&& animation)        = delete;
+    DancingPenguin(const DancingPenguin& animation)   = delete;
 
-    ~Animation();
+    ~DancingPenguin();
 
-    Animation& operator = (Animation&& animation)       = delete;
-    Animation& operator = (const Animation& animation)  = delete;
+    DancingPenguin& operator = (DancingPenguin&& animation)       = delete;
+    DancingPenguin& operator = (const DancingPenguin& animation)  = delete;
 
 private:
     std::optional<Scene> _scene;
@@ -134,9 +134,9 @@ private:
         float delta;
     } _time;
 
-    animation::PushConstants _push_constants;
+    dancing_penguin::PushConstants _push_constants;
 
-    std::optional<animation::AnimationPass> _animation_pass;
+    std::optional<dancing_penguin::AnimationPass> _animation_pass;
 
     constexpr static uint32_t _max_ray_tracing_recursive = 1u;
 };

@@ -2,7 +2,7 @@
 
 #extension GL_GOOGLE_include_directive : enable
 
-#include <shaders/animation/shared.glsl>
+#include <shaders/dancing_penguin/shared.glsl>
 
 #include <shaders/utils/geometry_properties.glsl>
 

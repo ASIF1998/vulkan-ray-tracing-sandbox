@@ -3,7 +3,7 @@
 #extension GL_EXT_ray_tracing           : enable
 #extension GL_GOOGLE_include_directive	: enable
 
-#include <shaders/animation/ray_payload.glsl>
+#include <shaders/dancing_penguin/ray_payload.glsl>
 
 layout(location = 0) rayPayloadInEXT payload_t payload;
 

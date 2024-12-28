@@ -6,8 +6,8 @@
 #extension GL_EXT_scalar_block_layout   : enable
 #extension GL_EXT_nonuniform_qualifier  : enable
 
-#include <shaders/animation/ray_payload.glsl>
-#include <shaders/animation/shared.glsl>
+#include <shaders/dancing_penguin/ray_payload.glsl>
+#include <shaders/dancing_penguin/shared.glsl>
 
 #include <shaders/utils/scene_geometry.glsl>
 #include <shaders/utils/texture_sampling.glsl>
