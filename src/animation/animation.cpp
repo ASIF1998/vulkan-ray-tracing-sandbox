@@ -9,6 +9,8 @@
 
 #include <animation/animation_pass.hpp>
 
+#include <ranges>
+
 using namespace animation;
 
 Animation::~Animation()
@@ -47,21 +49,29 @@ void Animation::initCamera()
 
 void Animation::createPipelineLayout()
 {
-    std::vector<VkDescriptorSetLayoutBinding> bindings (3);
-    bindings[0].binding         = Bindings::result;
-    bindings[0].descriptorCount = 1;
-    bindings[0].descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    bindings[0].stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
+    auto& materials = _scene->getModel().getMaterialManager().getMaterials();
     
-    bindings[1].binding         = Bindings::acceleration_structure;
-    bindings[1].descriptorCount = 1;
-    bindings[1].descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-    bindings[1].stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
+    std::vector<VkDescriptorSetLayoutBinding> bindings (Bindings::count);
+
+    bindings[Bindings::result].binding          = Bindings::result;
+    bindings[Bindings::result].descriptorCount  = 1;
+    bindings[Bindings::result].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    bindings[Bindings::result].stageFlags       = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
     
-    bindings[2].binding         = Bindings::scene_geometry;
-    bindings[2].descriptorCount = 1;
-    bindings[2].descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    bindings[2].stageFlags      = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+    bindings[Bindings::acceleration_structure].binding          = Bindings::acceleration_structure;
+    bindings[Bindings::acceleration_structure].descriptorCount  = 1;
+    bindings[Bindings::acceleration_structure].descriptorType   = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    bindings[Bindings::acceleration_structure].stageFlags       = VK_SHADER_STAGE_RAYGEN_BIT_KHR ;
+    
+    bindings[Bindings::scene_geometry].binding          = Bindings::scene_geometry;
+    bindings[Bindings::scene_geometry].descriptorCount  = 1;
+    bindings[Bindings::scene_geometry].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    bindings[Bindings::scene_geometry].stageFlags       = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+    
+    bindings[Bindings::albedos].binding         = Bindings::albedos;
+    bindings[Bindings::albedos].descriptorCount = static_cast<uint32_t>(materials.size());
+    bindings[Bindings::albedos].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[Bindings::albedos].stageFlags      = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
     VkDescriptorSetLayoutCreateInfo set_layout_info = { };
     set_layout_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -87,9 +97,12 @@ void Animation::createPipelineLayout()
 
 void Animation::createDescriptorSets()
 {
+    const auto& material = _scene->getModel().getMaterialManager().getMaterials();
+
     std::vector<VkDescriptorPoolSize> pool_sizes;
     pool_sizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1});
     pool_sizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1});
+    pool_sizes.push_back({VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(material.size())});
 
     VkDescriptorPoolCreateInfo descriptor_pool_create_info = { };
     descriptor_pool_create_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -292,6 +305,8 @@ void Animation::init()
     createDescriptorSets();
     createShaderBindingTable();
     initVertexBufferReferences();
+    
+    bindAlbedos();
 }
 
 bool Animation::processEvents()
@@ -322,6 +337,8 @@ void Animation::processPushConstants()
 
     _push_constants.rgen.camera_data.inv_view       = camera.getInvViewMatrix();
     _push_constants.rgen.camera_data.inv_projection = camera.getInvProjection();
+
+    _push_constants.rchit.eye_to_pixel_cone_spread_angle = camera.getEyeToPixelConeSpreadAngle();
 }
 
 void Animation::swapchainImageToPresentUsage(uint32_t image_index)
@@ -412,7 +429,6 @@ void Animation::updateDescriptorSets(uint32_t image_index)
     write_infos[0].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     write_infos[0].dstArrayElement  = 0;
     write_infos[0].dstBinding       = Bindings::result;
-    write_infos[0].dstSet           = _descriptor_set_handle;
     write_infos[0].dstSet           = _descriptor_set_handle;
     write_infos[0].pImageInfo       = &image_info;
 
@@ -564,6 +580,12 @@ void Animation::show()
 				0, sizeof(PushConstants::RayGen), &_push_constants.rgen
 			);
 
+            vkCmdPushConstants(
+				command_buffer_handle,
+				_pipeline_layout_handle, VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+				sizeof(PushConstants::RayGen), sizeof(PushConstants::ClosestHit), &_push_constants.rchit
+			);
+
             func_table.vkCmdTraceRaysKHR(
 				command_buffer_handle,
 				&_sbt.raygen_region,
@@ -597,3 +619,28 @@ void Animation::resizeWindow()
 {
     /// @todo
 } 
+
+void Animation::bindAlbedos()
+{
+    const auto& materials = _scene->getModel().getMaterialManager().getMaterials();
+
+    std::vector<VkDescriptorImageInfo> albedos_infos (materials.size());
+    for (auto i: std::views::iota(0u, materials.size()))
+    {
+        albedos_infos[i] = { };
+        albedos_infos[i].imageLayout    = VK_IMAGE_LAYOUT_GENERAL;
+        albedos_infos[i].imageView      = materials[i].albedo->view_handle;
+        albedos_infos[i].sampler        = materials[i].albedo->sampler_handle;
+    }
+
+    VkWriteDescriptorSet albedo_write_info = { };
+    albedo_write_info.sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    albedo_write_info.descriptorCount   = static_cast<uint32_t>(materials.size());
+    albedo_write_info.descriptorType    = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    albedo_write_info.dstArrayElement   = 0;
+    albedo_write_info.dstBinding        = Bindings::albedos;
+    albedo_write_info.dstSet            = _descriptor_set_handle;
+    albedo_write_info.pImageInfo        = albedos_infos.data();
+
+    vkUpdateDescriptorSets(_context.device_handle, 1, &albedo_write_info, 0, nullptr);
+}

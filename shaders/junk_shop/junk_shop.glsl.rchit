@@ -44,31 +44,31 @@ layout(set = 0, binding = emissives_binding)    uniform sampler2D emissives[];
 material_t get_material(in surface_t surface)
 {
     vec3 albedo = textureSampling(
-        albedos[gl_InstanceCustomIndexEXT], 
+        albedos[nonuniformEXT(gl_InstanceCustomIndexEXT)], 
         surface, 
         push_constants.eye_to_pixel_cone_spread_angle
     ).rgb;
 
     vec3 emissive = textureSampling(
-        emissives[gl_InstanceCustomIndexEXT], 
+        emissives[nonuniformEXT(gl_InstanceCustomIndexEXT)], 
         surface, 
         push_constants.eye_to_pixel_cone_spread_angle
     ).rgb;
 
     float metallic = textureSampling(
-        metallic[gl_InstanceCustomIndexEXT],
+        metallic[nonuniformEXT(gl_InstanceCustomIndexEXT)],
         surface, 
         push_constants.eye_to_pixel_cone_spread_angle
     ).r;
 
     float roughness = textureSampling(
-        roughness[gl_InstanceCustomIndexEXT], 
+        roughness[nonuniformEXT(gl_InstanceCustomIndexEXT)], 
         surface, 
         push_constants.eye_to_pixel_cone_spread_angle
     ).r;
 
     vec3 normal_from_tangent_space = textureSampling(
-        normal_maps[gl_InstanceCustomIndexEXT],
+        normal_maps[nonuniformEXT(gl_InstanceCustomIndexEXT)],
         surface, 
         push_constants.eye_to_pixel_cone_spread_angle
     ).xyz;

@@ -4,6 +4,7 @@
 const uint result_image_binding             = 0;
 const uint acceleration_structure_binding   = 1;
 const uint scene_geometry_binding			= 2;
+const uint albedos_binding 					= 3;
 
 const uint index_buffer_binding 			= 0;
 const uint src_vertex_buffer_binding 		= 1;

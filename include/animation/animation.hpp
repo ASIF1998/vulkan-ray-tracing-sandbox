@@ -28,6 +28,7 @@ namespace sample_vk::animation
             result,
             acceleration_structure,
             scene_geometry,
+            albedos,
 
             count
         };
@@ -43,6 +44,11 @@ namespace sample_vk::animation
                 glm::mat4 inv_projection    = glm::mat4(1.0f);
             } camera_data;
         } rgen;
+
+        struct ClosestHit
+        {
+            float eye_to_pixel_cone_spread_angle = 0.0f;
+        } rchit;
     };
 }
 
@@ -80,6 +86,8 @@ class Animation final :
     void updateTime();
 
     void animationPass();
+
+    void bindAlbedos();
     
 public:
     Animation() = default;
