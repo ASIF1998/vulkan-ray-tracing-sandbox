@@ -69,7 +69,7 @@ class DancingPenguin final :
 
     void createShaderBindingTable();
 
-    void initVertexBufferReferences();
+    void updateVertexBufferReferences();
 
     void destroyDescriptorSets();
     void destroyPipelineLayout();

@@ -66,7 +66,5 @@ void main()
         push_constants.eye_to_pixel_cone_spread_angle
     ).rgb;
 
-    vec3 ref = reflect(gl_WorldRayOriginEXT, surface.normal);
-
     payload.col = render(albedo, surface.normal);
 } 

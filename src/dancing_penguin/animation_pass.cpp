@@ -7,6 +7,8 @@
 
 #include <base/shader_compiler.hpp>
 
+#include <ranges>
+
 namespace vrts::dancing_penguin
 {
     AnimationPass::AnimationPass(const Context* ptr_context) :
@@ -75,7 +77,7 @@ namespace vrts::dancing_penguin
 
         std::array<VkWriteDescriptorSet, 4> write_infos;
 
-        for (size_t i = 0; i < write_infos.size(); ++i)
+        for (auto i: std::views::iota(0u, write_infos.size()))
         {
             write_infos[i] = { };
             write_infos[i].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -199,7 +201,7 @@ namespace vrts::dancing_penguin
 
         std::array<VkDescriptorSetLayoutBinding, 5> bindings_info;
 
-        for (size_t i = 0; i < bindings_info.size(); ++i)
+        for (auto i: std::views::iota(0u, bindings_info.size()))
         {
             bindings_info[i] = { };
             bindings_info[i].binding            = static_cast<uint32_t>(i);

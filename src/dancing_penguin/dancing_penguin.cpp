@@ -139,7 +139,7 @@ void DancingPenguin::createPipeline()
     stages[StageId::chit]    = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR; 
 
     std::array<VkPipelineShaderStageCreateInfo, StageId::count> shader_stage_create_infos = { };
-    for (size_t i = 0; i < StageId::count; ++i)
+    for (auto i: std::views::iota(0, StageId::count))
     {
         shader_stage_create_infos[i].sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         shader_stage_create_infos[i].module = shader_modules[i];
@@ -303,7 +303,6 @@ void DancingPenguin::init()
     createPipeline();
     createDescriptorSets();
     createShaderBindingTable();
-    initVertexBufferReferences();
     
     bindAlbedos();
 }
@@ -325,9 +324,9 @@ bool DancingPenguin::processEvents()
                     return false;
                 break;
             case SDL_WINDOWEVENT:
-				if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-					resizeWindow();
-				break;
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    resizeWindow();
+                break;
         }
     }
 
@@ -426,43 +425,43 @@ void DancingPenguin::updateDescriptorSets(uint32_t image_index)
     image_info.imageLayout  = VK_IMAGE_LAYOUT_GENERAL;
     image_info.imageView    = _swapchain_image_view_handles[image_index];
 
-    write_infos[0] = { }; 
-    write_infos[0].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_infos[0].descriptorCount  = 1;
-    write_infos[0].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    write_infos[0].dstArrayElement  = 0;
-    write_infos[0].dstBinding       = Bindings::result;
-    write_infos[0].dstSet           = _descriptor_set_handle;
-    write_infos[0].pImageInfo       = &image_info;
+    write_infos[Bindings::result] = { }; 
+    write_infos[Bindings::result].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_infos[Bindings::result].descriptorCount   = 1;
+    write_infos[Bindings::result].descriptorType    = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    write_infos[Bindings::result].dstArrayElement   = 0;
+    write_infos[Bindings::result].dstBinding        = Bindings::result;
+    write_infos[Bindings::result].dstSet            = _descriptor_set_handle;
+    write_infos[Bindings::result].pImageInfo        = &image_info;
 
     auto acceleration_structure_handle = _scene->getModel().getRootTLAS().value();
 
     VkWriteDescriptorSetAccelerationStructureKHR write_acceleration_structure_info = { };
-	write_acceleration_structure_info.sType 						= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-	write_acceleration_structure_info.accelerationStructureCount 	= 1;
+	write_acceleration_structure_info.sType                         = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+	write_acceleration_structure_info.accelerationStructureCount    = 1;
     write_acceleration_structure_info.pAccelerationStructures       = &acceleration_structure_handle;
 
-    write_infos[1] = { }; 
-    write_infos[1].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_infos[1].pNext           = &write_acceleration_structure_info;
-    write_infos[1].descriptorCount = 1;
-    write_infos[1].descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-    write_infos[1].dstArrayElement = 0;
-    write_infos[1].dstBinding      = Bindings::acceleration_structure;
-    write_infos[1].dstSet          = _descriptor_set_handle;
+    write_infos[Bindings::acceleration_structure] = { }; 
+    write_infos[Bindings::acceleration_structure].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_infos[Bindings::acceleration_structure].pNext             = &write_acceleration_structure_info;
+    write_infos[Bindings::acceleration_structure].descriptorCount   = 1;
+    write_infos[Bindings::acceleration_structure].descriptorType    = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    write_infos[Bindings::acceleration_structure].dstArrayElement   = 0;
+    write_infos[Bindings::acceleration_structure].dstBinding        = Bindings::acceleration_structure;
+    write_infos[Bindings::acceleration_structure].dstSet            = _descriptor_set_handle;
 
     VkDescriptorBufferInfo buffer_info = { };
-	buffer_info.buffer 	= _vertex_buffers_references.scene_info_reference->vk_handle;
-	buffer_info.offset 	= 0;
-	buffer_info.range 	= sizeof(VkDeviceAddress) * 2;
+    buffer_info.buffer 	= _vertex_buffers_references.scene_info_reference->vk_handle;
+    buffer_info.offset 	= 0;
+    buffer_info.range 	= sizeof(VkDeviceAddress) * 2;
 
-    write_infos[2] = { };
-    write_infos[2].sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_infos[2].descriptorCount  = 1;
-    write_infos[2].descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    write_infos[2].dstBinding       = Bindings::scene_geometry;
-    write_infos[2].dstSet           = _descriptor_set_handle;
-    write_infos[2].pBufferInfo      = &buffer_info;
+    write_infos[Bindings::scene_geometry] = { };
+    write_infos[Bindings::scene_geometry].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_infos[Bindings::scene_geometry].descriptorCount   = 1;
+    write_infos[Bindings::scene_geometry].descriptorType    = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    write_infos[Bindings::scene_geometry].dstBinding        = Bindings::scene_geometry;
+    write_infos[Bindings::scene_geometry].dstSet            = _descriptor_set_handle;
+    write_infos[Bindings::scene_geometry].pBufferInfo       = &buffer_info;
 
     vkUpdateDescriptorSets(
         _context.device_handle,
@@ -471,7 +470,7 @@ void DancingPenguin::updateDescriptorSets(uint32_t image_index)
     );
 }
 
-void DancingPenguin::initVertexBufferReferences()
+void DancingPenguin::updateVertexBufferReferences()
 {
     auto ptr_visitor = std::make_unique<SceneGeometryReferencesGetter>(getContext());
 
@@ -535,6 +534,8 @@ void DancingPenguin::animationPass()
 
     auto& model = _scene->getModel();
     model.visit(ptr_as_builder);
+
+    updateVertexBufferReferences();
 }
 
 void DancingPenguin::show()
