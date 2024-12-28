@@ -325,6 +325,10 @@ bool Animation::processEvents()
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     return false;
                 break;
+            case SDL_WINDOWEVENT:
+				if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+					resizeWindow();
+				break;
         }
     }
 
@@ -617,7 +621,17 @@ void Animation::show()
 
 void Animation::resizeWindow()
 {
-    /// @todo
+    VK_CHECK(vkDeviceWaitIdle(_context.device_handle));
+
+    auto [width, height] = _window->getSize();
+	_scene->getCameraController().getCamera().setSize(static_cast<float>(width), static_cast<float>(height));
+
+    destroySwapchainImageViews();
+	destroySwapchain();
+
+    createSwapchain();
+	getSwapchainImages();
+	createSwapchainImageViews();
 } 
 
 void Animation::bindAlbedos()
