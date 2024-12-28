@@ -49,7 +49,7 @@ void Animation::initCamera()
 
 void Animation::createPipelineLayout()
 {
-    auto& materials = _scene->getModel().getMaterialManager().getMaterials();
+    auto materials = _scene->getModel().getMaterialManager().getMaterials();
     
     std::vector<VkDescriptorSetLayoutBinding> bindings (Bindings::count);
 
@@ -97,7 +97,7 @@ void Animation::createPipelineLayout()
 
 void Animation::createDescriptorSets()
 {
-    const auto& material = _scene->getModel().getMaterialManager().getMaterials();
+    auto material = _scene->getModel().getMaterialManager().getMaterials();
 
     std::vector<VkDescriptorPoolSize> pool_sizes;
     pool_sizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1});
@@ -622,7 +622,7 @@ void Animation::resizeWindow()
 
 void Animation::bindAlbedos()
 {
-    const auto& materials = _scene->getModel().getMaterialManager().getMaterials();
+    auto materials = _scene->getModel().getMaterialManager().getMaterials();
 
     std::vector<VkDescriptorImageInfo> albedos_infos (materials.size());
     for (auto i: std::views::iota(0u, materials.size()))

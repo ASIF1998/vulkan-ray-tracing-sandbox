@@ -20,7 +20,7 @@ namespace sample_vk
         _materials.push_back(std::move(material));
     }
 
-    const std::vector<Material>& MaterialManager::getMaterials() const noexcept
+    std::span<const Material> MaterialManager::getMaterials() const
     {
         return _materials;
     }

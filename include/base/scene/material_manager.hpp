@@ -3,6 +3,7 @@
 #include <base/vulkan/image.hpp>
 
 #include <vector>
+#include <span>
 #include <numeric>
 
 #include <base/vulkan/utils.hpp>
@@ -29,7 +30,7 @@ namespace sample_vk
         MaterialManager& operator = (MaterialManager&& material_manager);
         MaterialManager& operator = (const MaterialManager& material_manager)   = delete;
 
-        [[nodiscard]] const std::vector<Material>& getMaterials() const noexcept;
+        [[nodiscard]] std::span<const Material> getMaterials() const;
 
         void add(Material&& material);
 

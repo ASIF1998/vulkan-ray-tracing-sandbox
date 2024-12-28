@@ -107,7 +107,7 @@ void JunkShop::updateDescriptorSet(uint32_t image_index)
 
 	/*	------------------------------------------------------	*/
 	/*	--------------------	materials	------------------	*/
-	const auto& materials = material_manager.getMaterials();
+	auto materials = material_manager.getMaterials();
 
 	std::vector<VkDescriptorImageInfo> albedos_infos 		(materials.size());
 	std::vector<VkDescriptorImageInfo> normal_maps_infos 	(materials.size());
@@ -310,7 +310,7 @@ void JunkShop::show()
 
 DescriptorSetsBindings JunkShop::getPipelineDescriptorSetsBindings() const
 {
-	auto& materials = _scene->getModel().getMaterialManager().getMaterials();
+	auto materials = _scene->getModel().getMaterialManager().getMaterials();
 
 	std::array<VkDescriptorSetLayoutBinding, DescriptorSets::count> bindings;
 
@@ -594,7 +594,7 @@ void JunkShop::createShaderBindingTable()
 
 PoolSizes JunkShop::getPoolSizes() const
 {
-	const auto& materials = _scene->getModel().getMaterialManager().getMaterials();
+	auto materials = _scene->getModel().getMaterialManager().getMaterials();
 
 	std::array<VkDescriptorPoolSize, DescriptorSets::count> pool_sizes;
 
