@@ -7,7 +7,7 @@
 
 #include <ranges>
 
-namespace sample_vk
+namespace vrts
 {
     ASBuilder::ASBuilder(const Context* ptr_context) :
         _ptr_context (ptr_context)

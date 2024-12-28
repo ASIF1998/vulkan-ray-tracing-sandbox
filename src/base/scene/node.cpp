@@ -2,7 +2,7 @@
 
 #include <base/raytracing_base.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     Node::Node(const std::string_view name, const glm::mat4& transform) :
         _type       (NodeType::Base),
@@ -30,7 +30,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     MeshNode::MeshNode(const std::string_view name, const glm::mat4& transform, Mesh&& mesh) :
         Node    (name, transform),
@@ -40,7 +40,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     SkinnedMeshNode::SkinnedMeshNode(const std::string_view name, const glm::mat4& transform, SkinnedMesh&& mesh) : 
         Node(name, transform),

@@ -10,7 +10,7 @@
 
 #include <glslang/Include/glslang_c_interface.h>
 
-namespace sample_vk::shader
+namespace vrts::shader
 {
     enum class Type
     {

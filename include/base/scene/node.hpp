@@ -12,7 +12,7 @@
 #include <string_view>
 #include <memory>
 
-namespace sample_vk
+namespace vrts
 {
     enum class NodeType
     {

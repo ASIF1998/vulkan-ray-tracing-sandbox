@@ -5,7 +5,7 @@
 
 #include <stacktrace>
 
-namespace sample_vk
+namespace vrts
 {
     auto toString(std::source_location source)
     {

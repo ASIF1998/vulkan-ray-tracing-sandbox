@@ -1,7 +1,7 @@
 #include <base/camera.hpp>
 #include <base/math.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     Camera::Camera(uint32_t width, uint32_t height) :
         _width  (static_cast<float>(width)),
@@ -55,7 +55,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     CameraController::CameraController(const Camera& camera) :
         _camera(camera)

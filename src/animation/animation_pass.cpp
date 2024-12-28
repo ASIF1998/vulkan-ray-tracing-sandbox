@@ -7,7 +7,7 @@
 
 #include <base/shader_compiler.hpp>
 
-namespace sample_vk::animation
+namespace vrts::animation
 {
     AnimationPass::AnimationPass(const Context* ptr_context) :
         _ptr_context        (ptr_context)
@@ -164,7 +164,7 @@ namespace sample_vk::animation
     }
 }
 
-namespace sample_vk::animation
+namespace vrts::animation
 {
     AnimationPass::Builder::~Builder()
     {

@@ -13,7 +13,7 @@
 
 #include <stdexcept>
 
-namespace sample_vk
+namespace vrts
 {
     Image::Image(const Context* ptr_context) :
         _ptr_context (ptr_context)
@@ -146,7 +146,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     struct ImageUtils
     {
@@ -207,7 +207,7 @@ namespace sample_vk
     };
 }
 
-namespace sample_vk
+namespace vrts
 {
     Image::Builder::Builder(const Context* ptr_context) noexcept :
         _ptr_context (ptr_context)
@@ -465,7 +465,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     Image::Loader::Loader(const Context* ptr_context) noexcept :
         _ptr_context (ptr_context)
@@ -537,7 +537,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     Image::Decoder::Decoder(const Context* ptr_context) noexcept :
         _ptr_context (ptr_context)

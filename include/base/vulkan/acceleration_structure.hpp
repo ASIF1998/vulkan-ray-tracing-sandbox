@@ -2,12 +2,12 @@
 
 #include <base/vulkan/buffer.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 }
 
-namespace sample_vk
+namespace vrts
 {
     struct AccelerationStructure
     {

@@ -4,7 +4,7 @@
 
 #include <numeric>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context
     {

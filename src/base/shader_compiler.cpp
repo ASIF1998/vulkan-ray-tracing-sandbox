@@ -20,7 +20,7 @@
 #define CHECK_SHADER(fn)    CHECK(fn, glslang_shader_get_info_log, ptr_shader)
 #define CHECK_PROGRAM(fn)   CHECK(fn, glslang_program_get_info_log, ptr_program)
 
-namespace sample_vk::shader
+namespace vrts::shader
 {
     struct IncludeProcessData
     {
@@ -113,7 +113,7 @@ namespace sample_vk::shader
     std::map<std::string, IncludeProcessData> IncludeProcessUtils::_includes_data;
 }
 
-namespace sample_vk::shader
+namespace vrts::shader
 {
     bool Compiler::_is_init = false;
 
@@ -134,7 +134,7 @@ namespace sample_vk::shader
     }
 }
 
-namespace sample_vk::shader
+namespace vrts::shader
 {
     glslang_stage_t getStage(Type type)
     {

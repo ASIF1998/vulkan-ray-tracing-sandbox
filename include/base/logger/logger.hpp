@@ -5,7 +5,7 @@
 
 #include <source_location>
 
-namespace sample_vk
+namespace vrts
 {
     struct Logger
     {
@@ -26,20 +26,20 @@ namespace sample_vk
     };
 }
 
-namespace sample_vk::log
+namespace vrts::log
 {
     constexpr void info(const std::string_view fmt, const auto&... args)
     {
-        Logger::log("vrts", sample_vk::Logger::Level::Info, std::vformat(fmt, std::make_format_args(args...)));
+        Logger::log("vrts", vrts::Logger::Level::Info, std::vformat(fmt, std::make_format_args(args...)));
     }
 
     constexpr void warning(const std::string_view fmt, const auto&... args)
     {
-        Logger::log("vrts", sample_vk::Logger::Level::Warning, std::vformat(fmt, std::make_format_args(args...)));
+        Logger::log("vrts", vrts::Logger::Level::Warning, std::vformat(fmt, std::make_format_args(args...)));
     }
 
     constexpr void error(const std::string_view fmt, const auto&... args)
     {
-        Logger::log("vrts", sample_vk::Logger::Level::Error, std::vformat(fmt, std::make_format_args(args...)));
+        Logger::log("vrts", vrts::Logger::Level::Error, std::vformat(fmt, std::make_format_args(args...)));
     }
 }

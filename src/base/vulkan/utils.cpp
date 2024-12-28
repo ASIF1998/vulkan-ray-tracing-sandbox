@@ -4,7 +4,7 @@
 
 #include <base/vulkan/context.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     const std::map<VkFormat, size_t> VkUtils::_vk_formats_sizes_table
     {
@@ -247,7 +247,7 @@ namespace sample_vk
     };
 }
 
-namespace sample_vk
+namespace vrts
 {
     void VkUtils::init(const Context* ptr_context)
     {
@@ -276,7 +276,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     CommandBuffer VkUtils::getCommandBuffer(const Context* ptr_context)
     {
@@ -305,7 +305,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     uint32_t VkUtils::getAlignedSize(VkDeviceSize size, VkDeviceSize aligned)
     {
@@ -313,7 +313,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     std::optional<VkFunctionPointerTable> VkUtils::_vulkan_function_pointer_table = std::nullopt;
 
@@ -326,7 +326,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     uint32_t VkUtils::getMipLevelsCount(uint32_t width, uint32_t height)
     {

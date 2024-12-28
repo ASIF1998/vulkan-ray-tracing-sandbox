@@ -1,7 +1,7 @@
 #include <base/scene/visitors/scene_geometry_references_getter.hpp>
 #include <base/scene/node.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     SceneGeometryReferencesGetter::SceneGeometryReferencesGetter(const Context* ptr_context) :
         _ptr_context(ptr_context)

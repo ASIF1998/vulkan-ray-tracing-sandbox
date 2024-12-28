@@ -5,9 +5,9 @@
 
 #include <animation/animation_pass.hpp>
 
-using namespace sample_vk;
+using namespace vrts;
 
-namespace sample_vk::animation
+namespace vrts::animation
 {
     struct StageId
     {

@@ -1,4 +1,4 @@
-namespace sample_vk
+namespace vrts
 {
     template<typename Keys>
     size_t AnimationSampler::getIndex(const Keys& keys, float time) const

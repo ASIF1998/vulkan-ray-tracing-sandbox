@@ -8,7 +8,7 @@
 
 #include <base/vulkan/utils.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     struct Material
     {

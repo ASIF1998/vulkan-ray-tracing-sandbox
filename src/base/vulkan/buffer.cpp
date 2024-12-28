@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-namespace sample_vk
+namespace vrts
 {
     Buffer::Buffer(const Context* ptr_context):
         _ptr_context (ptr_context)

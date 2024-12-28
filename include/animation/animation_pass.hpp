@@ -9,13 +9,13 @@
 
 #include <span>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
     struct SkinnedMesh;
 }
 
-namespace sample_vk::animation
+namespace vrts::animation
 {
     class AnimationPass
     {

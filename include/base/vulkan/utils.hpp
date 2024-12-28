@@ -31,12 +31,12 @@
             log::error(#fn);                \
     } while (false)
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 }
 
-namespace sample_vk
+namespace vrts
 {
     template<typename T>
     concept IsVulkanWrapper = requires(T t)

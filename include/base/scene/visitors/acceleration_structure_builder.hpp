@@ -6,7 +6,7 @@
 
 #include <string_view>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 
@@ -18,7 +18,7 @@ namespace sample_vk
     struct Buffer;
 }
 
-namespace sample_vk
+namespace vrts
 {
     class ASBuilder final :
         public NodeVisitor

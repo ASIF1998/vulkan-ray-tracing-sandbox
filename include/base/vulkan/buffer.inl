@@ -3,7 +3,7 @@
 
 #include <base/vulkan/utils.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     template<typename T>
     static void Buffer::writeData(

@@ -17,13 +17,13 @@
 #include <tuple>
 #include <map>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
     struct MeshNode;
 }
 
-namespace sample_vk
+namespace vrts
 {
     struct Light
     {

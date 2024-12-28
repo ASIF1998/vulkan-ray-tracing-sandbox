@@ -10,7 +10,7 @@
 
 #include <ranges>
 
-namespace sample_vk
+namespace vrts
 {
     Window::Window(const std::string_view title, uint32_t width, uint32_t height)
     {
@@ -88,7 +88,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     RayTracingBase::~RayTracingBase()
     {
@@ -107,7 +107,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     enum : uint32_t
     {
@@ -149,7 +149,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     void RayTracingBase::createInstance()
     {
@@ -206,7 +206,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     void RayTracingBase::getPhysicalDevice()
     {
@@ -295,7 +295,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     uint32_t getQueueFamilyIndex(
         const std::vector<VkQueueFamilyProperties>& families, 
@@ -414,7 +414,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     void RayTracingBase::getQueue()
     {
@@ -422,7 +422,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     void RayTracingBase::createCommandPool()
     {
@@ -452,7 +452,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     void RayTracingBase::createSurface()
     {
@@ -488,7 +488,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     std::vector<VkSurfaceFormatKHR> RayTracingBase::getSurfaceFormats() const
     {
@@ -760,7 +760,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     const Context* RayTracingBase::getContext() const noexcept
     {
@@ -768,7 +768,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     uint32_t RayTracingBase::getNextImageIndex() const
     {

@@ -6,9 +6,9 @@
 
 #include <array>
 
-using namespace sample_vk;
+using namespace vrts;
 
-namespace sample_vk::junk_shop
+namespace vrts::junk_shop
 {
     struct CameraData
     {

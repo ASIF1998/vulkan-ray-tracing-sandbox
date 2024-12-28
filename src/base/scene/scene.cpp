@@ -18,7 +18,7 @@
 
 #include <cstddef> 
 
-namespace sample_vk::utils
+namespace vrts::utils
 {
     static constexpr auto buffer_usage_flags = 
                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
@@ -106,7 +106,7 @@ namespace sample_vk::utils
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     class ScopedTransform
     {
@@ -129,7 +129,7 @@ namespace sample_vk
     };
 }
 
-namespace sample_vk
+namespace vrts
 {
     Scene::Scene(
         Model&&                     model, 
@@ -183,7 +183,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     void Scene::addRect(
         const Context*      ptr_context,
@@ -337,7 +337,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     Scene::Importer& Scene::Importer::path(const std::filesystem::path path)
     {

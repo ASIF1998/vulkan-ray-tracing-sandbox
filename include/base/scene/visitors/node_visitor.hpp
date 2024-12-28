@@ -1,13 +1,13 @@
 #pragma once
 
-namespace sample_vk
+namespace vrts
 {
     class   Node;
     struct  MeshNode;
     struct  SkinnedMeshNode;
 }
 
-namespace sample_vk
+namespace vrts
 {
     class NodeVisitor
     {

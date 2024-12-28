@@ -2,7 +2,7 @@
 
 #include <base/vulkan/context.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     MaterialManager::MaterialManager(MaterialManager&& material_manager) :
         _materials (std::move(material_manager._materials))

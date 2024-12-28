@@ -4,9 +4,9 @@
 
 #include <base/vulkan/acceleration_structure.hpp>
 
-using namespace sample_vk;
+using namespace vrts;
 
-namespace sample_vk::hello_triangle
+namespace vrts::hello_triangle
 {
     struct Mesh
     {

@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace sample_vk
+namespace vrts
 {
     struct VkFunctionPointerTable
     {

@@ -11,7 +11,7 @@
 
 #include <optional>
 
-namespace sample_vk
+namespace vrts
 {
     struct AnimationHierarchiry
     {

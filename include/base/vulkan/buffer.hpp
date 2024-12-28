@@ -9,12 +9,12 @@
 
 #include <base/vulkan/command_buffer.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 }
 
-namespace sample_vk
+namespace vrts
 {
     struct Buffer
     {

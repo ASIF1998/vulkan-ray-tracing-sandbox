@@ -2,7 +2,7 @@
 
 #include <base/logger/logger.hpp>
 
-namespace sample_vk
+namespace vrts
 {  
     template<typename VulkanFunctionType>
     VulkanFunctionType loadFunction(VkDevice device_handle, const std::string_view function_name)

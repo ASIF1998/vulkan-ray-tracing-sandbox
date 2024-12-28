@@ -1,6 +1,6 @@
 #include <base/vulkan/acceleration_structure.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     AccelerationStructure::AccelerationStructure(
         const Context*              ptr_context,

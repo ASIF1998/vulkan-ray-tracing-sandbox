@@ -6,7 +6,7 @@
 
 #include <optional>
 
-namespace sample_vk
+namespace vrts
 {
     class MemoryProperties
     {

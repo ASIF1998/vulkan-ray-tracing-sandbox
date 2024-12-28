@@ -8,12 +8,12 @@
 
 #include <base/math.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 }
 
-namespace sample_vk
+namespace vrts
 {
     struct ImageWriteData
     {

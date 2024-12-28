@@ -1,6 +1,6 @@
 #include <base/configuration.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     void VkUtils::setName(
         VkDevice                    device_handle, 

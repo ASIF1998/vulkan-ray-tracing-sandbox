@@ -3,7 +3,7 @@
 
 #include <base/vulkan/context.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     CommandBuffer::CommandBuffer(const Context* ptr_context, VkCommandBuffer command_buffer_handle) :
         _vk_handle      (command_buffer_handle),

@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-namespace sample_vk
+namespace vrts
 {
     Bone::Bone(
         std::string_view        name,
@@ -31,7 +31,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     Bone::Builder& Bone::Builder::name(std::string_view name)
     {
@@ -82,7 +82,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     std::optional<BoneInfo> BoneRegistry::get(std::string_view name) const
     {
@@ -103,7 +103,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     AnimationSampler::AnimationSampler(BoneTransformTrack&& track) :
         _track (std::move(track))
@@ -187,7 +187,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     void Animator::update(float delta_time)
     {
@@ -228,7 +228,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     Animator::Builder& Animator::Builder::bones(std::vector<Bone>&& bones)
     {

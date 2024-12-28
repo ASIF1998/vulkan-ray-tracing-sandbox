@@ -9,7 +9,7 @@
 
 #include <base/vulkan/buffer.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 
@@ -17,7 +17,7 @@ namespace sample_vk
     struct  MeshNode;
 }
 
-namespace sample_vk
+namespace vrts
 {
     class SceneGeometryReferencesGetter final :
         public NodeVisitor
