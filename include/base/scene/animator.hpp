@@ -202,8 +202,6 @@ namespace sample_vk
         float _duration           = 0.0f;
         float _current_time       = 0.0f;
         float _ticks_per_second   = 0.0f;
-
-        glm::mat4 _global_inverse_transform = glm::mat4(1.0f);
     };
 
     class Animator::Builder
@@ -223,7 +221,6 @@ namespace sample_vk
         Builder& boneRegistry(BoneRegistry&& bone_registry);
         Builder& animationHierarchiryRootNode(AnimationHierarchiry::Node&& root_node);
         Builder& time(float duration, float ticks_per_second);
-        Builder& globalTransform(const glm::mat4& global_transform);
 
         Animator build();
 
@@ -234,8 +231,6 @@ namespace sample_vk
 
         float _duration         = 0.0f; 
         float _ticks_per_second = 0.0f;
-
-        glm::mat4 _global_transform = glm::mat4(1.0f);
     };
 }
 

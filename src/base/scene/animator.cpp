@@ -221,7 +221,7 @@ namespace sample_vk
         const auto transform = parent_transform * node_transform;
 
         if (const auto bone = _bone_registry.get(node_name); bone)
-            _final_bones_matrices[bone->id] = /*_global_inverse_transform **/ transform * bone->offset;
+        _final_bones_matrices[bone->id] = transform * bone->offset;
 
         for (const auto& child: node.children)
             calculateBoneTransform(child, transform);
@@ -255,12 +255,6 @@ namespace sample_vk
         return *this;
     }
 
-    Animator::Builder& Animator::Builder::globalTransform(const glm::mat4& global_transform)
-    {
-        _global_transform = global_transform;
-        return *this;
-    }
-
     void Animator::Builder::validate() const
     {
         if (_bones.empty()) 
@@ -285,7 +279,6 @@ namespace sample_vk
         animator._root_node                 = std::move(_root_node);
         animator._duration                  = _duration;
         animator._ticks_per_second          = _ticks_per_second;
-        animator._global_inverse_transform  = glm::inverse(_global_transform);
 
         animator._final_bones_matrices.resize(animator._bone_registry.boneCount(), glm::mat4(1.0f));
 

@@ -816,7 +816,6 @@ namespace sample_vk
                 .boneRegistry(std::move(_animation.bone_infos))
                 .animationHierarchiryRootNode(std::move(_animation.root_node))
                 .time(duration, ticks_per_second)
-                .globalTransform(global_transform)
                 .build();
         }
     }
