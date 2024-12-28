@@ -7,7 +7,7 @@
 
 #include <base/math.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     class Camera
     {

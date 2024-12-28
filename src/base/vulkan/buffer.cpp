@@ -4,13 +4,13 @@
 
 #include <stdexcept>
 
-namespace sample_vk
+namespace vrts
 {
     Buffer::Buffer(const Context* ptr_context):
         _ptr_context (ptr_context)
     { 
         if (!ptr_context)
-            log::vkError("[Buffer]: ptr_context is null.");
+            log::error("[Buffer]: ptr_context is null.");
     }
 
     Buffer::Buffer(Buffer&& buffer)
@@ -23,11 +23,11 @@ namespace sample_vk
 
     Buffer::~Buffer()
     {
-        if (isInit())
-        {
+        if (vk_handle != VK_NULL_HANDLE)
             vkDestroyBuffer(_ptr_context->device_handle, vk_handle, nullptr);
+
+        if (memory_handle != VK_NULL_HANDLE) 
             vkFreeMemory(_ptr_context->device_handle, memory_handle, nullptr);
-        }
     }
 
     Buffer& Buffer::operator = (Buffer&& buffer)
@@ -58,11 +58,6 @@ namespace sample_vk
         return vkGetBufferDeviceAddress(_ptr_context->device_handle, &buffer_device_address_info);
     }
 
-    bool Buffer::isInit() const noexcept
-    {
-        return  memory_handle != VK_NULL_HANDLE  && vk_handle != VK_NULL_HANDLE;
-    }
-
     Buffer Buffer::make(
         const Context*          ptr_context,
         VkDeviceSize            size, 
@@ -72,10 +67,10 @@ namespace sample_vk
     )
     {
         if (!ptr_context)
-            log::vkError("[Buffer]: ptr_context is null.");
+            log::error("[Buffer]: ptr_context is null.");
 
         if (!size)
-            log::vkError("[Buffer]: size is 0.");
+            log::error("[Buffer]: size is 0.");
 
         Buffer buffer (ptr_context);
 

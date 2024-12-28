@@ -1,6 +1,6 @@
 #include <base/vulkan/acceleration_structure.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     AccelerationStructure::AccelerationStructure(
         const Context*              ptr_context,
@@ -17,18 +17,17 @@ namespace sample_vk
     void AccelerationStructure::validate() const
     {
         if (!_ptr_context)
-            log::vkError("[AccelerationStructure]: Not driver.");
+            log::error("[AccelerationStructure]: Not driver.");
 
         if (vk_handle == VK_NULL_HANDLE)
-            log::vkError("[AccelerationStructure]: acceleration structure handle is null.");
+            log::error("[AccelerationStructure]: acceleration structure handle is null.");
 
-        if (!buffer.isInit())
-            log::vkError("[AccelerationStructure]: buffer not initialize.");
+        if (buffer == std::nullopt)
+            log::error("[AccelerationStructure]: buffer not initialize.");
     }
 
     AccelerationStructure::AccelerationStructure(AccelerationStructure&& acceleration_structure) :
-        _ptr_context    (acceleration_structure._ptr_context),
-        buffer          (acceleration_structure._ptr_context)
+        _ptr_context (acceleration_structure._ptr_context)
     {
         std::swap(vk_handle, acceleration_structure.vk_handle);
         std::swap(buffer, acceleration_structure.buffer);
@@ -61,6 +60,6 @@ namespace sample_vk
     {
         return  _ptr_context != nullptr     && 
                 vk_handle != VK_NULL_HANDLE && 
-                buffer.isInit();
+                buffer != std::nullopt;
     }
 }

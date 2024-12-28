@@ -6,6 +6,8 @@
 
 #include <ranges>
 
+using namespace junk_shop;
+
 JunkShop::~JunkShop()
 {
 	destroyPipeline();
@@ -71,7 +73,7 @@ VkDescriptorImageInfo JunkShop::createDescriptorImageInfo(VkImageView image_view
 auto JunkShop::createDescriptorBufferInfo(VkBuffer buffer_handle, VkDeviceSize size, VkDeviceSize offset)
 	-> VkDescriptorBufferInfo
 {
-	VkDescriptorBufferInfo 	buffer_info = { };
+	VkDescriptorBufferInfo buffer_info = { };
 	buffer_info.buffer 	= buffer_handle;
 	buffer_info.offset 	= offset;
 	buffer_info.range 	= size;
@@ -90,7 +92,7 @@ void JunkShop::updateDescriptorSet(uint32_t image_index)
 	if (auto root_tlas_handle = _scene->getModel().getRootTLAS())
 		write_acceleration_structure_info.pAccelerationStructures = &(*root_tlas_handle);
 	else 
-		log::appError("Acceleartion structure not created.");
+		log::error("Acceleartion structure not created.");
 	
 	/*	--------------- rendering result ----------------------	*/
 	auto result_image_info = createDescriptorImageInfo(_swapchain_image_view_handles[image_index]);
@@ -105,7 +107,7 @@ void JunkShop::updateDescriptorSet(uint32_t image_index)
 
 	/*	------------------------------------------------------	*/
 	/*	--------------------	materials	------------------	*/
-	const auto& materials = material_manager.getMaterials();
+	auto materials = material_manager.getMaterials();
 
 	std::vector<VkDescriptorImageInfo> albedos_infos 		(materials.size());
 	std::vector<VkDescriptorImageInfo> normal_maps_infos 	(materials.size());
@@ -178,27 +180,6 @@ bool JunkShop::processEvents()
 {
 	SDL_Event event = { };
 
-	auto is_move = [] (auto current_scancode)
-	{
-		constexpr std::array scancodes = 
-		{
-			SDL_SCANCODE_W,
-			SDL_SCANCODE_A,
-			SDL_SCANCODE_S,
-			SDL_SCANCODE_D,
-			SDL_SCANCODE_SPACE,
-			SDL_SCANCODE_LSHIFT
-		};
-
-		for (auto scancode: scancodes)
-		{
-			if (current_scancode == scancode)
-				return true;
-		}
-
-		return false;
-	};
-
 	while (SDL_PollEvent(&event))
 	{
 		_scene->processEvent(&event);
@@ -234,7 +215,7 @@ bool JunkShop::processEvents()
 
 void JunkShop::show()
 {
-	log::appInfo("Sample running !!!");
+	log::info("Sample running !!!");
 
 	while (processEvents())
 	{
@@ -327,10 +308,9 @@ void JunkShop::show()
 	}
 }
 
-auto JunkShop::getPipelineDescriptorSetsBindings() const
-	-> std::array<VkDescriptorSetLayoutBinding, DescriptorSets::count>
+DescriptorSetsBindings JunkShop::getPipelineDescriptorSetsBindings() const
 {
-	auto& materials = _scene->getModel().getMaterialManager().getMaterials();
+	auto materials = _scene->getModel().getMaterialManager().getMaterials();
 
 	std::array<VkDescriptorSetLayoutBinding, DescriptorSets::count> bindings;
 
@@ -566,7 +546,7 @@ void JunkShop::createShaderBindingTable()
 	auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	if (!memory_type_index.has_value())
-		log::appError("Not memory index for create SBT.");
+		log::error("Not memory index for create SBT.");
 
 	auto createBufferForSBT = [this, &memory_type_index] (
 		std::optional<Buffer>&		buffer, 
@@ -612,10 +592,9 @@ void JunkShop::createShaderBindingTable()
 	_sbt.raygen_region.size 			= handle_size_aligned;
 }
 
-auto JunkShop::getPoolSizes() const
-	-> std::array<VkDescriptorPoolSize, DescriptorSets::count>
+PoolSizes JunkShop::getPoolSizes() const
 {
-	const auto& materials = _scene->getModel().getMaterialManager().getMaterials();
+	auto materials = _scene->getModel().getMaterialManager().getMaterials();
 
 	std::array<VkDescriptorPoolSize, DescriptorSets::count> pool_sizes;
 
@@ -744,7 +723,7 @@ void JunkShop::importScene()
 		);
 	}
 	else 
-		log::appError("Not memory index for scene importer.");
+		log::error("Not memory index for scene importer.");
 
 	_scene->applyTransform(glm::scale(glm::mat4(1), glm::vec3(100)));
 
@@ -771,7 +750,7 @@ void JunkShop::initVertexBuffersReferences()
 		);
 	}
 	else 
-		log::appError("Not memory index for create vertex buffers references.");
+		log::error("Not memory index for create vertex buffers references.");
 
 	auto command_buffer = getCommandBuffer();
 
@@ -793,7 +772,7 @@ void JunkShop::initCamera()
 	auto& camera = _scene->getCameraController().getCamera();
 
 	camera.setDepthRange(0.01f, 1000.0f);
-	camera.lookaAt(glm::vec3(50, 1823.898, 5133.947),glm::vec3(-0.5, 0, 1));
+	camera.lookaAt(glm::vec3(50, 1823.898, 5133.947), glm::vec3(-0.5, 0, 1));
 }
 
 PushConstants JunkShop::getPushConstantData()

@@ -1,5 +1,5 @@
-#ifndef JUNK_SHOP_BINDINGS_GLSL
-#define JUNK_SHOP_BINDINGS_GLSL
+#ifndef JUNK_SHOP_SHARED_GLSL
+#define JUNK_SHOP_SHARED_GLSL
 
 #include <shaders/utils/ray.glsl>
 

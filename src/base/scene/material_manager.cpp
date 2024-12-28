@@ -2,7 +2,7 @@
 
 #include <base/vulkan/context.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     MaterialManager::MaterialManager(MaterialManager&& material_manager) :
         _materials (std::move(material_manager._materials))
@@ -20,7 +20,7 @@ namespace sample_vk
         _materials.push_back(std::move(material));
     }
 
-    const std::vector<Material>& MaterialManager::getMaterials() const noexcept
+    std::span<const Material> MaterialManager::getMaterials() const
     {
         return _materials;
     }

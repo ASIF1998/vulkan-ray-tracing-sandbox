@@ -12,18 +12,19 @@
 #include <string_view>
 #include <memory>
 
-namespace sample_vk
+namespace vrts
 {
     enum class NodeType
     {
         Base,
-        Mesh
+        Mesh,
+        SkinnedMesh
     };
 
     class Node
     {
     public:
-        Node(const std::string_view name, const glm::mat4& transform);
+        explicit Node(const std::string_view name, const glm::mat4& transform);
 
         Node(Node&& node)       = delete;
         Node(const Node& node)  = delete;
@@ -39,7 +40,7 @@ namespace sample_vk
             visit(static_cast<NodeVisitor*>(ptr_visitor.get()));   
         }
 
-        void visit(NodeVisitor* ptr_visiter);
+        void visit(NodeVisitor* ptr_visitor);
     
     protected:
         NodeType _type;
@@ -51,13 +52,19 @@ namespace sample_vk
         std::optional<AccelerationStructure>    acceleation_structure;
     };
 
-    class MeshNode :
+    struct MeshNode :
         public Node
     {
-    public:
-        MeshNode(const std::string_view name, const glm::mat4& transform, Mesh&& mesh);
+        explicit MeshNode(const std::string_view name, const glm::mat4& transform, Mesh&& mesh);
 
-    public:
         Mesh mesh;
+    };
+
+    struct SkinnedMeshNode :
+        public Node
+    {
+        explicit SkinnedMeshNode(const std::string_view name, const glm::mat4& transform, SkinnedMesh&& mesh);
+
+        SkinnedMesh mesh;
     };
 }

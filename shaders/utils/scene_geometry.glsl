@@ -1,15 +1,9 @@
 #ifndef SCENE_GEOMETRY_GLSL
 #define SCENE_GEOMETRY_GLSL
 
-/// Vertices
-struct attribute_t
-{
-    vec4 pos;
-    vec4 normal;
-    vec4 tangent;
-    vec4 uv;
-};
+#include <shaders/utils/geometry_properties.glsl>
 
+/// Vertices
 layout(std430, scalar, buffer_reference, buffer_reference_align = 16) readonly buffer vertex_buffer_t
 {
     attribute_t attributes[];
@@ -31,23 +25,7 @@ layout(std430, buffer_reference, buffer_reference_align = 16) readonly buffer sc
     index_buffer_t index_buffers[];
 };
 
-struct triangle_t
-{
-    vec3 positions[3];
-    vec2 uvs[3];
-};
-
 /// Helpers
-struct surface_t
-{
-    vec3 pos;
-    vec3 normal;
-    vec3 tangent;
-    vec2 uv;
-
-    triangle_t triangle;
-};
-
 vec3 interpolate_attributes(vec3 v1, vec3 v2, vec3 v3, vec3 bc)
 {
     return v1 * bc.x + v2 * bc.y + v3 * bc.z;
@@ -64,8 +42,6 @@ surface_t get_surface (
     vec3                barycentric_coordinates
 ) 
 {
-    mat3 normal_matrix = inverse(transpose(mat3(gl_ObjectToWorldEXT)));
-
     uint index_1 = scene_indices.index_buffers[gl_InstanceCustomIndexEXT].indices[gl_PrimitiveID * 3 + 0];
     uint index_2 = scene_indices.index_buffers[gl_InstanceCustomIndexEXT].indices[gl_PrimitiveID * 3 + 1];
     uint index_3 = scene_indices.index_buffers[gl_InstanceCustomIndexEXT].indices[gl_PrimitiveID * 3 + 2];

@@ -5,7 +5,7 @@
 
 #include <stacktrace>
 
-namespace sample_vk
+namespace vrts
 {
     auto toString(std::source_location source)
     {
@@ -26,11 +26,11 @@ namespace sample_vk
         switch(level)
         {
             case Logger::Level::Info:
-                return "Info";
+                return "info";
             case Logger::Level::Warning:
-                return "Warning";
+                return "warning";
             case Logger::Level::Error:
-                return "Error";
+                return "error";
         }
 
         return "Unknown level";
@@ -44,7 +44,7 @@ namespace sample_vk
     {
         if (level == Level::Error)
         {
-            std::cout 
+            std::cerr 
                 << std::format(
                     "[{}] [{}]\n{}\n{}", 
                     logger_name,

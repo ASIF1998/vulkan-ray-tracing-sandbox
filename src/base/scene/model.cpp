@@ -1,9 +1,7 @@
 #include <base/scene/model.hpp>
 #include <base/logger/logger.hpp>
 
-#include <stdexcept>
-
-namespace sample_vk
+namespace vrts
 {
     Model::Model(std::unique_ptr<Node>&& ptr_node, MaterialManager&& material_manager) :
         _ptr_node           (std::move(ptr_node)),

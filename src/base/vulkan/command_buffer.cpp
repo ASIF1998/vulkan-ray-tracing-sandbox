@@ -3,7 +3,7 @@
 
 #include <base/vulkan/context.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     CommandBuffer::CommandBuffer(const Context* ptr_context, VkCommandBuffer command_buffer_handle) :
         _vk_handle      (command_buffer_handle),
@@ -13,7 +13,8 @@ namespace sample_vk
         assert(ptr_context != nullptr);
     }
 
-    CommandBuffer::CommandBuffer(CommandBuffer&& command_buffer) 
+    CommandBuffer::CommandBuffer(CommandBuffer&& command_buffer) :
+        _ptr_context(command_buffer._ptr_context)
     {
         std::swap(_vk_handle, command_buffer._vk_handle);
     }
@@ -25,6 +26,7 @@ namespace sample_vk
 
     CommandBuffer& CommandBuffer::operator = (CommandBuffer&& command_buffer)
     {
+        _ptr_context = command_buffer._ptr_context;
         std::swap(_vk_handle, command_buffer._vk_handle);
         return *this;
     }

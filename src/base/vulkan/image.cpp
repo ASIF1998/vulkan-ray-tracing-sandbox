@@ -13,13 +13,13 @@
 
 #include <stdexcept>
 
-namespace sample_vk
+namespace vrts
 {
     Image::Image(const Context* ptr_context) :
         _ptr_context (ptr_context)
     { 
         if (!ptr_context)
-            log::vkError("[Image]: ptr_context is null.");
+            log::error("[Image]: ptr_context is null.");
     }
     
     Image::Image(Image&& image) :
@@ -80,13 +80,13 @@ namespace sample_vk
 
         auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         if (!memory_type_index.has_value())
-            log::vkError("[Image]: Not memory index for create temp buffer.");
+            log::error("[Image]: Not memory index for create temp buffer.");
 
         auto temp_buffer = Buffer::make(
             _ptr_context,
             image_size,
             *memory_type_index,
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT
         );
 
         {
@@ -146,7 +146,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     struct ImageUtils
     {
@@ -207,7 +207,7 @@ namespace sample_vk
     };
 }
 
-namespace sample_vk
+namespace vrts
 {
     Image::Builder::Builder(const Context* ptr_context) noexcept :
         _ptr_context (ptr_context)
@@ -291,13 +291,13 @@ namespace sample_vk
     void Image::Builder::validate() const
     {
         if (!_ptr_context)
-            log::vkError("[Image::Builder] not driver.");
+            log::error("[Image::Builder] not driver.");
 
         if (_format == VK_FORMAT_UNDEFINED)
-            log::vkError("[Image::Builder] format is undefined.");
+            log::error("[Image::Builder] format is undefined.");
 
         if (!_width || !_height)
-            log::vkError("[Image::Builder] image size is 0.");
+            log::error("[Image::Builder] image size is 0.");
     }
 
     Image Image::Builder::build()
@@ -465,7 +465,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     Image::Loader::Loader(const Context* ptr_context) noexcept :
         _ptr_context (ptr_context)
@@ -480,10 +480,10 @@ namespace sample_vk
     void Image::Loader::validate() const
     {
         if (!std::filesystem::exists(_filename))
-            log::vkError("[Image::Loader] image not found: {}.", _filename.string());
+            log::error("[Image::Loader] image not found: {}.", _filename.string());
 
         if (!_ptr_context)
-            log::vkError("[Image::Loader] not driver.");
+            log::error("[Image::Loader] not driver.");
     }
 
     Image Image::Loader::load()
@@ -504,7 +504,7 @@ namespace sample_vk
         write_data.format = VK_FORMAT_R8G8B8_UNORM;
 
         if (!write_data.ptr_data)
-            log::vkError("[Image::Loader] failed load image: {}.", _filename.string());
+            log::error("[Image::Loader] failed load image: {}.", _filename.string());
 
         auto image = Image::Builder(_ptr_context)
             .vkFormat(write_data.format)
@@ -537,7 +537,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     Image::Decoder::Decoder(const Context* ptr_context) noexcept :
         _ptr_context (ptr_context)
@@ -567,10 +567,10 @@ namespace sample_vk
     void Image::Decoder::validate() const
     {
         if (!_ptr_context)
-            log::vkError("[Image::Decoder] not driver.");
+            log::error("[Image::Decoder] not driver.");
 
         if (!_compressed_image.ptr_data || !_compressed_image.size)
-            log::vkError("[Image::Decoder] not compressed image.");
+            log::error("[Image::Decoder] not compressed image.");
     }
 
     Image Image::Decoder::decode()

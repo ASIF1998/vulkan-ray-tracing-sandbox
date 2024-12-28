@@ -1,0 +1,58 @@
+#version 450
+
+#extension GL_GOOGLE_include_directive : enable
+
+#include <shaders/dancing_penguin/shared.glsl>
+
+#include <shaders/utils/geometry_properties.glsl>
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = index_buffer_binding) readonly buffer index_buffer_b
+{
+    uint index_buffer[];
+};
+
+layout(set = 0, binding = src_vertex_buffer_binding) readonly buffer src_vertex_buffer_b
+{
+    attribute_t src_vertex_buffer[];
+};
+
+layout(set = 0, binding = dst_vertex_buffer_binding) buffer dst_vertex_buffer_b
+{
+    attribute_t dst_vertex_buffer[];
+};
+
+layout(set = 0, binding = skinning_data_binding) readonly buffer skinning_data_b
+{
+    skinning_data_t skinning_data[];
+};
+
+layout(set = 0, binding = final_bones_martices_binding) readonly buffer final_bones_martices_b
+{
+    mat4 final_bones_martices[];
+};
+
+void main()
+{
+    uint index = index_buffer[gl_GlobalInvocationID.x];
+
+    skinning_data_t skin_data = skinning_data[index];
+
+    mat4 final_matrix = mat4(0);
+
+    for (uint i = 0; i < 4 && skin_data.bone_ids[i] != -1; ++i)
+        final_matrix += skin_data.weights[i] * final_bones_martices[skin_data.bone_ids[i]];
+
+    mat3 normla_matrix = inverse(transpose(mat3(final_matrix)));
+
+    vec3 normal = src_vertex_buffer[index].normal.xyz;
+    vec3 tangent = src_vertex_buffer[index].tangent.xyz;
+
+    vec4 pos = final_matrix * vec4(src_vertex_buffer[index].pos.xyz, 1.0f);
+
+    dst_vertex_buffer[index].pos        = pos;
+    dst_vertex_buffer[index].normal     = vec4(normla_matrix * normal, 1.0);
+    dst_vertex_buffer[index].tangent    = vec4(normla_matrix * tangent, 1.0);
+    dst_vertex_buffer[index].uv         = src_vertex_buffer[index].uv;
+}

@@ -3,15 +3,17 @@
 
 #include <base/vulkan/context.hpp>
 
+#include <base/vulkan/buffer.hpp>
+
 #include <ranges>
 
-namespace sample_vk
+namespace vrts
 {
     ASBuilder::ASBuilder(const Context* ptr_context) :
         _ptr_context (ptr_context)
     {
         if (!ptr_context)
-            log::vkError("[ASBuilder]: ptr_context is null.");
+            log::error("[ASBuilder]: ptr_context is null.");
 
         auto identity_matrix = VkUtils::cast(glm::mat4(1.0f));
 
@@ -28,7 +30,7 @@ namespace sample_vk
             );
         }
         else
-            log::vkError("[ASBuilder]: Not memory index for create identity matrix.");
+            log::error("[ASBuilder]: Not memory index for create identity matrix.");
 
         auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
 
@@ -45,12 +47,10 @@ namespace sample_vk
 
         auto tlas_name = std::format("[TLAS] '{}'", ptr_node->name);
 
-        log::appInfo("[ASBuilder]: Process {}", tlas_name);
-
         auto memory_index_type = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         if (!memory_index_type.has_value())
-            log::vkError("[ASBuilder]: Not memory index for create buffers.");
+            log::error("[ASBuilder]: Not memory index for create buffers.");
 
         auto func_table = VkUtils::getVulkanFunctionPointerTable();
 
@@ -205,16 +205,38 @@ namespace sample_vk
 
     void ASBuilder::process(MeshNode* ptr_node)
     {
-        auto blas_name = std::format("[BLAS] {}", ptr_node->name);
+        ptr_node->acceleation_structure = buildBLAS(
+            ptr_node->name, 
+            *ptr_node->mesh.vertex_buffer,
+            static_cast<uint32_t>(ptr_node->mesh.vertex_count),
+            *ptr_node->mesh.index_buffer,
+            static_cast<uint32_t>(ptr_node->mesh.index_count)
+        );
+    }
+    
+    void ASBuilder::process(SkinnedMeshNode* ptr_node)
+    {
+        ptr_node->acceleation_structure = buildBLAS(
+            ptr_node->name, 
+            *ptr_node->mesh.processed_vertex_buffer,
+            static_cast<uint32_t>(ptr_node->mesh.vertex_count),
+            *ptr_node->mesh.index_buffer,
+            static_cast<uint32_t>(ptr_node->mesh.index_count)
+        );
+    }
 
-        log::appInfo("[ASBuilder]: Process '{}'", blas_name);
-
-        auto& mesh = ptr_node->mesh;
-
+    AccelerationStructure ASBuilder::buildBLAS(
+        std::string_view    name,
+        const Buffer&       vertex_buffer,
+        uint32_t            vertex_count,
+        const Buffer&       index_buffer,
+        uint32_t            index_count
+    )
+    {
         auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         if (!memory_type_index.has_value())
-            log::vkError("[ASBuilder]: Not memory index for create buffers.");
+            log::error("[ASBuilder]: Not memory index for create buffers.");
         
         VkAccelerationStructureGeometryKHR mesh_info = { };
         mesh_info.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -227,11 +249,11 @@ namespace sample_vk
             triangles = { };
             triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 
-            triangles.indexData.deviceAddress   = mesh.index_buffer.getAddress();
+            triangles.indexData.deviceAddress   = index_buffer.getAddress();
             triangles.indexType                 = VK_INDEX_TYPE_UINT32;
 
-            triangles.maxVertex                 = static_cast<uint32_t>(mesh.vertex_count);
-            triangles.vertexData.deviceAddress  = mesh.vertex_buffer.getAddress();
+            triangles.maxVertex                 = vertex_count;
+            triangles.vertexData.deviceAddress  = vertex_buffer.getAddress();
             triangles.vertexFormat              = VK_FORMAT_R32G32B32_SFLOAT;
             triangles.vertexStride              = sizeof(Mesh::Attributes);
 
@@ -245,7 +267,7 @@ namespace sample_vk
         build_geometry_info.mode            = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
         build_geometry_info.type            = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
 
-        const auto primitive_count =  static_cast<uint32_t>(mesh.index_count / 3);
+        const auto primitive_count =  index_count / 3;
 
         VkAccelerationStructureBuildSizesInfoKHR as_size = { };
         as_size.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
@@ -267,7 +289,7 @@ namespace sample_vk
             as_size.accelerationStructureSize,
             *memory_type_index,
             VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-            std::format("[BLAS] Buffer: {}", ptr_node->name) 
+            std::format("[BLAS] Buffer: {}", name) 
         );
 
         VkAccelerationStructureCreateInfoKHR as_info = { };
@@ -289,7 +311,7 @@ namespace sample_vk
             _ptr_context->device_handle, 
             acceleration_structure_handle, 
             VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR, 
-            blas_name
+            std::format("[BLAS] {}", name)
         );
 
         auto scratch_buffer = Buffer::make(
@@ -327,10 +349,6 @@ namespace sample_vk
 
         command_buffer_for_build.upload(_ptr_context);
 
-        ptr_node->acceleation_structure = std::make_optional<AccelerationStructure>(
-            _ptr_context, 
-            acceleration_structure_handle, 
-            std::move(blas_buffer)
-        );
+        return AccelerationStructure(_ptr_context, acceleration_structure_handle, std::move(blas_buffer));
     }
 }

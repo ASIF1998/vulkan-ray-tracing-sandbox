@@ -9,21 +9,21 @@
 
 #include <base/vulkan/command_buffer.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 }
 
-namespace sample_vk
+namespace vrts
 {
     struct Buffer
     {
-    public:
+    private:
         Buffer(const Context* ptr_context);
 
+    public:
         Buffer(Buffer&& buffer);
         Buffer(const Buffer& buffer) = delete;
-
         ~Buffer();
 
         Buffer& operator = (Buffer&& buffer);
@@ -31,8 +31,6 @@ namespace sample_vk
 
         [[nodiscard]] VkMemoryRequirements  getMemoryRequirements() const noexcept;
         [[nodiscard]] VkDeviceAddress       getAddress()            const noexcept;
-
-        [[nodiscard]] bool isInit() const noexcept;
 
         [[nodiscard]]
         static Buffer make(

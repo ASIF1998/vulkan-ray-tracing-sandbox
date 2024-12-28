@@ -6,7 +6,7 @@
 
 #include <ranges>
 
-namespace sample_vk
+namespace vrts
 {
     std::vector<VkMemoryPropertyFlags> MemoryProperties::_memory_properties = { };
 

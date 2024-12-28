@@ -4,12 +4,12 @@
 
 #include <functional>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 }
 
-namespace sample_vk
+namespace vrts
 {
     class CommandBuffer
     {

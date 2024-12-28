@@ -17,13 +17,13 @@
 #include <tuple>
 #include <map>
 
-namespace sample_vk
+namespace vrts
 {
-    struct  Context;
-    class   MeshNode;
+    struct Context;
+    struct MeshNode;
 }
 
-namespace sample_vk
+namespace vrts
 {
     struct Light
     {
@@ -41,6 +41,12 @@ namespace sample_vk
         [[nodiscard]] const Model&              getModel()              const noexcept;
         [[nodiscard]] CameraController&         getCameraController()   noexcept;
         [[nodiscard]] const std::vector<Light>& getLights()             const noexcept;
+        
+        [[nodiscard]]
+        bool hasAnimator() const;
+
+        [[nodiscard]]
+        Animator& getAnimator();
 
         void processEvent(const SDL_Event* ptr_event);
         void updateCamera();
@@ -56,7 +62,12 @@ namespace sample_vk
         );
 
     private:
-        Scene(Model&& model, std::vector<Light>&& lights, const Camera& camera);
+        explicit Scene(
+            Model&&                     model, 
+            std::vector<Light>&&        lights, 
+            const Camera&               camera,
+            std::optional<Animator>&&   animator
+        );
 
         [[nodiscard]]
         static MeshNode* makeRectNode(
@@ -71,6 +82,8 @@ namespace sample_vk
         std::vector<Light> _lights;
 
         CameraController _camera_controller; 
+
+        std::optional<Animator> _animator;
     };
 
     class Scene::Importer
@@ -95,7 +108,14 @@ namespace sample_vk
         [[nodiscard]] Scene import();
 
     private:
+        size_t getMeshCount() const;
+
+        void processMaterial(const aiScene* ptr_scene, const aiMaterial* ptr_material);
+        void processAnimation(const aiMesh* ptr_mesh, std::span<Mesh::SkinningData> skinning_data);
         void processNode(const aiScene* ptr_scene, const aiNode* ptr_node);
+
+        void getKeyFrames(const aiAnimation* ptr_animation);
+        void getAnimation(const aiScene* ptr_scene);
 
         [[nodiscard]]
         Mesh createMesh (
@@ -103,8 +123,15 @@ namespace sample_vk
             const std::span<uint32_t>           indices,
             const std::span<Mesh::Attributes>   attributes
         ) const;
+        
+        [[nodiscard]]
+        SkinnedMesh createMesh (
+            const std::string_view              name,
+            const std::span<uint32_t>           indices,
+            const std::span<Mesh::Attributes>   attributes,
+            const std::span<Mesh::SkinningData> skinning_data
+        ) const;
 
-        void processMaterial(const aiScene* ptr_scene, const aiMaterial* ptr_material);
 
         [[nodiscard]]
         Image getImage(
@@ -125,7 +152,13 @@ namespace sample_vk
             VkFilter            filter
         );
 
-        void add(const std::string_view name, const std::span<uint32_t> indices, const std::span<Mesh::Attributes> attributes);
+        void add(
+            const std::string_view              name, 
+            const std::span<uint32_t>           indices, 
+            const std::span<Mesh::Attributes>   attributes, 
+            const std::span<Mesh::SkinningData> skinning_data
+        );
+
         void add(const aiLight* ptr_light);
 
         void validate() const;
@@ -151,5 +184,16 @@ namespace sample_vk
         {
             glm::mat4 transform = glm::mat4(1.0f);
         } _current_state;
+
+        struct
+        {
+            BoneRegistry        bone_infos;
+            std::vector<Bone>   bones;
+            
+            AnimationHierarchiry::Node  root_node;
+            AnimationHierarchiry::Node* ptr_current_node = &root_node;
+
+            std::optional<Animator> animator;
+        } _animation;
     };
 }

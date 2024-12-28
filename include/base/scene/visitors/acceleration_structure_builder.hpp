@@ -1,24 +1,39 @@
 #pragma once
 
+#include <base/vulkan/acceleration_structure.hpp>
+
 #include <base/scene/visitors/node_visitor.hpp>
 
-#include <base/vulkan/buffer.hpp>
+#include <string_view>
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 
-    class Node;
-    class MeshNode;
+    class   Node;
+    struct  MeshNode;
+
+    struct Mesh;
+
+    struct Buffer;
 }
 
-namespace sample_vk
+namespace vrts
 {
     class ASBuilder final :
         public NodeVisitor
     {
-        void process(Node* ptr_node)        override;
-        void process(MeshNode* ptr_node)    override;
+        AccelerationStructure buildBLAS(
+            std::string_view    name,
+            const Buffer&       vertex_buffer,
+            uint32_t            vertex_count,
+            const Buffer&       index_buffer,
+            uint32_t            index_count
+        );
+
+        void process(Node* ptr_node)            override;
+        void process(MeshNode* ptr_node)        override;
+        void process(SkinnedMeshNode* ptr_node) override;
 
     public:
         ASBuilder(const Context* ptr_context);

@@ -1,12 +1,13 @@
 #pragma once
 
-namespace sample_vk
+namespace vrts
 {
-    class Node;
-    class MeshNode;
+    class   Node;
+    struct  MeshNode;
+    struct  SkinnedMeshNode;
 }
 
-namespace sample_vk
+namespace vrts
 {
     class NodeVisitor
     {
@@ -21,8 +22,9 @@ namespace sample_vk
         NodeVisitor& operator = (NodeVisitor&& visitor)         = delete;
         NodeVisitor& operator = (const NodeVisitor& visitor)    = delete;
 
-        virtual void process(Node* ptr_node)        = 0;
-        virtual void process(MeshNode* ptr_node)    = 0;
+        virtual void process(Node* ptr_node)            = 0;
+        virtual void process(MeshNode* ptr_node)        = 0;
+        virtual void process(SkinnedMeshNode* ptr_node) = 0;
     };
 
     template<typename T>

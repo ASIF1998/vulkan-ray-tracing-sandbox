@@ -1,34 +1,44 @@
 #include <hello_triangle/hello_triangle.hpp>
 #include <junk_shop/junk_shop.hpp>
+#include <dancing_penguin/dancing_penguin.hpp>
 
-#include <base/logger/logger.hpp>
+#include <base/math.hpp>
 
 enum class Samples 
 {
     HelloTriangle,
-    JunkShop
+    JunkShop,
+    DancingPenguin
 };
 
 int main(int argc, char* argv[])
 {
-    constexpr auto sample = Samples::JunkShop;
+    constexpr auto sample = Samples::DancingPenguin;
 
     try
     {
         std::unique_ptr<RayTracingBase> pApp;
 
-        if constexpr (sample == Samples::HelloTriangle)
-            pApp = std::make_unique<HelloTriangle>();
-        else if constexpr (sample == Samples::JunkShop)
-            pApp = std::make_unique<JunkShop>();
+        switch (sample)
+        {
+            case Samples::HelloTriangle:
+                pApp = std::make_unique<HelloTriangle>();
+                break;
+            case Samples::JunkShop:
+                pApp = std::make_unique<JunkShop>();
+                break;
+            case Samples::DancingPenguin:
+                pApp = std::make_unique<DancingPenguin>();
+                break;
+        }
 
         pApp->init();
         pApp->show();
     }
     catch (...)
     {
-
+        return EXIT_FAILURE;
     }
     
-    return 0;
+    return EXIT_SUCCESS;
 }

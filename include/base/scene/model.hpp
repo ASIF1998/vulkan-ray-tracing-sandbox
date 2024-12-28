@@ -2,6 +2,7 @@
 
 #include <base/scene/node.hpp>
 #include <base/scene/material_manager.hpp>
+#include <base/scene/animator.hpp>
 
 #include <base/math.hpp>
 
@@ -11,14 +12,14 @@
 
 #include <concepts>
 
-namespace sample_vk
+namespace vrts
 {
     class Model
     {
         friend class Scene;
 
     private:
-        Model(std::unique_ptr<Node>&& ptr_node, MaterialManager&& material_manager);
+        explicit Model(std::unique_ptr<Node>&& ptr_node, MaterialManager&& material_manager);
 
     public:
         template<IsNodeVisitor T>

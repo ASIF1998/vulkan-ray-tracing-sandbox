@@ -4,7 +4,7 @@
 
 #include <filesystem>
 
-namespace sample_vk
+namespace vrts
 {
     constexpr bool enable_vk_profiling                      = false;
     constexpr bool enable_vk_objects_naming                 = true;

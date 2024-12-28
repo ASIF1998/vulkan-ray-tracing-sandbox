@@ -22,21 +22,21 @@
 #define VK_CHECK(fn)                            \
     do {                                        \
         if (auto res = fn; res != VK_SUCCESS)   \
-            log::vkError(#fn);                  \
+            log::error(#fn);                    \
     } while (false)
 
 #define SDL_CHECK(fn)                       \
     do {                                    \
         if (auto res = fn; res != SDL_TRUE) \
-            log::appError(#fn);             \
+            log::error(#fn);                \
     } while (false)
 
-namespace sample_vk
+namespace vrts
 {
     struct Context;
 }
 
-namespace sample_vk
+namespace vrts
 {
     template<typename T>
     concept IsVulkanWrapper = requires(T t)
@@ -47,11 +47,12 @@ namespace sample_vk
     template<typename T>
     concept IsVulkanHandle =
     (
-        std::is_same_v<VkImage, T>                       ||
-        std::is_same_v<VkImageView, T>                   ||
-        std::is_same_v<VkBuffer, T>                      ||
-        std::is_same_v<VkShaderModule, T>                ||
-        std::is_same_v<VkAccelerationStructureKHR, T>
+        std::is_same_v<VkImage, T>                      ||
+        std::is_same_v<VkImageView, T>                  ||
+        std::is_same_v<VkBuffer, T>                     ||
+        std::is_same_v<VkShaderModule, T>               ||
+        std::is_same_v<VkAccelerationStructureKHR, T>   ||
+        std::is_same_v<VkDescriptorSet, T>
     );
 
     class VkUtils

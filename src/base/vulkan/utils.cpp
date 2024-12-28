@@ -4,7 +4,7 @@
 
 #include <base/vulkan/context.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     const std::map<VkFormat, size_t> VkUtils::_vk_formats_sizes_table
     {
@@ -247,12 +247,12 @@ namespace sample_vk
     };
 }
 
-namespace sample_vk
+namespace vrts
 {
     void VkUtils::init(const Context* ptr_context)
     {
         if (!ptr_context)
-            log::vkError("[VkUtils]: ptr_context is null.");
+            log::error("[VkUtils]: ptr_context is null.");
 
         if (!_vulkan_function_pointer_table)    
             _vulkan_function_pointer_table = std::make_optional<VkFunctionPointerTable>(ptr_context->device_handle);
@@ -266,17 +266,17 @@ namespace sample_vk
     )
     {
         if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-            log::vkWarning("[{}]: {}", ptr_callback_data->pMessageIdName, ptr_callback_data->pMessage);
+            log::warning("[Vulkan][{}]: {}", ptr_callback_data->pMessageIdName, ptr_callback_data->pMessage);
         else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-            log::vkWarning("[{}]: {}", ptr_callback_data->pMessageIdName, ptr_callback_data->pMessage);
+            log::warning("[Vulkan][{}]: {}", ptr_callback_data->pMessageIdName, ptr_callback_data->pMessage);
         else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT || message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-            log::vkInfo("[{}]: {}", ptr_callback_data->pMessageIdName, ptr_callback_data->pMessage);
+            log::info("[Vulkan][{}]: {}", ptr_callback_data->pMessageIdName, ptr_callback_data->pMessage);
 
         return VK_FALSE;
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     CommandBuffer VkUtils::getCommandBuffer(const Context* ptr_context)
     {
@@ -305,7 +305,7 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     uint32_t VkUtils::getAlignedSize(VkDeviceSize size, VkDeviceSize aligned)
     {
@@ -313,20 +313,20 @@ namespace sample_vk
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     std::optional<VkFunctionPointerTable> VkUtils::_vulkan_function_pointer_table = std::nullopt;
 
     const VkFunctionPointerTable& VkUtils::getVulkanFunctionPointerTable()
     {
         if (!_vulkan_function_pointer_table)
-            log::vkError("[VkUtils]: Vulkan function pointer table not initialized.");
+            log::error("[VkUtils]: Vulkan function pointer table not initialized.");
 
         return _vulkan_function_pointer_table.value();
     }
 }
 
-namespace sample_vk
+namespace vrts
 {
     uint32_t VkUtils::getMipLevelsCount(uint32_t width, uint32_t height)
     {

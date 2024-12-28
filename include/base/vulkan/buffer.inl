@@ -3,7 +3,7 @@
 
 #include <base/vulkan/utils.hpp>
 
-namespace sample_vk
+namespace vrts
 {
     template<typename T>
     static void Buffer::writeData(
@@ -24,7 +24,7 @@ namespace sample_vk
             );
         }
         else 
-            log::vkError("[Buffer]: Not memory index for create temp buffer.");
+            log::error("[Buffer]: Not memory index for create temp buffer.");
 
         uint8_t* ptr_src = nullptr;
 

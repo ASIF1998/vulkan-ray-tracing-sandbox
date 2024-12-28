@@ -4,7 +4,9 @@
 
 #include <base/math.hpp>
 
-namespace sample_vk
+#include <optional>
+
+namespace vrts
 {
     struct Mesh
     {
@@ -18,11 +20,14 @@ namespace sample_vk
             glm::vec4 uv;
         };
 
+        struct SkinningData
+        {
+            glm::ivec4  bone_ids    = glm::ivec4(-1);
+            glm::vec4   weights     = glm::vec4(-1.0f);
+        };
+
     public:
-        Mesh(const Context* ptr_context):
-            index_buffer    (ptr_context),
-            vertex_buffer   (ptr_context)
-        { }
+        Mesh() = default;
 
         Mesh(Mesh&& mesh)       = default; 
         Mesh(const Mesh& mesh)  = delete;
@@ -31,10 +36,23 @@ namespace sample_vk
         Mesh& operator = (const Mesh& mesh) = delete;
 
     public:
-        Buffer index_buffer;
+        std::optional<Buffer> index_buffer;
         size_t index_count = 0;
 
-        Buffer vertex_buffer;
+        std::optional<Buffer> vertex_buffer;
         size_t vertex_count = 0;
+
+        std::optional<Buffer> skinning_buffer;
+    };
+
+    struct SkinnedMesh
+    {
+        std::optional<Buffer> source_vertex_buffer;
+        std::optional<Buffer> processed_vertex_buffer;
+        std::optional<Buffer> skinning_buffer;
+        size_t vertex_count = 0;
+        
+        std::optional<Buffer> index_buffer;
+        size_t index_count = 0;
     };
 }
