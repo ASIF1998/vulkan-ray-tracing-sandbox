@@ -92,13 +92,13 @@ class DancingPenguin final :
 public:
     DancingPenguin() = default;
 
-    DancingPenguin(DancingPenguin&& animation)        = delete;
-    DancingPenguin(const DancingPenguin& animation)   = delete;
+    DancingPenguin(DancingPenguin&& animation)      = delete;
+    DancingPenguin(const DancingPenguin& animation) = delete;
 
     ~DancingPenguin();
 
-    DancingPenguin& operator = (DancingPenguin&& animation)       = delete;
-    DancingPenguin& operator = (const DancingPenguin& animation)  = delete;
+    DancingPenguin& operator = (DancingPenguin&& animation)         = delete;
+    DancingPenguin& operator = (const DancingPenguin& animation)    = delete;
 
 private:
     std::optional<Scene> _scene;

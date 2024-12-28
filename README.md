@@ -31,3 +31,14 @@
 ![](results/junk-shop/junk-shop-1.png)
 ![](results/junk-shop/junk-shop-2.png)
 [junk-shop-video](https://github.com/ASIF1998/vulkan-ray-tracing-sandbox/tree/main/results/junk-shop/junk-shop.mp4)
+
+## DancingPenguin
+Этот пример отрисовывет танцующего пингвина (модель называется [Dancing_Penguin](https://skfb.ly/6QZCU)) при помощи скелетной анимации и трассировки лучей.
+
+Тут тоже можно двигать камеру по аналогии с **JunkShop**.
+
+### Результаты
+
+![](results/dancing-penguin/dancing-penguin-1.png)
+![](results/dancing-penguin/dancing-penguin-2.png)
+![](results/dancing-penguin/dancing-penguin-3.png)
