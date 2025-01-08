@@ -9,12 +9,7 @@
 namespace vrts
 {
     struct Context;
-
-    class   Node;
-    struct  MeshNode;
-
     struct Mesh;
-
     struct Buffer;
 }
 

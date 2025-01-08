@@ -20,7 +20,7 @@ namespace vrts
             _memory_properties.push_back(memory_properties.memoryTypes[memory_index].propertyFlags);
     }
 
-    std::optional<uint32_t> MemoryProperties::getMemoryIndex(VkMemoryPropertyFlags flags)
+    uint32_t MemoryProperties::getMemoryIndex(VkMemoryPropertyFlags flags)
     {
         for (auto memory_index: std::views::iota(0u, _memory_properties.size()))
         {
@@ -28,6 +28,8 @@ namespace vrts
                 return memory_index;
         }
 
-        return std::nullopt;
+        log::error("[MemoryProperties] Failed find memory index");
+
+        return std::numeric_limits<uint32_t>::max();
     }
 }

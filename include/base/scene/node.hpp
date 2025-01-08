@@ -21,9 +21,8 @@ namespace vrts
         SkinnedMesh
     };
 
-    class Node
+    struct Node
     {
-    public:
         explicit Node(const std::string_view name, const glm::mat4& transform);
 
         Node(Node&& node)       = delete;
@@ -42,17 +41,16 @@ namespace vrts
 
         void visit(NodeVisitor* ptr_visitor);
     
-    protected:
-        NodeType _type;
-
-    public:
         std::string                             name;
         glm::mat4                               transform;
         std::vector<std::unique_ptr<Node>>      children;
         std::optional<AccelerationStructure>    acceleation_structure;
+
+    protected:
+        NodeType _type;
     };
 
-    struct MeshNode :
+    struct MeshNode final :
         public Node
     {
         explicit MeshNode(const std::string_view name, const glm::mat4& transform, Mesh&& mesh);
@@ -60,7 +58,7 @@ namespace vrts
         Mesh mesh;
     };
 
-    struct SkinnedMeshNode :
+    struct SkinnedMeshNode final :
         public Node
     {
         explicit SkinnedMeshNode(const std::string_view name, const glm::mat4& transform, SkinnedMesh&& mesh);

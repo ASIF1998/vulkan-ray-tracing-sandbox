@@ -70,24 +70,18 @@ namespace vrts
             &&  _memory_handle != VK_NULL_HANDLE;
     }
 
-    void Image::writeData(
-        const ImageWriteData&   write_data
-    )
+    void Image::writeData(const ImageWriteData& write_data)
     {
         size_t pixel_format_size    = VkUtils::getFormatSize(write_data.format);
         size_t scanline_size        = write_data.width * pixel_format_size; 
         size_t image_size           = write_data.height * scanline_size;
 
-        auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-        if (!memory_type_index.has_value())
-            log::error("[Image]: Not memory index for create temp buffer.");
-
-        auto temp_buffer = Buffer::make(
-            _ptr_context,
-            image_size,
-            *memory_type_index,
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-        );
+        auto temp_buffer = Buffer::Builder(_ptr_context)
+            .vkSize(image_size)
+            .vkUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
+            .isHostVisible(true)
+            .name("[ASBuilder] Identity matrix for AS build")
+            .build();
 
         {
             void* ptr_temp_buffer_memory = nullptr;
@@ -349,23 +343,20 @@ namespace vrts
 
         auto aligned_size = (memory_requirements.size + (memory_requirements.alignment - 1)) & ~(memory_requirements.alignment - 1);
 
-        if (auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-        {
-            VkMemoryAllocateInfo allocate_info = { };
-            allocate_info.sType             = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            allocate_info.pNext             = &memory_allocation_flags;
-            allocate_info.memoryTypeIndex   = *memory_index;
-            allocate_info.allocationSize    = aligned_size;
+        VkMemoryAllocateInfo allocate_info = { };
+        allocate_info.sType             = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocate_info.pNext             = &memory_allocation_flags;
+        allocate_info.memoryTypeIndex   = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        allocate_info.allocationSize    = aligned_size;
 
-            VK_CHECK(
-                vkAllocateMemory(
-                    _ptr_context->device_handle,
-                    &allocate_info,
-                    nullptr,
-                    &image._memory_handle
-                )
-            );
-        }
+        VK_CHECK(
+            vkAllocateMemory(
+                _ptr_context->device_handle,
+                &allocate_info,
+                nullptr,
+                &image._memory_handle
+            )
+        );
 
         VkBindImageMemoryInfo bind_info = { };
         bind_info.sType     = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;

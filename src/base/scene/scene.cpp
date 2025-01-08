@@ -61,26 +61,18 @@ namespace vrts::utils
         const Context*          ptr_context,
         const std::string_view  name,
         std::span<T>            data,
-        VkBufferUsageFlags      bits
+        VkBufferUsageFlags      usage_flags
     )
     {
-        assert(bits & VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+        assert(usage_flags & VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 
-        auto buffer = Buffer::make(
-            ptr_context,
-            data.size_bytes(),
-            *MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
-            bits,
-            name
-        );
+        auto buffer = Buffer::Builder(ptr_context)
+            .vkSize(data.size_bytes())
+            .vkUsage(usage_flags)
+            .name(name)
+            .build();
 
-        auto command_buffer = VkUtils::getCommandBuffer(ptr_context);
-
-        Buffer::writeData(
-            buffer,
-            data,
-            command_buffer
-        );
+        Buffer::writeData(buffer,data);
 
         return buffer;
     }
@@ -89,20 +81,16 @@ namespace vrts::utils
         const Context*          ptr_context,
         const std::string_view  name,
         VkDeviceSize            size,
-        VkBufferUsageFlags      bits
+        VkBufferUsageFlags      usage_flags
     )
     {
-        assert(bits & VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+        assert(usage_flags & VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 
-        auto buffer = Buffer::make(
-            ptr_context,
-            size,
-            *MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
-            bits,
-            name
-        );
-
-        return buffer;
+        return Buffer::Builder(ptr_context)
+            .vkUsage(usage_flags)
+            .vkSize(size)
+            .name(name)
+            .build();
     }
 }
 
@@ -187,13 +175,12 @@ namespace vrts
 {
     void Scene::addRect(
         const Context*      ptr_context,
-        const glm::vec2&    size, 
         const glm::vec3&    color,
         const glm::vec3&    emissive, 
         const glm::mat4&    transform
     )
     {
-        _model.addNode(std::unique_ptr<Node>(Scene::makeRectNode(ptr_context, size, glm::transpose(transform))));
+        _model.addNode(Scene::makeRectNode(ptr_context, glm::transpose(transform)));
 
         static uint32_t rect_material_id = 0;
         ++rect_material_id;
@@ -256,9 +243,8 @@ namespace vrts
         });
     }
 
-    MeshNode* Scene::makeRectNode(
+    std::unique_ptr<MeshNode> Scene::makeRectNode(
         const Context*      ptr_context,
-        const glm::vec2&    size, 
         const glm::mat4&    transform
     )
     {
@@ -268,9 +254,9 @@ namespace vrts
         const std::array positions = 
         {
             glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
-            glm::vec4(size.x, 0.0f, 0.0f, 1.0f),
-            glm::vec4(0.0f, size.y, 0.0f, 1.0f),
-            glm::vec4(size, 0.0f, 1.0f)
+            glm::vec4(1.0f, 0.0f, 0.0f, 1.0f),
+            glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+            glm::vec4(1.0f, 1.0f, 0.0f, 1.0f)
         };
 
         const std::array uvs = 
@@ -323,7 +309,7 @@ namespace vrts
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
-        return new MeshNode(name, transform, std::move(mesh));
+        return std::make_unique<MeshNode>(name, transform, std::move(mesh));
     }
 
     bool Scene::hasAnimator() const

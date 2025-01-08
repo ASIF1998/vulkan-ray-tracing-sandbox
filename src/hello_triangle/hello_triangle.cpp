@@ -111,26 +111,13 @@ void HelloTriangle::createAS()
 
 void HelloTriangle::createBLAS()
 {
-    auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    auto transform_matrix_buffer = Buffer::Builder(getContext())
+        .vkSize(sizeof(VkTransformMatrixKHR))
+        .vkUsage(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR)
+        .name("Transform matrix buffer")
+        .build();
 
-    if (!memory_type_index.has_value())
-        log::error("Not memory index for create buffers.");
-
-    auto transform_matrix_buffer = Buffer::make(
-        getContext(), 
-        sizeof(VkTransformMatrixKHR), 
-        *memory_type_index, 
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR, 
-        "Transform matrix buffer"
-    );
-
-    {
-        auto transform_matrix = VkUtils::getVulkanIdentityMatrix();
-
-        auto command_buffer = getCommandBuffer();
-
-        Buffer::writeData(transform_matrix_buffer, transform_matrix, command_buffer);
-    }
+    Buffer::writeData(transform_matrix_buffer, VkUtils::getVulkanIdentityMatrix());
 
     VkAccelerationStructureGeometryKHR blas_geometry = { };
     blas_geometry.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -169,13 +156,11 @@ void HelloTriangle::createBLAS()
         &blas_build_sizes
     );
 
-    auto blas_buffer = Buffer::make(
-        getContext(), 
-        blas_build_sizes.accelerationStructureSize, 
-        *memory_type_index, 
-        VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, 
-        "Blas buffer"
-    );
+    auto blas_buffer = Buffer::Builder(getContext())
+        .vkSize(blas_build_sizes.accelerationStructureSize)
+        .vkUsage(VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+        .name("Blas buffer")
+        .build();
 
     VkAccelerationStructureCreateInfoKHR blas_create_info = { };
     blas_create_info.sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
@@ -205,13 +190,11 @@ void HelloTriangle::createBLAS()
 
     auto command_buffer = getCommandBuffer();
 
-    auto scratch_buffer = Buffer::make(
-        getContext(), 
-        blas_build_sizes.buildScratchSize, 
-        *memory_type_index, 
-        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, 
-        "Blas scratch buffer"
-    );
+    auto scratch_buffer = Buffer::Builder(getContext())
+        .vkSize(blas_build_sizes.buildScratchSize)
+        .vkUsage(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+        .name("Blas scratch buffer")
+        .build();
 
     command_buffer.write([&scratch_buffer, &func_table, &blas_geometry, &blas_handle] (VkCommandBuffer vk_handle)
     {
@@ -246,18 +229,11 @@ void HelloTriangle::createBLAS()
 
 void HelloTriangle::createTLAS()
 {
-    auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    if (!memory_type_index.has_value())
-        log::error("Not memory index for create buffers.");
-    
-    auto instance_buffer = Buffer::make(
-        getContext(), 
-        sizeof(VkAccelerationStructureInstanceKHR), 
-        *memory_type_index,
-        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT, 
-        "Instance buffer"
-    );
+    auto instance_buffer = Buffer::Builder(getContext())
+        .vkSize(sizeof(VkAccelerationStructureInstanceKHR))
+        .vkUsage(VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+        .name("Instance buffer")
+        .build();
 
     auto func_table = VkUtils::getVulkanFunctionPointerTable();;
 
@@ -274,12 +250,10 @@ void HelloTriangle::createTLAS()
         as_instance.mask                                    = 0xff;             // Попадание только в том случае, если rayMask и instance.mask != 0
         as_instance.instanceShaderBindingTableRecordOffset  = 0;                // Мы будем использовать одну и ту же группу хитов для всех объектов
 
-        auto command_buffer = getCommandBuffer();
-
-        Buffer::writeData(instance_buffer, as_instance, command_buffer);
+        Buffer::writeData(instance_buffer, as_instance);
     }
 
-    auto instance_buffer_address = instance_buffer.getAddress();
+    const auto instance_buffer_address = instance_buffer.getAddress();
 
     VkAccelerationStructureGeometryInstancesDataKHR as_geometry_instance_data = { };
     as_geometry_instance_data.sType                 = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
@@ -310,13 +284,11 @@ void HelloTriangle::createTLAS()
         &tlas_build_sizes
     );
 
-    auto tlas_buffer = Buffer::make(
-        getContext(), 
-        tlas_build_sizes.accelerationStructureSize, 
-        *memory_type_index,
-        VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, 
-        "Tlas buffer"
-    );
+    auto tlas_buffer = Buffer::Builder(getContext())
+        .vkSize(tlas_build_sizes.accelerationStructureSize)
+        .vkUsage(VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+        .name("Tlas buffer")
+        .build();
 
     VkAccelerationStructureCreateInfoKHR tlas_create_info = { };
     tlas_create_info.sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
@@ -344,13 +316,11 @@ void HelloTriangle::createTLAS()
         "TLAS"
     );
 
-    auto scratch_buffer = Buffer::make(
-        getContext(), 
-        tlas_build_sizes.buildScratchSize, 
-        *memory_type_index,
-        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
-        "Tlas scratch buffer"
-    );
+    auto scratch_buffer = Buffer::Builder(getContext())
+        .vkSize(tlas_build_sizes.buildScratchSize)
+        .vkUsage(VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+        .name("Tlas scratch buffer")
+        .build();
 
     geomerty_build_info.dstAccelerationStructure    = tlas_handle;
     geomerty_build_info.scratchData.deviceAddress   = scratch_buffer.getAddress();
@@ -441,32 +411,19 @@ void HelloTriangle::createShaderBindingTable()
         )
     );
 
-    auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    if (!memory_type_index.has_value())
-        log::error("Not memory index for create SBT.");
-
-    auto createBufferForSBT = [this, &memory_type_index] (
+    auto createBufferForSBT = [this] (
 		std::optional<Buffer>&      buffer, 
 		const std::span<uint8_t> 	data,
 		const std::string_view 		name
 	)
 	{
-		buffer = Buffer::make(
-			getContext(),
-			_ray_tracing_pipeline_properties.shaderGroupHandleSize,
-			*memory_type_index,
-			VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			std::format("[SBT]: {}", name)
-		);
+        buffer = Buffer::Builder(getContext())
+            .vkSize(_ray_tracing_pipeline_properties.shaderGroupHandleSize)
+            .vkUsage(VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+            .name(std::format("[SBT]: {}", name))
+            .build();
 
-		auto command_buffer = getCommandBuffer();
-
-		Buffer::writeData(
-			buffer.value(), 
-			data, 
-			command_buffer
-		);
+		Buffer::writeData(buffer.value(), data);
 	};
 
     auto raygen_data        = std::span(&handles[0], _ray_tracing_pipeline_properties.shaderGroupHandleSize);
@@ -615,40 +572,28 @@ void HelloTriangle::initMesh()
     _mesh.indices.push_back(1);
     _mesh.indices.push_back(2);
 
-    if (auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-    {
-        uint32_t vertex_buffer_size = static_cast<uint32_t>(sizeof(glm::vec3) * _mesh.vertices.size());
-        uint32_t index_buffer_size  = static_cast<uint32_t>(sizeof(uint32_t) * _mesh.indices.size());
+    uint32_t vertex_buffer_size = static_cast<uint32_t>(sizeof(glm::vec3) * _mesh.vertices.size());
+    uint32_t index_buffer_size  = static_cast<uint32_t>(sizeof(uint32_t) * _mesh.indices.size());
 
-        auto shared_usage_flags = 
-                VK_BUFFER_USAGE_TRANSFER_DST_BIT 
-            |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
-            |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+    auto shared_usage_flags = 
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT 
+        |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
+        |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
 
-        _mesh.vertex_buffer = Buffer::make(
-            getContext(),
-            vertex_buffer_size, 
-            *memory_type_index,
-            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags,
-            "Vertex buffer"
-        );
+    _mesh.vertex_buffer = Buffer::Builder(getContext())
+        .vkSize(vertex_buffer_size)
+        .vkUsage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | shared_usage_flags)
+        .name("Vertex buffer")
+        .build();
 
-        _mesh.index_buffer = Buffer::make(
-            getContext(),
-            index_buffer_size, 
-            *memory_type_index,
-            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags,
-            "Index buffer"
-        );
-    }
-    else 
-        log::error("Not memory index for create mesh index and vertex buffers.");
+    _mesh.index_buffer = Buffer::Builder(getContext())
+        .vkSize(index_buffer_size)
+        .vkUsage(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | shared_usage_flags)
+        .name("Index buffer")
+        .build();
 
-    auto command_buffer_for_copy_vertices   = getCommandBuffer();
-    auto command_buffer_for_copy_indices    = getCommandBuffer();
-
-    Buffer::writeData(_mesh.vertex_buffer.value(), std::span(_mesh.vertices), command_buffer_for_copy_vertices);
-    Buffer::writeData(_mesh.index_buffer.value(), std::span(_mesh.indices), command_buffer_for_copy_indices);
+    Buffer::writeData(_mesh.vertex_buffer.value(), std::span(_mesh.vertices));
+    Buffer::writeData(_mesh.index_buffer.value(), std::span(_mesh.indices));
 }
 
 void HelloTriangle::init()

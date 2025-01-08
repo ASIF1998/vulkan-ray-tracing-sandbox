@@ -18,7 +18,6 @@ namespace vrts
     {
         friend class Scene;
 
-    private:
         explicit Model(std::unique_ptr<Node>&& ptr_node, MaterialManager&& material_manager);
 
     public:

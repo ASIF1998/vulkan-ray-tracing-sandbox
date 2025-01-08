@@ -45,26 +45,13 @@ namespace vrts
         if (references.empty())
             log::error("[SceneGeometryReferencesGetter]: Not references.");
 
-        auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        auto references_buffer = Buffer::Builder(_ptr_context)
+            .vkSize(references.size() * sizeof(VkDeviceAddress))
+            .vkUsage(VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+            .name(name)
+            .build();
 
-        if (!memory_index.has_value())
-            log::error("[SceneGeometryReferencesGetter]: Not memory index for create references buffer.");
-
-        auto references_buffer = Buffer::make(
-            _ptr_context,
-            references.size() * sizeof(VkDeviceAddress),
-            *memory_index,
-            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-            name.data()
-        );
-
-        auto command_buffer_for_write = VkUtils::getCommandBuffer(_ptr_context);
-
-        Buffer::writeData(
-            references_buffer, 
-            std::span(references), 
-            command_buffer_for_write
-        );
+        Buffer::writeData(references_buffer, std::span(references));
 
         return references_buffer;
     }

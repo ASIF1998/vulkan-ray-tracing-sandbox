@@ -12,9 +12,6 @@
 namespace vrts
 {
     struct Context;
-
-    class   Node;
-    struct  MeshNode;
 }
 
 namespace vrts

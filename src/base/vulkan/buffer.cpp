@@ -57,42 +57,78 @@ namespace vrts
 
         return vkGetBufferDeviceAddress(_ptr_context->device_handle, &buffer_device_address_info);
     }
+}
 
-    Buffer Buffer::make(
-        const Context*          ptr_context,
-        VkDeviceSize            size, 
-        uint32_t                type_index,
-        VkBufferUsageFlags      usage_flags,
-        const std::string_view  buffer_name
-    )
+namespace vrts
+{
+    Buffer::Builder::Builder(const Context* ptr_context) :
+        _ptr_context(ptr_context)
+    { }
+
+    void Buffer::Builder::validate() const
     {
-        if (!ptr_context)
-            log::error("[Buffer]: ptr_context is null.");
+        if (!_ptr_context)
+            log::error("[Buffer::Builder] Context is null");
 
-        if (!size)
-            log::error("[Buffer]: size is 0.");
+        if (_size == 0) 
+            log::error("[Buffer::Builder] Size is 0");
 
-        Buffer buffer (ptr_context);
+        if (_usage_flags == VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM) 
+            log::error("[Buffer::Builder] Didn't set usage flags");
+    }
 
-        buffer.size_in_bytes    = size;
-        buffer._ptr_context     = ptr_context;
+    Buffer::Builder& Buffer::Builder::vkSize(VkDeviceSize size)
+    {
+        _size = size;
+        return *this;
+    }
+
+    Buffer::Builder& Buffer::Builder::vkUsage(VkBufferUsageFlags usage_flags)
+    {
+        _usage_flags = usage_flags;
+        return *this;
+    }
+
+    Buffer::Builder& Buffer::Builder::isHostVisible(bool is_host_visible)
+    {
+        _is_host_visible = is_host_visible;
+        return *this;
+    }
+
+    Buffer::Builder& Buffer::Builder::name(std::string_view name)
+    {
+        _name = name;
+        return *this;
+    }
+
+    Buffer Buffer::Builder::build()
+    {
+        validate();
+
+        Buffer buffer (_ptr_context);
+
+        buffer.size_in_bytes    = _size;
 
         VkBufferCreateInfo buffer_create_info = { };
         buffer_create_info.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_create_info.usage                    = usage_flags;
-        buffer_create_info.size                     = size;
+        buffer_create_info.usage                    = _usage_flags;
+        buffer_create_info.size                     = _size;
         buffer_create_info.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
         buffer_create_info.queueFamilyIndexCount    = static_cast<uint32_t>(1);
-        buffer_create_info.pQueueFamilyIndices      = &ptr_context->queue.family_index;
+        buffer_create_info.pQueueFamilyIndices      = &_ptr_context->queue.family_index;
 
         VK_CHECK(
             vkCreateBuffer(
-                ptr_context->device_handle, 
+                _ptr_context->device_handle, 
                 &buffer_create_info, 
                 nullptr, 
                 &buffer.vk_handle
             )
         );
+
+        const auto type_index = _is_host_visible ?
+                MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+            :   MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         auto memory_requirements = buffer.getMemoryRequirements();
 
@@ -108,7 +144,7 @@ namespace vrts
 
         VK_CHECK(
             vkAllocateMemory(
-                ptr_context->device_handle, 
+                _ptr_context->device_handle, 
                 &memory_allocate_info, 
                 nullptr, 
                 &buffer.memory_handle
@@ -117,14 +153,14 @@ namespace vrts
 
         VK_CHECK(
             vkBindBufferMemory(
-                ptr_context->device_handle, 
+                _ptr_context->device_handle, 
                 buffer.vk_handle, 
                 buffer.memory_handle, 
                 0
             )
         );
 
-        VkUtils::setName(ptr_context->device_handle, buffer, VK_OBJECT_TYPE_BUFFER, buffer_name);
+        VkUtils::setName(_ptr_context->device_handle, buffer, VK_OBJECT_TYPE_BUFFER, _name);
 
         return buffer; 
     }

@@ -55,7 +55,6 @@ namespace vrts
 
         void addRect(
             const Context*      ptr_context,
-            const glm::vec2&    size,
             const glm::vec3&    color,
             const glm::vec3&    emissive, 
             const glm::mat4&    transform
@@ -70,9 +69,8 @@ namespace vrts
         );
 
         [[nodiscard]]
-        static MeshNode* makeRectNode(
+        static std::unique_ptr<MeshNode> makeRectNode(
             const Context*      ptr_context,
-            const glm::vec2&    size, 
             const glm::mat4&    transform
         );
 

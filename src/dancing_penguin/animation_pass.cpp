@@ -103,15 +103,17 @@ namespace vrts::dancing_penguin
 
         const auto size = static_cast<VkDeviceSize>(sizeof(glm::mat4) * matrices.size());
 
-        auto memory_type_index = *MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
         constexpr auto buffer_usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
         constexpr std::string_view buffer_name = "[AnimationPass] Final bone matrices";
 
         if (!_final_bones_matrices || _final_bones_matrices->size_in_bytes < size)
         {
-            _final_bones_matrices = Buffer::make(_ptr_context, size, memory_type_index, buffer_usage, buffer_name);
+            _final_bones_matrices = Buffer::Builder(_ptr_context)
+                .vkSize(size)
+                .vkUsage(buffer_usage)
+                .name(buffer_name)
+                .build();
 
             VkDescriptorBufferInfo buffer_info = { };
             buffer_info.buffer  = _final_bones_matrices->vk_handle;
@@ -129,9 +131,7 @@ namespace vrts::dancing_penguin
             vkUpdateDescriptorSets(_ptr_context->device_handle, 1, &write_info, 0, nullptr);
         }
 
-        auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
-
-        Buffer::writeData(*_final_bones_matrices, matrices, command_buffer);
+        Buffer::writeData(*_final_bones_matrices, matrices);
     }
 
     void AnimationPass::process(std::span<const glm::mat4> final_bones_matrices)

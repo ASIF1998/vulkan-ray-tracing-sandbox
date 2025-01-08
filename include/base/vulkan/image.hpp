@@ -159,6 +159,5 @@ namespace vrts
             const uint8_t* ptr_data = nullptr;
             size_t size             = 0;
         } _compressed_image;
-         
     };
 }

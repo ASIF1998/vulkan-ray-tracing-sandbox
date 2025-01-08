@@ -24,10 +24,10 @@ namespace vrts
     public:
         MaterialManager() = default;
 
-        MaterialManager(MaterialManager&& material_manager);
-        MaterialManager(const MaterialManager& material_manager) = delete;
+        MaterialManager(MaterialManager&& material_manager)         = default;
+        MaterialManager(const MaterialManager& material_manager)    = delete;
 
-        MaterialManager& operator = (MaterialManager&& material_manager);
+        MaterialManager& operator = (MaterialManager&& material_manager)        = default;
         MaterialManager& operator = (const MaterialManager& material_manager)   = delete;
 
         [[nodiscard]] std::span<const Material> getMaterials() const;

@@ -2,9 +2,9 @@
 
 namespace vrts
 {
-    class   Node;
-    struct  MeshNode;
-    struct  SkinnedMeshNode;
+    struct Node;
+    struct MeshNode;
+    struct SkinnedMeshNode;
 }
 
 namespace vrts

@@ -19,22 +19,22 @@ namespace vrts
 
         if (auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
         {
-            _identity_matrix = Buffer::make(
-                _ptr_context, 
-                sizeof(identity_matrix), 
-                *memory_type_index, 
+            constexpr auto usage = 
                     VK_BUFFER_USAGE_TRANSFER_DST_BIT 
                 |   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
                 |   VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT 
-                |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR
-            );
+                |   VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+
+            _identity_matrix = Buffer::Builder(_ptr_context)
+                .vkSize(sizeof(identity_matrix))
+                .vkUsage(usage)
+                .name("[ASBuilder] Identity matrix for AS build")
+                .build();
         }
         else
             log::error("[ASBuilder]: Not memory index for create identity matrix.");
 
-        auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
-
-        Buffer::writeData(_identity_matrix.value(), identity_matrix, command_buffer);
+        Buffer::writeData(_identity_matrix.value(), identity_matrix);
     }
 
     void ASBuilder::process(Node* ptr_node)
@@ -45,14 +45,9 @@ namespace vrts
         for (auto& child: ptr_node->children)
             child->visit(this);
 
-        auto tlas_name = std::format("[TLAS] '{}'", ptr_node->name);
+        const auto tlas_name = std::format("[TLAS] '{}'", ptr_node->name);
 
-        auto memory_index_type = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-        if (!memory_index_type.has_value())
-            log::error("[ASBuilder]: Not memory index for create buffers.");
-
-        auto func_table = VkUtils::getVulkanFunctionPointerTable();
+        const auto func_table = VkUtils::getVulkanFunctionPointerTable();
 
         std::vector<VkAccelerationStructureInstanceKHR> instances;
         instances.reserve(ptr_node->children.size() - 1);
@@ -96,19 +91,13 @@ namespace vrts
 
         const auto primitive_count = static_cast<uint32_t>(instances.size());
 
-        auto instances_buffer = Buffer::make(
-            _ptr_context,
-            sizeof(VkAccelerationStructureInstanceKHR) * instances.size(),
-            *memory_index_type,
-            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            std::format("[TLAS] instance buffer: {}", ptr_node->name)
-        );
+        auto instances_buffer = Buffer::Builder(_ptr_context)
+            .vkSize(sizeof(VkAccelerationStructureInstanceKHR) * instances.size())
+            .vkUsage(VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+            .name(std::format("[TLAS] Instance buffer: {}", ptr_node->name))
+            .build();
 
-        {
-            auto command_buffer = VkUtils::getCommandBuffer(_ptr_context);
-
-            Buffer::writeData(instances_buffer, std::span(instances), command_buffer);
-        }
+        Buffer::writeData(instances_buffer, std::span(instances));
 
         VkAccelerationStructureGeometryKHR geometry = { };
         geometry.sType          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -141,13 +130,11 @@ namespace vrts
             &tlas_size
         );
 
-        auto tlas_buffer = Buffer::make(
-            _ptr_context,
-            tlas_size.accelerationStructureSize,
-            *memory_index_type,
-            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-            std::format("[TLAS] buffer: {}", ptr_node->name)
-        );
+        auto tlas_buffer = Buffer::Builder(_ptr_context)
+            .vkSize(tlas_size.accelerationStructureSize)
+            .vkUsage(VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+            .name(std::format("[TLAS] Buffer: {}", ptr_node->name))
+            .build();
 
         VkAccelerationStructureCreateInfoKHR tlas_info = { };
         tlas_info.sType     = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
@@ -171,13 +158,11 @@ namespace vrts
             tlas_name
         );
 
-        auto scratch_buffer = Buffer::make(
-            _ptr_context,
-            tlas_size.buildScratchSize,
-            *memory_index_type,
-            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-            std::format("[TLAS] scratch buffer: {}", ptr_node->name)
-        );
+        auto scratch_buffer = Buffer::Builder(_ptr_context)
+            .vkSize(tlas_size.buildScratchSize)
+            .vkUsage(VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+            .name(std::format("[TLAS] Scratch buffer: {}", ptr_node->name))
+            .build();
 
         geometry_build_info.scratchData.deviceAddress   = scratch_buffer.getAddress();
         geometry_build_info.dstAccelerationStructure    = acceleration_structure_handle;
@@ -233,11 +218,6 @@ namespace vrts
         uint32_t            index_count
     )
     {
-        auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-        if (!memory_type_index.has_value())
-            log::error("[ASBuilder]: Not memory index for create buffers.");
-        
         VkAccelerationStructureGeometryKHR mesh_info = { };
         mesh_info.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
         mesh_info.flags         = VK_GEOMETRY_OPAQUE_BIT_KHR;
@@ -284,13 +264,11 @@ namespace vrts
 
         VkAccelerationStructureKHR acceleration_structure_handle = VK_NULL_HANDLE;
 
-        auto blas_buffer = Buffer::make(
-            _ptr_context,
-            as_size.accelerationStructureSize,
-            *memory_type_index,
-            VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-            std::format("[BLAS] Buffer: {}", name) 
-        );
+        auto blas_buffer = Buffer::Builder(_ptr_context)
+            .vkSize(as_size.accelerationStructureSize)
+            .vkUsage(VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+            .name(std::format("[BLAS] Buffer: {}", name))
+            .build();
 
         VkAccelerationStructureCreateInfoKHR as_info = { };
         as_info.sType   = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
@@ -314,12 +292,11 @@ namespace vrts
             std::format("[BLAS] {}", name)
         );
 
-        auto scratch_buffer = Buffer::make(
-            _ptr_context,
-            as_size.buildScratchSize,
-            *memory_type_index,
-            VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
-        );
+        auto scratch_buffer = Buffer::Builder(_ptr_context)
+            .vkSize(as_size.buildScratchSize)
+            .vkUsage(VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+            .name(std::format("[BLAS] Scratch buffer: {}", name))
+            .build();
 
         VkAccelerationStructureBuildGeometryInfoKHR build_info = { };
         build_info.sType                        = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;

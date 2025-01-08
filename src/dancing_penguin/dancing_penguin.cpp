@@ -21,22 +21,19 @@ DancingPenguin::~DancingPenguin()
 
 void DancingPenguin::initScene()
 {
-    if (auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-    {
-        auto [width, height] = _window->getSize();
+    auto [width, height] = _window->getSize();
 
-        _scene = Scene::Importer(getContext())
-            .path(project_dir / "content/dancing_penguin.glb")
-            .vkMemoryTypeIndex(*memory_index)
-            .viewport(width, height)
-            .import();
+    _scene = Scene::Importer(getContext())
+        .path(project_dir / "content/dancing_penguin.glb")
+        .vkMemoryTypeIndex(MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
+        .viewport(width, height)
+        .import();
 
-        auto ptr_animation_pass_builder = std::make_unique<AnimationPass::Builder>(getContext());
+    auto ptr_animation_pass_builder = std::make_unique<AnimationPass::Builder>(getContext());
 
-        _scene->getModel().visit(ptr_animation_pass_builder);
+    _scene->getModel().visit(ptr_animation_pass_builder);
 
-        _animation_pass = ptr_animation_pass_builder->build();
-    }
+    _animation_pass = ptr_animation_pass_builder->build();
 }
 
 void DancingPenguin::initCamera()
@@ -223,32 +220,19 @@ void DancingPenguin::createShaderBindingTable()
 		)
 	);
 
-	auto memory_type_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	if (!memory_type_index.has_value())
-		log::error("Not memory index for create SBT.");
-
-	auto createBufferForSBT = [this, &memory_type_index] (
+	auto createBufferForSBT = [this] (
 		std::optional<Buffer>&		buffer, 
 		const std::span<uint8_t> 	data,
 		const std::string_view 		name
 	)
 	{
-		buffer = Buffer::make(
-			getContext(),
-			_ray_tracing_pipeline_properties.shaderGroupHandleSize,
-			*memory_type_index,
-			VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-			std::format("[SBT]: {}", name)
-		);
+        buffer = Buffer::Builder(getContext())
+            .vkSize(_ray_tracing_pipeline_properties.shaderGroupHandleSize)
+            .vkUsage(VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+            .name(std::format("[SBT]: {}", name))
+            .build();
 
-		auto command_buffer = getCommandBuffer();
-
-		Buffer::writeData(
-			buffer.value(), 
-			data, 
-			command_buffer
-		);
+		Buffer::writeData(buffer.value(), data);
 	};
 
 	auto raygen_data 		= std::span(&raw_data[handle_size_aligned * StageId::ray_gen], _ray_tracing_pipeline_properties.shaderGroupHandleSize);
@@ -479,20 +463,11 @@ void DancingPenguin::updateVertexBufferReferences()
 	_vertex_buffers_references.scene_geometries_ref	= ptr_visitor->getVertexBuffersReferences();
 	_vertex_buffers_references.scene_indices_ref	= ptr_visitor->getIndexBuffersReferences();
 	
-	if (auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-	{
-		_vertex_buffers_references.scene_info_reference = Buffer::make(
-			getContext(),
-			sizeof(VkDeviceAddress) * 2,
-			*memory_index,
-			VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-			"Pointer to vertex buffers references"
-		);
-	}
-	else 
-		log::error("Not memory index for create vertex buffers references.");
-
-	auto command_buffer = getCommandBuffer();
+    _vertex_buffers_references.scene_info_reference = Buffer::Builder(getContext())
+        .vkSize(sizeof(VkDeviceAddress) * 2)
+        .vkUsage(VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT)
+        .name("Pointer to vertex buffers references")
+        .build();
 
 	std::array<VkDeviceAddress, 2> references
 	{
@@ -500,11 +475,7 @@ void DancingPenguin::updateVertexBufferReferences()
 		_vertex_buffers_references.scene_indices_ref->getAddress()
 	};
 
-	Buffer::writeData<VkDeviceAddress>(
-		*_vertex_buffers_references.scene_info_reference, 
-		references,
-		command_buffer
-	);
+	Buffer::writeData<VkDeviceAddress>(*_vertex_buffers_references.scene_info_reference, references);
 }
 
 void DancingPenguin::updateTime()

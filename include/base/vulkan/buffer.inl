@@ -6,25 +6,13 @@
 namespace vrts
 {
     template<typename T>
-    static void Buffer::writeData(
-        Buffer&             buffer, 
-        const std::span<T>  data, 
-        CommandBuffer&      command_buffer
-    )
+    static void Buffer::writeData(Buffer& buffer, const std::span<T> data)
     {
-        Buffer temp_buffer (buffer._ptr_context);
-
-        if (auto memory_index = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
-        {
-            temp_buffer = Buffer::make(
-                buffer._ptr_context,
-                data.size_bytes(),
-                *memory_index,
-                VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-            );
-        }
-        else 
-            log::error("[Buffer]: Not memory index for create temp buffer.");
+        auto temp_buffer = Buffer::Builder(buffer._ptr_context)
+            .vkSize(data.size_bytes())
+            .vkUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
+            .isHostVisible(true)
+            .build();
 
         uint8_t* ptr_src = nullptr;
 
@@ -42,6 +30,8 @@ namespace vrts
 
         vkUnmapMemory(temp_buffer._ptr_context->device_handle, temp_buffer.memory_handle);
 
+        auto command_buffer = VkUtils::getCommandBuffer(buffer._ptr_context);
+
         command_buffer.write([&data, &temp_buffer, &buffer] (VkCommandBuffer vk_handle)
         {
             VkBufferCopy copy = { };
@@ -56,16 +46,8 @@ namespace vrts
     }
 
     template<typename T>
-    static void Buffer::writeData(
-        Buffer&         buffer, 
-        const T&        obj, 
-        CommandBuffer&  command_buffer
-    )
+    static void Buffer::writeData(Buffer& buffer, const T& obj)
     {
-        writeData(
-            buffer, 
-            std::span(reinterpret_cast<const uint8_t*>(&obj), sizeof(T)), 
-            command_buffer
-        );
+        writeData(buffer, std::span(reinterpret_cast<const uint8_t*>(&obj), sizeof(T)));
     }
 }

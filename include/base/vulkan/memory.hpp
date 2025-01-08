@@ -20,7 +20,7 @@ namespace vrts
         static void init(VkPhysicalDevice physical_device_handle);
 
         [[nodiscard]]
-        static std::optional<uint32_t> getMemoryIndex(VkMemoryPropertyFlags flags);
+        static uint32_t getMemoryIndex(VkMemoryPropertyFlags flags);
 
     private:
         static std::vector<VkMemoryPropertyFlags> _memory_properties;
