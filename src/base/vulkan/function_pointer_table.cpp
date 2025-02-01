@@ -1,3 +1,4 @@
+#include <base/configuration.hpp>
 #include <base/vulkan/function_pointer_table.hpp>
 
 #include <base/logger/logger.hpp>
@@ -33,5 +34,11 @@ namespace vrts
         vkCreateRayTracingPipelinesKHR                  = loadFunction<PFN_vkCreateRayTracingPipelinesKHR>(device_handle, "vkCreateRayTracingPipelinesKHR");
         vkGetRayTracingShaderGroupHandlesKHR            = loadFunction<PFN_vkGetRayTracingShaderGroupHandlesKHR>(device_handle, "vkGetRayTracingShaderGroupHandlesKHR");
         vkCmdTraceRaysKHR                               = loadFunction<PFN_vkCmdTraceRaysKHR>(device_handle, "vkCmdTraceRaysKHR");
+  
+        if (vrts::enable_vk_debug_marker)
+        {
+            vkCmdDebugMarkerBeginEXT    = loadFunction<PFN_vkCmdDebugMarkerBeginEXT>(device_handle, "vkCmdDebugMarkerBeginEXT");
+            vkCmdDebugMarkerEndEXT      = loadFunction<PFN_vkCmdDebugMarkerEndEXT>(device_handle, "vkCmdDebugMarkerEndEXT");
+        }       
     }
 }

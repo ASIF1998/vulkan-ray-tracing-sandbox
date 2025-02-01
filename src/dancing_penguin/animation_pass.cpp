@@ -159,7 +159,7 @@ namespace vrts::dancing_penguin
                 );
                 
                 vkCmdDispatch(command_buffer_handle, x_group_size, 1, 1); 
-            });
+            }, "Run animation subpass", GpuMarkerColors::run_compute_pipeline);
 
             command_buffer.upload(_ptr_context);
         }

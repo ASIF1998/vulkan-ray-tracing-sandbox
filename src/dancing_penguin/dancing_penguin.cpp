@@ -359,7 +359,7 @@ void DancingPenguin::swapchainImageToPresentUsage(uint32_t image_index)
             0, nullptr, 
             1, &image_memory_barrier
         );
-    });
+    }, "Change swapchain image usage to present", GpuMarkerColors::change_image_layout);
 
     command_buffer.upload(getContext());
 }
@@ -396,7 +396,7 @@ void DancingPenguin::swapchainImageToGeneralUsage(uint32_t image_index)
             0, nullptr, 
             1, &image_memory_barrier
         );
-    });
+    }, "Change swapchain image usage to general", GpuMarkerColors::change_image_layout);
 
     command_buffer.upload(getContext());
 }
@@ -567,7 +567,7 @@ void DancingPenguin::show()
 				&_sbt.callable_region,
 				width, height, 1
 			);
-        });
+        }, "Run drawing", GpuMarkerColors::run_ray_tracing_pipeline);
 
         draw_command_buffer.upload(getContext());
 

@@ -220,7 +220,7 @@ void HelloTriangle::createBLAS()
             &blas_build_geometry_info, 
             &ptr_blas_build_range_info
         );
-    });
+    }, "Build BLAS", GpuMarkerColors::build_blas);
 
     command_buffer.upload(getContext());
 
@@ -344,7 +344,7 @@ void HelloTriangle::createTLAS()
             1, &geomerty_build_info, 
             &ptr_tlas_build_range_info
         );
-    });
+    }, "Build TLAS", GpuMarkerColors::build_tlas);
 
     command_buffer_for_build_tlas.upload(getContext());
 
@@ -662,7 +662,7 @@ void HelloTriangle::buildCommandBuffers()
 				&_sbt.callable_region,
                 width, height, 1
             );
-        });
+        }, "Run drawing", GpuMarkerColors::run_ray_tracing_pipeline);
     }
 
     /// build command buffers for switch images layout from swapchain
@@ -696,7 +696,7 @@ void HelloTriangle::buildCommandBuffers()
                 0, nullptr,
                 1, &image_barrier 
             );
-        });
+        }, "Change swapchain image layout to present", GpuMarkerColors::change_image_layout);
 
         std::swap(image_barrier.oldLayout, image_barrier.newLayout);
         image_barrier.srcAccessMask = 0;
@@ -711,7 +711,7 @@ void HelloTriangle::buildCommandBuffers()
                 0, nullptr,
                 1, &image_barrier 
             );
-        });
+        }, "Change swapchain image layout to general", GpuMarkerColors::change_image_layout);
 
         std::swap(image_barrier.oldLayout, image_barrier.newLayout);
     }

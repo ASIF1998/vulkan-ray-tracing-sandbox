@@ -1,8 +1,10 @@
 #include <base/raytracing_base.hpp>
-#include <base/vulkan/memory.hpp>
 #include <base/shader_compiler.hpp>
 
+#include <base/vulkan/memory.hpp>
 #include <base/vulkan/image.hpp>
+
+#include <base/vulkan/gpu_marker_colors.hpp>
 
 #include <stdexcept>
 
@@ -352,6 +354,9 @@ namespace vrts
             VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
             VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME
         };
+
+        if (vrts::enable_vk_debug_marker)
+            extensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
 
         for (auto extension: extensions)
             log::info("Device extension: {}", extension);
@@ -703,7 +708,7 @@ namespace vrts
                     1, &image_memory_barrier
                 );
             }
-        });
+        }, "Change swapchain images layout to general", GpuMarkerColors::change_image_layout);
 
         command_buffer.upload(getContext());
     }

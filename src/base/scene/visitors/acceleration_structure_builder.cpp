@@ -2,6 +2,7 @@
 #include <base/scene/node.hpp>
 
 #include <base/vulkan/context.hpp>
+#include <base/vulkan/gpu_marker_colors.hpp>
 
 #include <base/vulkan/buffer.hpp>
 
@@ -181,7 +182,7 @@ namespace vrts
                 1, &geometry_build_info,
                 &ptr_build_range
             );
-        });
+        }, std::format("Build TLAS: {}", ptr_node->name), GpuMarkerColors::build_tlas);
 
         command_buffer_for_build.upload(_ptr_context);
 
@@ -322,7 +323,7 @@ namespace vrts
                 1, &build_info,
                 &ptr_range_info
             );
-        });
+        }, std::format("Build BLAS: {}", name), GpuMarkerColors::build_blas);
 
         command_buffer_for_build.upload(_ptr_context);
 

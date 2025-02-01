@@ -31,13 +31,41 @@ namespace vrts
         return *this;
     }
 
-    void CommandBuffer::write(const std::function<void (VkCommandBuffer command_buffer_handle)>& writer)
+    void CommandBuffer::write(
+        const WriteFunctionType&    writer, 
+        std::string_view            name,
+        const glm::vec3&            col
+    )
     {
         VkCommandBufferBeginInfo begin_info = { };
         begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
+        VkDebugMarkerMarkerInfoEXT marker_info = { };
+        marker_info.sType       = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
+        marker_info.pMarkerName = name.data();
+
+        if (col.length() > 0.0)
+        {
+            marker_info.color[0] = col.r;
+            marker_info.color[1] = col.g;
+            marker_info.color[2] = col.b;
+            marker_info.color[3] = 1.0f;
+        }
+
+        const auto& functions = VkUtils::getVulkanFunctionPointerTable();
+
+        const bool enable_marking = (!name.empty() || col.length() > 0.0) && vrts::enable_vk_debug_marker;
+
         vkBeginCommandBuffer(_vk_handle, &begin_info);
-            writer(_vk_handle);
+
+        if (enable_marking)
+            functions.vkCmdDebugMarkerBeginEXT(_vk_handle, &marker_info);
+
+        writer(_vk_handle);
+
+        if (enable_marking)
+            functions.vkCmdDebugMarkerEndEXT(_vk_handle);
+
         vkEndCommandBuffer(_vk_handle);
     }
 

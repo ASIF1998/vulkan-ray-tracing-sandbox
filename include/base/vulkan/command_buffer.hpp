@@ -1,8 +1,12 @@
 #pragma once
 
+#include <base/math.hpp>
+
 #include <vulkan/vulkan.h>
 
 #include <functional>
+
+#include <string_view>
 
 namespace vrts
 {
@@ -13,6 +17,8 @@ namespace vrts
 {
     class CommandBuffer
     {
+        using WriteFunctionType = std::function<void (VkCommandBuffer command_buffer_handle)>;
+
     public:
         CommandBuffer(const Context* ptr_context, VkCommandBuffer command_buffer_handle);
 
@@ -24,7 +30,11 @@ namespace vrts
         CommandBuffer& operator = (CommandBuffer&& command_buffer);
         CommandBuffer& operator = (const CommandBuffer& command_buffer) = delete;
 
-        void write(const std::function<void (VkCommandBuffer command_buffer_handle)>& writer);
+        void write(
+            const WriteFunctionType&    writer, 
+            std::string_view            name = "",
+            const glm::vec3&            col = glm::vec3(0)
+        );
 
         void upload(const Context* ptr_context);
 

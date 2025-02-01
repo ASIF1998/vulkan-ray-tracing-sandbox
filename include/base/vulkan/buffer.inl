@@ -2,6 +2,7 @@
 #include <base/vulkan/memory.hpp>
 
 #include <base/vulkan/utils.hpp>
+#include <base/vulkan/gpu_marker_colors.hpp>
 
 namespace vrts
 {
@@ -40,7 +41,7 @@ namespace vrts
             copy.size       = data.size_bytes();
 
             vkCmdCopyBuffer(vk_handle, temp_buffer.vk_handle, buffer.vk_handle, 1, &copy);
-        });
+        }, "Write data in buffer", GpuMarkerColors::write_data_in_buffer);
 
         command_buffer.upload(buffer._ptr_context);
     }

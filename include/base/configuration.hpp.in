@@ -8,6 +8,7 @@ namespace vrts
 {
     constexpr bool enable_vk_profiling                      = false;
     constexpr bool enable_vk_objects_naming                 = true;
+    constexpr bool enable_vk_debug_marker                   = false;
 
     const std::filesystem::path project_dir = "@VULKAN_RAY_TRACING_SANDBOX_PROJECT_DIR@";
 }

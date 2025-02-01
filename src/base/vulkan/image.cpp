@@ -129,7 +129,7 @@ namespace vrts
             copy_info.pRegions          = &region;
 
             vkCmdCopyBufferToImage2(command_buffer_handle, &copy_info);
-        });
+        }, "Write data in image", GpuMarkerColors::write_data_in_image);
 
         command_buffer.upload(_ptr_context);
     }
@@ -193,7 +193,7 @@ namespace vrts
                 command_buffer.write([&blit_info] (VkCommandBuffer command_buffer_handle)
                 {
                     vkCmdBlitImage2(command_buffer_handle, &blit_info);
-                });
+                }, std::format("Create mipmap for level = {}", mip_level - 1), GpuMarkerColors::create_mipmap);
 
                 command_buffer.upload(ptr_context);
             }
@@ -277,7 +277,7 @@ namespace vrts
             dependency_info.pImageMemoryBarriers    = &image_memory_barrier;
 
             vkCmdPipelineBarrier2(command_buffer_handle, &dependency_info);
-        });
+        }, "Change image layout from undefined to general");
 
         command_buffer.upload(_ptr_context);
     }
@@ -447,7 +447,7 @@ namespace vrts
                 range.levelCount        = 1;
 
                 vkCmdClearColorImage(handle, image.vk_handle, VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &range);
-            });
+            }, "Fill image", GpuMarkerColors::write_data_in_image);
 
             command_buffer.upload(_ptr_context);
         }

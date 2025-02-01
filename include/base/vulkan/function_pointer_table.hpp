@@ -17,5 +17,8 @@ namespace vrts
         PFN_vkCreateRayTracingPipelinesKHR              vkCreateRayTracingPipelinesKHR              = VK_NULL_HANDLE;
         PFN_vkGetRayTracingShaderGroupHandlesKHR        vkGetRayTracingShaderGroupHandlesKHR        = VK_NULL_HANDLE;
         PFN_vkCmdTraceRaysKHR                           vkCmdTraceRaysKHR                           = VK_NULL_HANDLE;
+
+        PFN_vkCmdDebugMarkerBeginEXT    vkCmdDebugMarkerBeginEXT    = VK_NULL_HANDLE;
+        PFN_vkCmdDebugMarkerEndEXT      vkCmdDebugMarkerEndEXT      = VK_NULL_HANDLE;
     };
 }

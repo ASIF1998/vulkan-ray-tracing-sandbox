@@ -279,7 +279,7 @@ void JunkShop::show()
 				&_sbt.callable_region,
 				width, height, 1
 			);
-		});
+		}, "Run drawing", GpuMarkerColors::run_ray_tracing_pipeline);
 
 		command_buffer_for_trace_ray.upload(getContext());
 
@@ -796,7 +796,7 @@ void JunkShop::buildCommandBuffers()
                 0, nullptr,
                 1, &image_barrier 
             );
-        });
+        }, "Change swapchain image layout to present", GpuMarkerColors::change_image_layout);
 
         std::swap(image_barrier.oldLayout, image_barrier.newLayout);
         image_barrier.srcAccessMask = 0;
@@ -811,7 +811,7 @@ void JunkShop::buildCommandBuffers()
                 0, nullptr,
                 1, &image_barrier 
             );
-        });
+        }, "Change swapchain image layout to general", GpuMarkerColors::change_image_layout);
 
         std::swap(image_barrier.oldLayout, image_barrier.newLayout);
     }
