@@ -7,6 +7,10 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
@@ -37,34 +41,36 @@ set(Vulkan_SDK_LIBS ${Vulkan_INCLUDE_DIRS}/../Lib)
 ######################################################################
 #   glslang
 ######################################################################
+set(GLSLANG_INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/glslang/include)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(GLSLANG_LIBS_NAME 
-            GenericCodeGend.lib
-            glslang-default-resource-limitsd.lib
-            glslangd.lib
-            MachineIndependentd.lib
-            OSDependentd.lib
-            SPIRV-Tools-optd.lib
-            SPIRV-Toolsd.lib
-            SPIRVd.lib
-            SPVRemapperd.lib
+        GenericCodeGend.lib
+        glslang-default-resource-limitsd.lib
+        glslangd.lib
+        MachineIndependentd.lib
+        OSDependentd.lib
+        SPIRV-Tools-optd.lib
+        SPIRV-Toolsd.lib
+        SPIRVd.lib
+        SPVRemapperd.lib
     )
 else()
     set(GLSLANG_LIBS_NAME 
-            GenericCodeGen.lib
-            glslang-default-resource-limits.lib
-            glslang.lib
-            MachineIndependent.lib
-            OSDependent.lib
-            SPIRV-Tools-opt.lib
-            SPIRV-Tools.lib
-            SPIRV.lib
-            SPVRemapper.lib
+        GenericCodeGen.lib
+        glslang-default-resource-limits.lib
+        glslang.lib
+        MachineIndependent.lib
+        OSDependent.lib
+        SPIRV-Tools-opt.lib
+        SPIRV-Tools.lib
+        SPIRV.lib
+        SPVRemapper.lib
     )
 endif()
 
 foreach(library ${GLSLANG_LIBS_NAME})
-    set(GLSLANG_LIBS ${GLSLANG_LIBS} ${Vulkan_SDK_LIBS}/${library})
+    set(GLSLANG_LIBS ${GLSLANG_LIBS} ${CMAKE_SOURCE_DIR}/third_party/glslang/${CMAKE_BUILD_TYPE}/${library})
 endforeach()
 
 ######################################################################
@@ -74,18 +80,19 @@ set(ASSIMP_ROOT ${CMAKE_SOURCE_DIR}/third_party/assimp)
 
 set(ASSIMP_INCLUDE_DIRECTORY ${ASSIMP_ROOT}/include)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(ASSIMP_LIBS_NAME
-        assimp-vc143-mtd.lib
-    )
-else()
-    set(ASSIMP_LIBS_NAME
-        assimp-vc143-mt.lib
-    )
-endif()
+set(ASSIMP_LIBS
+    ${ASSIMP_ROOT}/assimp-vc143-mt.lib
+)
 
-foreach(library ${ASSIMP_LIBS_NAME})
-    set(ASSIMP_LIBS ${ASSIMP_LIBS} ${ASSIMP_ROOT}/${CMAKE_BUILD_TYPE}/${library})
+set(ASSIMP_BINS
+    assimp-vc143-mt.dll
+    assimp-vc143-mt.exp
+    assimp-vc143-mt.lib
+    assimp-vc143-mt.pdb
+)
+
+foreach(bin_name ${ASSIMP_BINS})
+    configure_file(${ASSIMP_ROOT}/${bin_name} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}/${bin_name} COPYONLY)
 endforeach()
 
 ######################################################################
@@ -96,9 +103,11 @@ set(STB_INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/)
 ######################################################################
 #   SDL2
 ######################################################################
+set(SDL2_INCLUDE_DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/SDL2/include)
+
 set(SDL2_LIBS 
-    ${Vulkan_SDK_LIBS}/SDL2.lib
-    ${Vulkan_SDK_LIBS}/SDL2main.lib
+    ${CMAKE_SOURCE_DIR}/third_party/SDL2/SDL2.lib
+    ${CMAKE_SOURCE_DIR}/third_party/SDL2/SDL2main.lib
 )
 
 ######################################################################
@@ -118,6 +127,9 @@ target_link_libraries(vulkan-ray-tracing-sandbox PUBLIC
     
 target_include_directories(vulkan-ray-tracing-sandbox PUBLIC 
     ${Vulkan_INCLUDE_DIRS}
+    ${SDL2_INCLUDE_DIRECTORY}
+    ${GLSLANG_INCLUDE_DIRECTORY}
     ${ASSIMP_INCLUDE_DIRECTORY}
     ${STB_INCLUDE_DIRECTORY}
+    ${GLM_INCLUDE_DIRECTORY}
 )

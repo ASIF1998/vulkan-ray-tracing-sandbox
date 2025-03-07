@@ -4,7 +4,7 @@
 
 namespace vrts::utils
 {
-    glm::vec3 generateColor(uint32_t marker_id);
+    [[nodiscard]] glm::vec3 generateColor(uint32_t marker_id);
 }
 
 namespace vrts
