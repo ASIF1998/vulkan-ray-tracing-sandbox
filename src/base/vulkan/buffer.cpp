@@ -51,9 +51,11 @@ namespace vrts
 
     VkDeviceAddress Buffer::getAddress() const noexcept
     {
-        VkBufferDeviceAddressInfo buffer_device_address_info = { };
-        buffer_device_address_info.sType    = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
-        buffer_device_address_info.buffer   = vk_handle;
+        const VkBufferDeviceAddressInfo buffer_device_address_info 
+        { 
+            .sType  = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+            .buffer = vk_handle
+        };
 
         return vkGetBufferDeviceAddress(_ptr_context->device_handle, &buffer_device_address_info);
     }
@@ -109,13 +111,15 @@ namespace vrts
 
         buffer.size_in_bytes    = _size;
 
-        VkBufferCreateInfo buffer_create_info = { };
-        buffer_create_info.sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_create_info.usage                    = _usage_flags;
-        buffer_create_info.size                     = _size;
-        buffer_create_info.sharingMode              = VK_SHARING_MODE_EXCLUSIVE;
-        buffer_create_info.queueFamilyIndexCount    = static_cast<uint32_t>(1);
-        buffer_create_info.pQueueFamilyIndices      = &_ptr_context->queue.family_index;
+        const VkBufferCreateInfo buffer_create_info 
+        { 
+            .sType                    = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .size                     = _size,
+            .usage                    = _usage_flags,
+            .sharingMode              = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount    = static_cast<uint32_t>(1),
+            .pQueueFamilyIndices      = &_ptr_context->queue.family_index
+        };
 
         VK_CHECK(
             vkCreateBuffer(
@@ -132,15 +136,19 @@ namespace vrts
 
         auto memory_requirements = buffer.getMemoryRequirements();
 
-        VkMemoryAllocateFlagsInfoKHR memory_allocation_flags = { };
-        memory_allocation_flags.sType       = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR;
-        memory_allocation_flags.flags       = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
+        constexpr VkMemoryAllocateFlagsInfoKHR memory_allocation_flags 
+        { 
+            .sType       = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR,
+            .flags       = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR
+        };
 
-        VkMemoryAllocateInfo memory_allocate_info = { };
-        memory_allocate_info.sType              = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memory_allocate_info.pNext              = &memory_allocation_flags;
-        memory_allocate_info.allocationSize     = VkUtils::getAlignedSize(memory_requirements.size, memory_requirements.alignment);
-        memory_allocate_info.memoryTypeIndex    = type_index;
+        const VkMemoryAllocateInfo memory_allocate_info 
+        { 
+            .sType              = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .pNext              = &memory_allocation_flags,
+            .allocationSize     = VkUtils::getAlignedSize(memory_requirements.size, memory_requirements.alignment),
+            .memoryTypeIndex    = type_index
+        };
 
         VK_CHECK(
             vkAllocateMemory(

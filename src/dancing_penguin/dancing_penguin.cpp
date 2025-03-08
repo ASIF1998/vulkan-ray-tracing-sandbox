@@ -69,24 +69,39 @@ void DancingPenguin::createPipelineLayout()
     bindings[Bindings::albedos].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     bindings[Bindings::albedos].stageFlags      = VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 
-    VkDescriptorSetLayoutCreateInfo set_layout_info = { };
-    set_layout_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    set_layout_info.pBindings       = bindings.data();
-    set_layout_info.bindingCount    = static_cast<uint32_t>(bindings.size());
+    const VkDescriptorSetLayoutCreateInfo set_layout_info 
+    { 
+        .sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .bindingCount   = static_cast<uint32_t>(bindings.size()),
+        .pBindings      = bindings.data()
+    };
 
     VK_CHECK(vkCreateDescriptorSetLayout(_context.device_handle, &set_layout_info, nullptr, &_descriptor_set_layout_handle));
 
-    VkPushConstantRange push_constant_range = { };
-    push_constant_range.offset      = 0;
-    push_constant_range.size        = sizeof(PushConstants);
-    push_constant_range.stageFlags  = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+    constexpr std::array push_constants_ranges 
+	{
+		VkPushConstantRange 
+		{ 
+			.stageFlags	= VK_SHADER_STAGE_RAYGEN_BIT_KHR,
+			.offset		= 0,
+			.size		= sizeof(PushConstants::RayGen)
+		},
+		VkPushConstantRange 
+		{ 
+			.stageFlags	= VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+			.offset		= sizeof(PushConstants::RayGen),
+			.size		= sizeof(PushConstants::ClosestHit)
+		}
+	};
 
-    VkPipelineLayoutCreateInfo pipeline_layout_info = { };
-    pipeline_layout_info.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_info.setLayoutCount         = 1;
-    pipeline_layout_info.pSetLayouts            = &_descriptor_set_layout_handle;
-    pipeline_layout_info.pushConstantRangeCount = 1;
-    pipeline_layout_info.pPushConstantRanges    = &push_constant_range;
+    const VkPipelineLayoutCreateInfo pipeline_layout_info 
+    { 
+        .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .setLayoutCount         = 1,
+        .pSetLayouts            = &_descriptor_set_layout_handle,
+        .pushConstantRangeCount = static_cast<uint32_t>(push_constants_ranges.size()),
+        .pPushConstantRanges    = push_constants_ranges.data()
+    };
 
     VK_CHECK(vkCreatePipelineLayout(_context.device_handle, &pipeline_layout_info, nullptr, &_pipeline_layout_handle));
 }
@@ -100,19 +115,23 @@ void DancingPenguin::createDescriptorSets()
     pool_sizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1});
     pool_sizes.push_back({VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast<uint32_t>(material.size())});
 
-    VkDescriptorPoolCreateInfo descriptor_pool_create_info = { };
-    descriptor_pool_create_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptor_pool_create_info.maxSets         = 1;
-    descriptor_pool_create_info.poolSizeCount   = static_cast<uint32_t>(pool_sizes.size());
-    descriptor_pool_create_info.pPoolSizes      = pool_sizes.data();
+    const VkDescriptorPoolCreateInfo descriptor_pool_create_info 
+    { 
+        .sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .maxSets         = 1,
+        .poolSizeCount   = static_cast<uint32_t>(pool_sizes.size()),
+        .pPoolSizes      = pool_sizes.data()
+    };
 
     VK_CHECK(vkCreateDescriptorPool(_context.device_handle, &descriptor_pool_create_info, nullptr, &_descriptor_pool_handle));
 
-    VkDescriptorSetAllocateInfo descriptor_set_allocate_info = { };
-    descriptor_set_allocate_info.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptor_set_allocate_info.descriptorPool     = _descriptor_pool_handle;
-    descriptor_set_allocate_info.descriptorSetCount = 1;
-    descriptor_set_allocate_info.pSetLayouts        = &_descriptor_set_layout_handle;
+    const VkDescriptorSetAllocateInfo descriptor_set_allocate_info 
+    { 
+        .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .descriptorPool     = _descriptor_pool_handle,
+        .descriptorSetCount = 1,
+        .pSetLayouts        = &_descriptor_set_layout_handle
+    };
 
     VK_CHECK(vkAllocateDescriptorSets(_context.device_handle, &descriptor_set_allocate_info, &_descriptor_set_handle));
 
@@ -166,15 +185,17 @@ void DancingPenguin::createPipeline()
     groups[StageId::chit].closestHitShader      = StageId::chit;
     groups[StageId::chit].intersectionShader    = VK_SHADER_UNUSED_KHR;
     groups[StageId::chit].type                  = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
-
-    VkRayTracingPipelineCreateInfoKHR pipeline_info = { };
-    pipeline_info.sType                          = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
-    pipeline_info.stageCount                     = StageId::count;
-    pipeline_info.pStages                        = shader_stage_create_infos.data();
-    pipeline_info.groupCount                     = StageId::count;
-    pipeline_info.pGroups                        = groups.data();
-    pipeline_info.maxPipelineRayRecursionDepth   = _max_ray_tracing_recursive;
-    pipeline_info.layout                         = _pipeline_layout_handle;
+    
+    const VkRayTracingPipelineCreateInfoKHR pipeline_info 
+    { 
+        .sType                          = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR,
+        .stageCount                     = StageId::count,
+        .pStages                        = shader_stage_create_infos.data(),
+        .groupCount                     = StageId::count,
+        .pGroups                        = groups.data(),
+        .maxPipelineRayRecursionDepth   = _max_ray_tracing_recursive,
+        .layout                         = _pipeline_layout_handle
+    };
 
     auto func_table = VkUtils::getVulkanFunctionPointerTable();
 
@@ -333,23 +354,27 @@ void DancingPenguin::swapchainImageToPresentUsage(uint32_t image_index)
 
     command_buffer.write([this, image_index](VkCommandBuffer command_buffer_handle)
     {
-        VkImageSubresourceRange range = { };
-        range.aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT;
-        range.baseArrayLayer    = 0;
-        range.layerCount        = 1;
-        range.baseMipLevel      = 0;
-        range.levelCount        = 1;
+        constexpr VkImageSubresourceRange range 
+        { 
+            .aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel      = 0,
+            .levelCount        = 1,
+            .baseArrayLayer    = 0,
+            .layerCount        = 1
+        };
 
-        VkImageMemoryBarrier image_memory_barrier = { };
-        image_memory_barrier.sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        image_memory_barrier.srcAccessMask          = VK_ACCESS_SHADER_WRITE_BIT;
-        image_memory_barrier.dstAccessMask          = VK_ACCESS_NONE_KHR;
-        image_memory_barrier.oldLayout              = VK_IMAGE_LAYOUT_GENERAL;
-        image_memory_barrier.newLayout              = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        image_memory_barrier.srcQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR;
-        image_memory_barrier.dstQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR;
-        image_memory_barrier.image                  = _swapchain_image_handles[image_index];
-        image_memory_barrier.subresourceRange       = range;
+        const VkImageMemoryBarrier image_memory_barrier 
+        { 
+            .sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .srcAccessMask          = VK_ACCESS_SHADER_WRITE_BIT,
+            .dstAccessMask          = VK_ACCESS_NONE_KHR,
+            .oldLayout              = VK_IMAGE_LAYOUT_GENERAL,
+            .newLayout              = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            .srcQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR,
+            .dstQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR,
+            .image                  = _swapchain_image_handles[image_index],
+            .subresourceRange       = range
+        };
 
         vkCmdPipelineBarrier(
             command_buffer_handle, 
@@ -370,23 +395,27 @@ void DancingPenguin::swapchainImageToGeneralUsage(uint32_t image_index)
 
     command_buffer.write([this, image_index](VkCommandBuffer command_buffer_handle)
     {
-        VkImageSubresourceRange range = { };
-        range.aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT;
-        range.baseArrayLayer    = 0;
-        range.layerCount        = 1;
-        range.baseMipLevel      = 0;
-        range.levelCount        = 1;
+        constexpr VkImageSubresourceRange range 
+        { 
+            .aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel      = 0,
+            .levelCount        = 1,
+            .baseArrayLayer    = 0,
+            .layerCount        = 1
+        };
 
-        VkImageMemoryBarrier image_memory_barrier = { };
-        image_memory_barrier.sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        image_memory_barrier.srcAccessMask          = VK_ACCESS_NONE_KHR;
-        image_memory_barrier.dstAccessMask          = VK_ACCESS_SHADER_WRITE_BIT;
-        image_memory_barrier.oldLayout              = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        image_memory_barrier.newLayout              = VK_IMAGE_LAYOUT_GENERAL;
-        image_memory_barrier.srcQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR;
-        image_memory_barrier.dstQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR;
-        image_memory_barrier.image                  = _swapchain_image_handles[image_index];
-        image_memory_barrier.subresourceRange       = range;
+        const VkImageMemoryBarrier image_memory_barrier 
+        { 
+            .sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .srcAccessMask          = VK_ACCESS_NONE_KHR,
+            .dstAccessMask          = VK_ACCESS_SHADER_WRITE_BIT,
+            .oldLayout              = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            .newLayout              = VK_IMAGE_LAYOUT_GENERAL,
+            .srcQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR,
+            .dstQueueFamilyIndex    = VK_QUEUE_FAMILY_EXTERNAL_KHR,
+            .image                  = _swapchain_image_handles[image_index],
+            .subresourceRange       = range
+        };
 
         vkCmdPipelineBarrier(
             command_buffer_handle, 
@@ -405,9 +434,11 @@ void DancingPenguin::updateDescriptorSets(uint32_t image_index)
 {
     std::array<VkWriteDescriptorSet, 3> write_infos = { };
 
-    VkDescriptorImageInfo image_info = { };
-    image_info.imageLayout  = VK_IMAGE_LAYOUT_GENERAL;
-    image_info.imageView    = _swapchain_image_view_handles[image_index];
+    const VkDescriptorImageInfo image_info 
+    { 
+        .imageView      = _swapchain_image_view_handles[image_index],
+        .imageLayout    = VK_IMAGE_LAYOUT_GENERAL
+    };
 
     write_infos[Bindings::result] = { }; 
     write_infos[Bindings::result].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -420,10 +451,12 @@ void DancingPenguin::updateDescriptorSets(uint32_t image_index)
 
     auto acceleration_structure_handle = _scene->getModel().getRootTLAS().value();
 
-    VkWriteDescriptorSetAccelerationStructureKHR write_acceleration_structure_info = { };
-	write_acceleration_structure_info.sType                         = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-	write_acceleration_structure_info.accelerationStructureCount    = 1;
-    write_acceleration_structure_info.pAccelerationStructures       = &acceleration_structure_handle;
+    const VkWriteDescriptorSetAccelerationStructureKHR write_acceleration_structure_info 
+    { 
+        .sType                         = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+        .accelerationStructureCount    = 1,
+        .pAccelerationStructures       = &acceleration_structure_handle
+    };
 
     write_infos[Bindings::acceleration_structure] = { }; 
     write_infos[Bindings::acceleration_structure].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -434,10 +467,12 @@ void DancingPenguin::updateDescriptorSets(uint32_t image_index)
     write_infos[Bindings::acceleration_structure].dstBinding        = Bindings::acceleration_structure;
     write_infos[Bindings::acceleration_structure].dstSet            = _descriptor_set_handle;
 
-    VkDescriptorBufferInfo buffer_info = { };
-    buffer_info.buffer 	= _vertex_buffers_references.scene_info_reference->vk_handle;
-    buffer_info.offset 	= 0;
-    buffer_info.range 	= sizeof(VkDeviceAddress) * 2;
+    const VkDescriptorBufferInfo buffer_info 
+    { 
+        .buffer = _vertex_buffers_references.scene_info_reference->vk_handle,
+        .offset =  0,
+        .range  = sizeof(VkDeviceAddress) * 2
+    };
 
     write_infos[Bindings::scene_geometry] = { };
     write_infos[Bindings::scene_geometry].sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -489,7 +524,7 @@ void DancingPenguin::updateTime()
 
     end = timer.now();
 
-    _time.delta = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - begin).count() * seconds_per_milisceond;
+    _delta_time = std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(end - begin).count() * seconds_per_milisceond;
 
     begin = end;
 }
@@ -498,7 +533,7 @@ void DancingPenguin::animationPass()
 {
     auto& animator = _scene->getAnimator();
 
-    animator.update(_time.delta);
+    animator.update(_delta_time);
     _animation_pass->process(animator.getFinalBoneMatrices());
 
     auto ptr_as_builder = std::make_unique<ASBuilder>(getContext());
@@ -575,12 +610,14 @@ void DancingPenguin::show()
 
         VkResult result = VK_RESULT_MAX_ENUM;
 
-		VkPresentInfoKHR present_info = { };
-		present_info.sType			= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		present_info.pImageIndices	= &image_index;
-		present_info.pResults		= &result;
-		present_info.pSwapchains	= &_swapchain_handle;
-		present_info.swapchainCount = 1;
+		VkPresentInfoKHR present_info 
+        { 
+            .sType			= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+            .swapchainCount = 1,
+            .pSwapchains	= &_swapchain_handle,
+            .pImageIndices	= &image_index,
+            .pResults       = &result,
+        };
 
         auto present_result = vkQueuePresentKHR(_context.queue.handle, &present_info);
         VK_CHECK(present_result);
@@ -616,14 +653,16 @@ void DancingPenguin::bindAlbedos()
         albedos_infos[i].sampler        = materials[i].albedo->sampler_handle;
     }
 
-    VkWriteDescriptorSet albedo_write_info = { };
-    albedo_write_info.sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    albedo_write_info.descriptorCount   = static_cast<uint32_t>(materials.size());
-    albedo_write_info.descriptorType    = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    albedo_write_info.dstArrayElement   = 0;
-    albedo_write_info.dstBinding        = Bindings::albedos;
-    albedo_write_info.dstSet            = _descriptor_set_handle;
-    albedo_write_info.pImageInfo        = albedos_infos.data();
+    const VkWriteDescriptorSet albedo_write_info 
+    { 
+        .sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstSet            = _descriptor_set_handle,
+        .dstBinding        = Bindings::albedos,
+        .dstArrayElement   = 0,
+        .descriptorCount   = static_cast<uint32_t>(materials.size()),
+        .descriptorType    = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        .pImageInfo        = albedos_infos.data(),
+    };
 
     vkUpdateDescriptorSets(_context.device_handle, 1, &albedo_write_info, 0, nullptr);
 }

@@ -37,20 +37,17 @@ namespace vrts
         const glm::vec3&            col
     )
     {
-        VkCommandBufferBeginInfo begin_info = { };
-        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        constexpr VkCommandBufferBeginInfo begin_info 
+        { 
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
+        };
 
-        VkDebugMarkerMarkerInfoEXT marker_info = { };
-        marker_info.sType       = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT;
-        marker_info.pMarkerName = name.data();
-
-        if (col.length() > 0.0)
-        {
-            marker_info.color[0] = col.r;
-            marker_info.color[1] = col.g;
-            marker_info.color[2] = col.b;
-            marker_info.color[3] = 1.0f;
-        }
+        const VkDebugMarkerMarkerInfoEXT marker_info 
+        { 
+            .sType          = VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT,
+            .pMarkerName    = name.data(),
+            .color          = {col.r, col.g, col.b, 1.0f}
+        };
 
         const auto& functions = VkUtils::getVulkanFunctionPointerTable();
 
@@ -71,19 +68,25 @@ namespace vrts
 
     void CommandBuffer::upload(const Context* ptr_context)
     {
-        VkCommandBufferSubmitInfo command_buffer_info = { };
-        command_buffer_info.sType           = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
-        command_buffer_info.commandBuffer   = _vk_handle;
+        const VkCommandBufferSubmitInfo command_buffer_info 
+        { 
+            .sType          = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+            .commandBuffer  = _vk_handle
+        };
 
-        VkSubmitInfo2KHR submit_info = { };
-        submit_info.sType                   = VK_STRUCTURE_TYPE_SUBMIT_INFO_2_KHR;
-        submit_info.pCommandBufferInfos     = &command_buffer_info;
-        submit_info.commandBufferInfoCount  = 1;
+        const VkSubmitInfo2KHR submit_info
+        { 
+            .sType                  = VK_STRUCTURE_TYPE_SUBMIT_INFO_2_KHR,
+            .commandBufferInfoCount = 1,
+            .pCommandBufferInfos    = &command_buffer_info
+        };
 
         VkFence fence_handle = VK_NULL_HANDLE;
 
-        VkFenceCreateInfo fence_create_info = { };
-        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        constexpr VkFenceCreateInfo fence_create_info 
+        { 
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+        };
 
         VK_CHECK(vkCreateFence(ptr_context->device_handle, &fence_create_info, nullptr, &fence_handle));
 

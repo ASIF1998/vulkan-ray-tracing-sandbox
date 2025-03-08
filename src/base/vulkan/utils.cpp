@@ -282,11 +282,13 @@ namespace vrts
     {
         VkCommandBuffer command_buffer_handle = VK_NULL_HANDLE;
 
-        VkCommandBufferAllocateInfo allocate_info = { };
-        allocate_info.sType                 = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocate_info.level                 = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocate_info.commandBufferCount    = 1;
-        allocate_info.commandPool           = ptr_context->command_pool_handle;
+        const VkCommandBufferAllocateInfo allocate_info 
+        { 
+            .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+            .commandPool        = ptr_context->command_pool_handle,
+            .level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+            .commandBufferCount = 1
+        };
 
         VK_CHECK(
             vkAllocateCommandBuffers(

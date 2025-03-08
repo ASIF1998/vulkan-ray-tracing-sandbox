@@ -115,18 +115,22 @@ namespace vrts::dancing_penguin
                 .name(buffer_name)
                 .build();
 
-            VkDescriptorBufferInfo buffer_info = { };
-            buffer_info.buffer  = _final_bones_matrices->vk_handle;
-            buffer_info.range   = _final_bones_matrices->size_in_bytes;
+            const VkDescriptorBufferInfo buffer_info 
+            { 
+                .buffer = _final_bones_matrices->vk_handle,
+                .range  = _final_bones_matrices->size_in_bytes,
+            };
 
-            VkWriteDescriptorSet write_info = { };
-            write_info.sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            write_info.descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-            write_info.dstArrayElement  = 0;
-            write_info.dstBinding       = static_cast<uint32_t>(Bindings::final_bones_matrices);
-            write_info.dstSet           = _descriptor_set_handle;
-            write_info.descriptorCount  = 1;
-            write_info.pBufferInfo      = &buffer_info;
+            const VkWriteDescriptorSet write_info 
+            { 
+                .sType              = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet             = _descriptor_set_handle,
+                .dstBinding         = static_cast<uint32_t>(Bindings::final_bones_matrices),
+                .dstArrayElement    = 0,
+                .descriptorCount    = 1,
+                .descriptorType     = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .pBufferInfo        = &buffer_info
+            };
 
             vkUpdateDescriptorSets(_ptr_context->device_handle, 1, &write_info, 0, nullptr);
         }
@@ -210,10 +214,12 @@ namespace vrts::dancing_penguin
             bindings_info[i].stageFlags         = VK_SHADER_STAGE_COMPUTE_BIT;
         }
 
-        VkDescriptorSetLayoutCreateInfo descriptor_set_info = { };
-        descriptor_set_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptor_set_info.bindingCount    = static_cast<uint32_t>(bindings_info.size());
-        descriptor_set_info.pBindings       = bindings_info.data();
+        const VkDescriptorSetLayoutCreateInfo descriptor_set_info 
+        { 
+            .sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+            .bindingCount    = static_cast<uint32_t>(bindings_info.size()),
+            .pBindings       = bindings_info.data()
+        };
 
         VK_CHECK(vkCreateDescriptorSetLayout(
             _ptr_context->device_handle,
@@ -222,10 +228,12 @@ namespace vrts::dancing_penguin
             &_descriptor_set_layout
         ));
 
-        VkPipelineLayoutCreateInfo layout_info = { };
-        layout_info.sType           = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        layout_info.pSetLayouts     = &_descriptor_set_layout;
-        layout_info.setLayoutCount  = 1;
+        const VkPipelineLayoutCreateInfo layout_info 
+        { 
+            .sType           = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+            .setLayoutCount  = 1,
+            .pSetLayouts     = &_descriptor_set_layout
+        };
         
         VK_CHECK(vkCreatePipelineLayout(
             _ptr_context->device_handle,
@@ -247,16 +255,20 @@ namespace vrts::dancing_penguin
             shader::Type::compute
         );
 
-        VkPipelineShaderStageCreateInfo stage = { };
-        stage.sType     = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        stage.module    = _compute_shader_handle;
-        stage.pName     = "main";
-        stage.stage     = VK_SHADER_STAGE_COMPUTE_BIT;
+        const VkPipelineShaderStageCreateInfo stage 
+        { 
+            .sType     = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            .stage     = VK_SHADER_STAGE_COMPUTE_BIT,
+            .module    = _compute_shader_handle,
+            .pName     = "main"
+        };
 
-        VkComputePipelineCreateInfo pipeline_info = { };
-        pipeline_info.sType     = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-        pipeline_info.layout    = _pipeline_layout;
-        pipeline_info.stage     = stage;
+        const VkComputePipelineCreateInfo pipeline_info 
+        { 
+            .sType     = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+            .stage     = stage,
+            .layout    = _pipeline_layout
+        };
         
         VK_CHECK(vkCreateComputePipelines(
             _ptr_context->device_handle,
@@ -269,15 +281,19 @@ namespace vrts::dancing_penguin
 
     void AnimationPass::Builder::createDescriptorPool()
     {
-        VkDescriptorPoolSize descriptor_size = { };
-        descriptor_size.type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        descriptor_size.descriptorCount = 5;
+        constexpr VkDescriptorPoolSize descriptor_size 
+        { 
+            .type               = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .descriptorCount    = 5
+        };
 
-        VkDescriptorPoolCreateInfo descriptor_pool_info = { };
-        descriptor_pool_info.sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        descriptor_pool_info.maxSets        = 1;
-        descriptor_pool_info.pPoolSizes     = &descriptor_size;
-        descriptor_pool_info.poolSizeCount  = 1;
+        const VkDescriptorPoolCreateInfo descriptor_pool_info 
+        { 
+            .sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+            .maxSets        = 1,
+            .poolSizeCount  = 1,
+            .pPoolSizes     = &descriptor_size
+        };
 
         VK_CHECK(vkCreateDescriptorPool(
             _ptr_context->device_handle,
@@ -289,11 +305,13 @@ namespace vrts::dancing_penguin
 
     void AnimationPass::Builder::allocateDescriptorSet()
     {
-        VkDescriptorSetAllocateInfo allocate_info = { };
-        allocate_info.sType                 = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocate_info.descriptorPool        = _descriptor_pool_handle;
-        allocate_info.descriptorSetCount    = 1;
-        allocate_info.pSetLayouts           = &_descriptor_set_layout;
+        const VkDescriptorSetAllocateInfo allocate_info 
+        { 
+            .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+            .descriptorPool     = _descriptor_pool_handle,
+            .descriptorSetCount = 1,
+            .pSetLayouts        = &_descriptor_set_layout
+        };
 
         VK_CHECK(vkAllocateDescriptorSets(_ptr_context->device_handle, &allocate_info, &_descriptor_set_handle));
 

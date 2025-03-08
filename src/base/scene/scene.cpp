@@ -270,9 +270,9 @@ namespace vrts
         const glm::vec4 normal  (0, 0, 1, 0);
         const glm::vec4 tangent (1, 0, 0, 0);
 
-        std::vector<Mesh::Attributes> attributes;
+        std::vector<Attributes> attributes;
 
-        Mesh::Attributes attr = { };
+        Attributes attr = { };
         attr.normal     = normal;
         attr.tangent    = tangent;
 
@@ -383,9 +383,9 @@ namespace vrts
     { }
 
     Mesh Scene::Importer::createMesh(
-        const std::string_view              name,
-        const std::span<uint32_t>           indices,
-        const std::span<Mesh::Attributes>   attributes
+        const std::string_view      name,
+        const std::span<uint32_t>   indices,
+        const std::span<Attributes> attributes
     ) const
     {
         Mesh mesh;
@@ -413,10 +413,10 @@ namespace vrts
     }
 
     SkinnedMesh Scene::Importer::createMesh(
-        const std::string_view              name,
-        const std::span<uint32_t>           indices,
-        const std::span<Mesh::Attributes>   attributes,
-        const std::span<Mesh::SkinningData> skinning_data
+        const std::string_view          name,
+        const std::span<uint32_t>       indices,
+        const std::span<Attributes>     attributes,
+        const std::span<SkinningData>   skinning_data
     ) const
     {
         static int skinned_mesh_index = 0;
@@ -455,7 +455,7 @@ namespace vrts
         (
             _ptr_context,
             std::format("[SkinnedMesh][Processed vertex buffer]: {}", skinned_mesh_index),
-            static_cast<VkDeviceSize>(attributes.size() * sizeof(Mesh::Attributes)),
+            static_cast<VkDeviceSize>(attributes.size() * sizeof(Attributes)),
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | utils::buffer_usage_flags
         );
 
@@ -463,10 +463,10 @@ namespace vrts
     }
 
     void Scene::Importer::add(
-        const std::string_view              name, 
-        const std::span<uint32_t>           indices, 
-        const std::span<Mesh::Attributes>   attributes,
-        const std::span<Mesh::SkinningData> skinning_data
+        const std::string_view          name, 
+        const std::span<uint32_t>       indices, 
+        const std::span<Attributes>     attributes,
+        const std::span<SkinningData>   skinning_data
     )
     {
         if (skinning_data.empty())
@@ -605,7 +605,7 @@ namespace vrts
         return _ptr_root_node->children.size();
     }
 
-    void Scene::Importer::processAnimation(const aiMesh* ptr_mesh, std::span<Mesh::SkinningData> skinning_data)
+    void Scene::Importer::processAnimation(const aiMesh* ptr_mesh, std::span<SkinningData> skinning_data)
     {
         const std::span bones (ptr_mesh->mBones, ptr_mesh->mNumBones);
         for (const auto& bone: bones)
@@ -669,9 +669,9 @@ namespace vrts
             log::info("[Scene::Importer]\t\t - Index count: {}", index_count);
             log::info("[Scene::Importer]\t\t - Vertex count: {}", vertex_count);
 
-            std::vector<uint32_t>           indices;
-            std::vector<Mesh::Attributes>   attributes;
-            std::vector<Mesh::SkinningData> skinning_data;
+            std::vector<uint32_t>       indices;
+            std::vector<Attributes>     attributes;
+            std::vector<SkinningData>   skinning_data;
 
             for (auto i: std::views::iota(0u, ptr_node->mNumMeshes))
             {
@@ -684,7 +684,7 @@ namespace vrts
 
                 for (auto j: std::views::iota(0u, ptr_mesh->mNumVertices))
                 {
-                    Mesh::Attributes attr;
+                    Attributes attr;
                     attr.pos        = utils::cast(ptr_mesh->mVertices[j]);
                     attr.normal     = utils::cast(ptr_mesh->mNormals[j]);
                     attr.tangent    = utils::cast(ptr_mesh->mTangents[j]);

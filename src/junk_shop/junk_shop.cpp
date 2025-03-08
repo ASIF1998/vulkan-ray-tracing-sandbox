@@ -52,20 +52,24 @@ void JunkShop::resizeWindow()
 
 VkDescriptorImageInfo JunkShop::createDescriptorImageInfo(const Image& image)
 {
-	VkDescriptorImageInfo image_info = { };
-	image_info.imageLayout 	= VK_IMAGE_LAYOUT_GENERAL;
-	image_info.imageView 	= image.view_handle;
-	image_info.sampler 		= image.sampler_handle;
+	const VkDescriptorImageInfo image_info 
+	{ 
+		.sampler		= image.sampler_handle,
+		.imageView		= image.view_handle,
+		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
+	};
 
 	return image_info;
 }
 
 VkDescriptorImageInfo JunkShop::createDescriptorImageInfo(VkImageView image_view_handle)
 {
-	VkDescriptorImageInfo image_info = { };
-	image_info.imageLayout 	= VK_IMAGE_LAYOUT_GENERAL;
-	image_info.imageView 	= image_view_handle;
-	image_info.sampler 		= VK_NULL_HANDLE;
+	VkDescriptorImageInfo image_info 
+	{ 
+		.sampler		= VK_NULL_HANDLE,
+		.imageView 		= image_view_handle,
+		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
+	};
 
 	return image_info;
 }
@@ -73,27 +77,31 @@ VkDescriptorImageInfo JunkShop::createDescriptorImageInfo(VkImageView image_view
 auto JunkShop::createDescriptorBufferInfo(VkBuffer buffer_handle, VkDeviceSize size, VkDeviceSize offset)
 	-> VkDescriptorBufferInfo
 {
-	VkDescriptorBufferInfo buffer_info = { };
-	buffer_info.buffer 	= buffer_handle;
-	buffer_info.offset 	= offset;
-	buffer_info.range 	= size;
+	const VkDescriptorBufferInfo buffer_info 
+	{ 
+		.buffer	= buffer_handle,
+		.offset	= offset,
+		.range	= size
+	};
 
 	return buffer_info;
 }
 
 void JunkShop::updateDescriptorSet(uint32_t image_index)
 {
+	auto root_tlas_handle = _scene->getModel().getRootTLAS();
+	if (!root_tlas_handle)
+		log::error("Acceleartion structure not created.");
+
 	auto& material_manager = _scene->getModel().getMaterialManager();
 
-	VkWriteDescriptorSetAccelerationStructureKHR write_acceleration_structure_info = { };
-	write_acceleration_structure_info.sType 						= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-	write_acceleration_structure_info.accelerationStructureCount 	= 1;
+	const VkWriteDescriptorSetAccelerationStructureKHR write_acceleration_structure_info 
+	{ 
+		.sType						= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+		.accelerationStructureCount	= 1,
+		.pAccelerationStructures 	= &(*root_tlas_handle)
+	};
 
-	if (auto root_tlas_handle = _scene->getModel().getRootTLAS())
-		write_acceleration_structure_info.pAccelerationStructures = &(*root_tlas_handle);
-	else 
-		log::error("Acceleartion structure not created.");
-	
 	/*	--------------- rendering result ----------------------	*/
 	auto result_image_info = createDescriptorImageInfo(_swapchain_image_view_handles[image_index]);
 
@@ -285,12 +293,14 @@ void JunkShop::show()
 
 		VkResult result = VK_RESULT_MAX_ENUM;
 
-		VkPresentInfoKHR present_info = { };
-		present_info.sType			= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		present_info.pImageIndices	= &image_index;
-		present_info.pResults		= &result;
-		present_info.pSwapchains	= &_swapchain_handle;
-		present_info.swapchainCount = 1;
+		const VkPresentInfoKHR present_info 
+		{ 
+			.sType			= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			.swapchainCount	= 1,
+			.pSwapchains	= &_swapchain_handle,
+			.pImageIndices	= &image_index,
+			.pResults		= &result
+		};
 
 		_swapchain.general_to_present_layout[image_index]->upload(getContext());
 
@@ -375,10 +385,12 @@ void JunkShop::createPipelineLayout()
 {
 	auto bindings = getPipelineDescriptorSetsBindings();
 
-	VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info = { };
-	descriptor_set_layout_create_info.sType 		= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	descriptor_set_layout_create_info.bindingCount 	= static_cast<uint32_t>(bindings.size());
-	descriptor_set_layout_create_info.pBindings 	= bindings.data();
+	const VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info 
+	{ 
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.bindingCount	= static_cast<uint32_t>(bindings.size()),
+		.pBindings		= bindings.data()
+	};
 
 	VK_CHECK(
 		vkCreateDescriptorSetLayout(
@@ -389,24 +401,30 @@ void JunkShop::createPipelineLayout()
 		)
 	);
 
-	std::array<VkPushConstantRange, 2> push_constants_ranges;
+	constexpr std::array push_constants_ranges 
+	{
+		VkPushConstantRange 
+		{ 
+			.stageFlags	= VK_SHADER_STAGE_RAYGEN_BIT_KHR,
+			.offset		= 0,
+			.size		= sizeof(PushConstants::RayGen)
+		},
+		VkPushConstantRange 
+		{ 
+			.stageFlags	= VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR,
+			.offset		= sizeof(PushConstants::RayGen),
+			.size		= sizeof(PushConstants::ClosestHit)
+		}
+	};
 
-	push_constants_ranges[ShaderId::ray_gen] = { };
-	push_constants_ranges[ShaderId::ray_gen].size 			= sizeof(PushConstants::RayGen);
-	push_constants_ranges[ShaderId::ray_gen].stageFlags 	= VK_SHADER_STAGE_RAYGEN_BIT_KHR;
-	push_constants_ranges[ShaderId::ray_gen].offset 		= 0;
-
-	push_constants_ranges[ShaderId::chit] = { };
-	push_constants_ranges[ShaderId::chit].size 			= sizeof(PushConstants::ClosestHit);
-	push_constants_ranges[ShaderId::chit].stageFlags 	= VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
-	push_constants_ranges[ShaderId::chit].offset 		= sizeof(PushConstants::RayGen);
-
-	VkPipelineLayoutCreateInfo pipeline_layout_create_info = { };
-	pipeline_layout_create_info.sType 					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipeline_layout_create_info.setLayoutCount 			= 1;
-	pipeline_layout_create_info.pSetLayouts 			= &_descriptor_set_layout_handle;
-	pipeline_layout_create_info.pushConstantRangeCount 	= static_cast<uint32_t>(push_constants_ranges.size());
-	pipeline_layout_create_info.pPushConstantRanges 	= push_constants_ranges.data();
+	const VkPipelineLayoutCreateInfo pipeline_layout_create_info 
+	{ 
+		.sType					= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+		.setLayoutCount			= 1,
+		.pSetLayouts			= &_descriptor_set_layout_handle,
+		.pushConstantRangeCount = static_cast<uint32_t>(push_constants_ranges.size()),
+		.pPushConstantRanges	= push_constants_ranges.data()
+	};
 
 	VK_CHECK(
 		vkCreatePipelineLayout(
@@ -629,11 +647,13 @@ void JunkShop::createDescriptorSets()
 {
 	auto pool_sizes = getPoolSizes();
 
-	VkDescriptorPoolCreateInfo descriptor_pool_create_info = { };
-	descriptor_pool_create_info.sType 			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	descriptor_pool_create_info.maxSets 		= 1;
-	descriptor_pool_create_info.poolSizeCount 	= static_cast<uint32_t>(pool_sizes.size());
-	descriptor_pool_create_info.pPoolSizes 		= pool_sizes.data();
+	const VkDescriptorPoolCreateInfo descriptor_pool_create_info 
+	{ 
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.maxSets		= 1,
+		.poolSizeCount	= static_cast<uint32_t>(pool_sizes.size()),
+		.pPoolSizes		= pool_sizes.data()
+	};
 
 	VK_CHECK(
 		vkCreateDescriptorPool(
@@ -644,11 +664,13 @@ void JunkShop::createDescriptorSets()
 		)
 	);
 
-	VkDescriptorSetAllocateInfo descriptor_set_allocate_info = { };
-	descriptor_set_allocate_info.sType 				= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	descriptor_set_allocate_info.descriptorPool 	= _descriptor_pool;
-	descriptor_set_allocate_info.descriptorSetCount = 1;
-	descriptor_set_allocate_info.pSetLayouts  		= &_descriptor_set_layout_handle;
+	const VkDescriptorSetAllocateInfo descriptor_set_allocate_info 
+	{ 
+		.sType				= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.descriptorPool		= _descriptor_pool,
+		.descriptorSetCount	= 1,
+		.pSetLayouts		= &_descriptor_set_layout_handle,
+	};
 	
 	VK_CHECK(
 		vkAllocateDescriptorSets(
@@ -766,17 +788,22 @@ PushConstants JunkShop::getPushConstantData()
 void JunkShop::buildCommandBuffers()
 {
 	/// build command buffers for switch images layout from swapchain
-    VkImageMemoryBarrier image_barrier = { };
-    image_barrier.sType                             = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    image_barrier.oldLayout                         = VK_IMAGE_LAYOUT_GENERAL;
-    image_barrier.newLayout                         = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    image_barrier.srcQueueFamilyIndex               = 0;
-    image_barrier.dstQueueFamilyIndex               = 0;
-    image_barrier.subresourceRange.aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT;
-    image_barrier.subresourceRange.baseArrayLayer   = 0;
-    image_barrier.subresourceRange.layerCount       = 1;
-    image_barrier.subresourceRange.baseMipLevel     = 0;
-    image_barrier.subresourceRange.levelCount       = 1;
+    VkImageMemoryBarrier image_barrier 
+	{ 
+		.sType					= VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.oldLayout              = VK_IMAGE_LAYOUT_GENERAL,
+		.newLayout              = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+		.srcQueueFamilyIndex    = 0,
+		.dstQueueFamilyIndex    = 0,
+		.subresourceRange		= 
+		{
+			.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT,
+			.baseMipLevel   = 0,
+			.levelCount     = 1,
+			.baseArrayLayer = 0,
+			.layerCount     = 1
+		}
+	};
 
     for (size_t image_index = 0; image_index < NUM_IMAGES_IN_SWAPCHAIN; ++image_index)
     {

@@ -179,22 +179,26 @@ namespace vrts
         debug_messenger_create_info.pfnUserCallback = VkUtils::debugCallback;
 #endif
 
-        VkApplicationInfo app_info = { };
-        app_info.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.apiVersion         = VK_API_VERSION_1_3;
-        app_info.pApplicationName   = "Ray Tracing Sample";
-        app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        app_info.pEngineName        = "No Engine";
-        app_info.engineVersion      = VK_MAKE_VERSION(0, 0, 0);
+        constexpr VkApplicationInfo app_info 
+        { 
+            .sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+            .pApplicationName   = "Ray Tracing Sample",
+            .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+            .pEngineName        = "No Engine",
+            .engineVersion      = VK_MAKE_VERSION(0, 0, 0),
+            .apiVersion         = VK_API_VERSION_1_3
+        };
 
-        VkInstanceCreateInfo instance_create_info = { };
-        instance_create_info.sType                      = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        //instance_create_info.pNext                      = &debug_messenger_create_info;
-        instance_create_info.enabledExtensionCount      = static_cast<uint32_t>(extensions.size());
-        instance_create_info.ppEnabledExtensionNames    = extensions.data();
-        instance_create_info.pApplicationInfo           = &app_info;VK_MAKE_VERSION(0, 0, 1);
-        instance_create_info.ppEnabledLayerNames        = layers.data();
-        instance_create_info.enabledLayerCount          = static_cast<uint32_t>(layers.size());
+        const VkInstanceCreateInfo instance_create_info 
+        { 
+            .sType                      = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            //.pNext                      = &debug_messenger_create_info,
+            .pApplicationInfo           = &app_info,
+            .enabledLayerCount          = static_cast<uint32_t>(layers.size()),
+            .ppEnabledLayerNames        = layers.data(),
+            .enabledExtensionCount      = static_cast<uint32_t>(extensions.size()),
+            .ppEnabledExtensionNames    = extensions.data()
+        };
 
         log::info("Create instance");
 
@@ -266,9 +270,11 @@ namespace vrts
 
         _ray_tracing_pipeline_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
 
-        VkPhysicalDeviceProperties2 phyical_device_properties = { };
-        phyical_device_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-        phyical_device_properties.pNext = &_ray_tracing_pipeline_properties;
+        VkPhysicalDeviceProperties2 phyical_device_properties 
+        { 
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+            .pNext = &_ray_tracing_pipeline_properties
+        };
 
         vkGetPhysicalDeviceProperties2(_context.physical_device_handle, &phyical_device_properties);
 
@@ -277,7 +283,7 @@ namespace vrts
 
     bool RayTracingBase::isRayTracingSupported(std::span<const VkExtensionProperties> properties) const
     {
-        constexpr std::array<const char*, 3> device_extensions
+        constexpr std::array device_extensions
         {
             VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
             VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
@@ -339,11 +345,13 @@ namespace vrts
 
         constexpr uint32_t queue_count = 1;
 
-        VkDeviceQueueCreateInfo device_queue_create_info = { };
-        device_queue_create_info.sType               = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        device_queue_create_info.pQueuePriorities    = &priority;
-        device_queue_create_info.queueCount          = queue_count;
-        device_queue_create_info.queueFamilyIndex    = _context.queue.family_index;
+        const VkDeviceQueueCreateInfo device_queue_create_info 
+        { 
+            .sType               = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .queueFamilyIndex    = _context.queue.family_index,
+            .queueCount          = queue_count,
+            .pQueuePriorities    = &priority
+        };
 
         std::vector<const char*> extensions
         {
@@ -355,50 +363,62 @@ namespace vrts
             VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME
         };
 
-        if (vrts::enable_vk_debug_marker)
+        if constexpr (vrts::enable_vk_debug_marker)
             extensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
 
         for (auto extension: extensions)
             log::info("Device extension: {}", extension);
 
-        VkPhysicalDeviceVulkan12Features device_vulkan12_features = { };
-        device_vulkan12_features.sType                  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-        device_vulkan12_features.runtimeDescriptorArray = VK_TRUE;
-        device_vulkan12_features.bufferDeviceAddress    = VK_TRUE;
+        VkPhysicalDeviceVulkan12Features device_vulkan12_features 
+        { 
+            .sType                  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+            .runtimeDescriptorArray = VK_TRUE,
+            .bufferDeviceAddress    = VK_TRUE
+        };
 
-        VkPhysicalDeviceSynchronization2Features synchronization_2_features = { };
-        synchronization_2_features.sType            = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
-        synchronization_2_features.pNext            = &device_vulkan12_features;
-        synchronization_2_features.synchronization2 = VK_TRUE;
+        VkPhysicalDeviceSynchronization2Features synchronization_2_features 
+        { 
+            .sType              = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES,
+            .pNext              = &device_vulkan12_features,
+            .synchronization2   = VK_TRUE
+        };
 
-        VkPhysicalDeviceAccelerationStructureFeaturesKHR as_features = { };
-        as_features.sType                                                   = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
-        as_features.pNext                                                   = &synchronization_2_features;
-        as_features.accelerationStructure                                   = VK_TRUE;
-        as_features.accelerationStructureCaptureReplay                      = VK_TRUE;
-        as_features.descriptorBindingAccelerationStructureUpdateAfterBind   = VK_TRUE;
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR as_features 
+        { 
+            .sType                                                  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
+            .pNext                                                  = &synchronization_2_features,
+            .accelerationStructure                                  = VK_TRUE,
+            .accelerationStructureCaptureReplay                     = VK_TRUE,
+            .descriptorBindingAccelerationStructureUpdateAfterBind  = VK_TRUE
+        };
 
-        VkPhysicalDeviceRayTracingPipelineFeaturesKHR ray_tracing_pipeline_features = { };
-        ray_tracing_pipeline_features.sType                                 = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
-        ray_tracing_pipeline_features.pNext                                 = &as_features;
-        ray_tracing_pipeline_features.rayTracingPipeline                    = VK_TRUE;
-        ray_tracing_pipeline_features.rayTracingPipelineTraceRaysIndirect   = VK_TRUE;
-        ray_tracing_pipeline_features.rayTraversalPrimitiveCulling          = VK_TRUE;
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR ray_tracing_pipeline_features 
+        { 
+            .sType                                  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
+            .pNext                                  = &as_features,
+            .rayTracingPipeline                     = VK_TRUE,
+            .rayTracingPipelineTraceRaysIndirect    = VK_TRUE,
+            .rayTraversalPrimitiveCulling           = VK_TRUE
+        };
 
-        VkPhysicalDeviceFeatures2 features2 = { };
-        features2.sType                 = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        features2.pNext                 = &ray_tracing_pipeline_features;
-        features2.features.shaderInt64  = VK_TRUE;
+        VkPhysicalDeviceFeatures2 features2 
+        { 
+            .sType      = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+            .pNext      = &ray_tracing_pipeline_features,
+            .features   = {.shaderInt64 = VK_TRUE}
+        };
 
         vkGetPhysicalDeviceFeatures2(_context.physical_device_handle, &features2);
 
-        VkDeviceCreateInfo device_create_info = { };
-        device_create_info.sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        device_create_info.pNext                    = &features2;
-        device_create_info.queueCreateInfoCount     = 1;
-        device_create_info.pQueueCreateInfos        = &device_queue_create_info;
-        device_create_info.enabledExtensionCount    = static_cast<uint32_t>(extensions.size());
-        device_create_info.ppEnabledExtensionNames  = extensions.data();
+        const VkDeviceCreateInfo device_create_info 
+        { 
+            .sType                    = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+            .pNext                    = &features2,
+            .queueCreateInfoCount     = 1,
+            .pQueueCreateInfos        = &device_queue_create_info,
+            .enabledExtensionCount    = static_cast<uint32_t>(extensions.size()),
+            .ppEnabledExtensionNames  = extensions.data()
+        };
 
         log::info("Create device");
 
@@ -431,9 +451,11 @@ namespace vrts
 {
     void RayTracingBase::createCommandPool()
     {
-        VkCommandPoolCreateInfo command_pool_create_info = { };
-        command_pool_create_info.sType              = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        command_pool_create_info.queueFamilyIndex   = _context.queue.family_index;
+        const VkCommandPoolCreateInfo command_pool_create_info 
+        { 
+            .sType              = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+            .queueFamilyIndex   = _context.queue.family_index
+        };
 
         VK_CHECK(
             vkCreateCommandPool(
@@ -619,21 +641,23 @@ namespace vrts
 
         auto [width, height] = _window->getSize();
 
-        VkSwapchainCreateInfoKHR swapchian_create_info = { };
-        swapchian_create_info.sType                 = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapchian_create_info.imageArrayLayers      = 1;
-        swapchian_create_info.imageColorSpace       = _surface_format.colorSpace;
-        swapchian_create_info.imageFormat           = _surface_format.format;
-        swapchian_create_info.imageExtent           = { width, height };
-        swapchian_create_info.imageSharingMode      = VK_SHARING_MODE_EXCLUSIVE;
-        swapchian_create_info.imageUsage            = capabilities.supportedUsageFlags;
-        swapchian_create_info.minImageCount         = NUM_IMAGES_IN_SWAPCHAIN;
-        swapchian_create_info.queueFamilyIndexCount = 1;
-        swapchian_create_info.pQueueFamilyIndices   = &_context.queue.family_index;
-        swapchian_create_info.presentMode           = VK_PRESENT_MODE_IMMEDIATE_KHR;
-        swapchian_create_info.preTransform          = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-        swapchian_create_info.surface               = _surface_handle;
-        swapchian_create_info.compositeAlpha        = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        const VkSwapchainCreateInfoKHR swapchian_create_info 
+        { 
+            .sType                  = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+            .surface                = _surface_handle,
+            .minImageCount          = NUM_IMAGES_IN_SWAPCHAIN,
+            .imageFormat            = _surface_format.format,
+            .imageColorSpace        = _surface_format.colorSpace,
+            .imageExtent            = { width, height },
+            .imageArrayLayers       = 1,
+            .imageUsage             = capabilities.supportedUsageFlags,
+            .imageSharingMode       = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount  = 1,
+            .pQueueFamilyIndices    = &_context.queue.family_index,
+            .preTransform           = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+            .compositeAlpha         = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+            .presentMode            = VK_PRESENT_MODE_IMMEDIATE_KHR
+        };
 
         VK_CHECK(
             vkCreateSwapchainKHR(
@@ -677,22 +701,26 @@ namespace vrts
         
         command_buffer.write([this] (VkCommandBuffer vk_handle)
         {
-            VkImageSubresourceRange image_range = { };
-            image_range.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            image_range.baseArrayLayer  = 0;
-            image_range.layerCount      = 1;
-            image_range.baseMipLevel    = 0;
-            image_range.levelCount      = 1;
+            constexpr VkImageSubresourceRange image_range 
+            { 
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel   = 0,
+                .levelCount     = 1,
+                .baseArrayLayer = 0,
+                .layerCount     = 1
+            };
 
-            VkImageMemoryBarrier image_memory_barrier = { };
-            image_memory_barrier.sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            image_memory_barrier.srcAccessMask          = VK_ACCESS_NONE_KHR;
-            image_memory_barrier.dstAccessMask          = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_MEMORY_READ_BIT;
-            image_memory_barrier.oldLayout              = VK_IMAGE_LAYOUT_UNDEFINED;
-            image_memory_barrier.newLayout              = VK_IMAGE_LAYOUT_GENERAL;
-            image_memory_barrier.srcQueueFamilyIndex    = _context.queue.family_index;
-            image_memory_barrier.dstQueueFamilyIndex    = _context.queue.family_index;
-            image_memory_barrier.subresourceRange       = image_range;
+            VkImageMemoryBarrier image_memory_barrier 
+            { 
+                .sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                .srcAccessMask          = VK_ACCESS_NONE_KHR,
+                .dstAccessMask          = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_MEMORY_READ_BIT,
+                .oldLayout              = VK_IMAGE_LAYOUT_UNDEFINED,
+                .newLayout              = VK_IMAGE_LAYOUT_GENERAL,
+                .srcQueueFamilyIndex    = _context.queue.family_index,
+                .dstQueueFamilyIndex    = _context.queue.family_index,
+                .subresourceRange       = image_range
+            };
 
             for(const auto swapchain_image_handle: _swapchain_image_handles)
             {
@@ -715,23 +743,21 @@ namespace vrts
 
     void RayTracingBase::createSwapchainImageViews()
     {
-        VkImageViewCreateInfo image_view_create_info = { };
-        image_view_create_info.sType        = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        image_view_create_info.format       = _surface_format.format;
-        image_view_create_info.viewType     = VK_IMAGE_VIEW_TYPE_2D;
-        image_view_create_info.components   = 
+        VkImageViewCreateInfo image_view_create_info 
         { 
-            VK_COMPONENT_SWIZZLE_IDENTITY, 
-            VK_COMPONENT_SWIZZLE_IDENTITY, 
-            VK_COMPONENT_SWIZZLE_IDENTITY, 
-            VK_COMPONENT_SWIZZLE_IDENTITY 
+            .sType              = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .viewType           = VK_IMAGE_VIEW_TYPE_2D,
+            .format             = _surface_format.format,
+            .components         = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A },
+            .subresourceRange   = 
+            {
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel   = 0,
+                .levelCount     = 1,
+                .baseArrayLayer = 0,
+                .layerCount     = 1
+            }
         };
-
-        image_view_create_info.subresourceRange.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-        image_view_create_info.subresourceRange.baseArrayLayer  = 0;
-        image_view_create_info.subresourceRange.baseMipLevel    = 0;
-        image_view_create_info.subresourceRange.layerCount      = 1;
-        image_view_create_info.subresourceRange.levelCount      = 1;
         
         for (auto i: std::views::iota(0u, NUM_IMAGES_IN_SWAPCHAIN))
         {
@@ -782,8 +808,10 @@ namespace vrts
         uint32_t image_index = 0;
 
         VkFence fence_handle = VK_NULL_HANDLE;
-        VkFenceCreateInfo fence_create_info = { };
-        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        constexpr VkFenceCreateInfo fence_create_info 
+        { 
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+        };
 
         VK_CHECK(vkCreateFence(_context.device_handle, &fence_create_info, nullptr, &fence_handle));
 

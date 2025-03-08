@@ -168,27 +168,30 @@ namespace vrts::shader
         auto source = IncludeProcessUtils::getSource(filename);
         auto stage  = getStage(type);
 
-        glsl_include_callbacks_t includer = { };
+        const glsl_include_callbacks_t includer 
+        { 
+            .include_system         = IncludeProcessUtils::systemInclude,
+            .include_local          = IncludeProcessUtils::localInclude,
+            .free_include_result    = IncludeProcessUtils::freeInclude
+        };
 
-        includer.include_local          = IncludeProcessUtils::localInclude;
-        includer.include_system         = IncludeProcessUtils::systemInclude;
-        includer.free_include_result    = IncludeProcessUtils::freeInclude;
-
-        glslang_input_t input = { };
-        input.language                          = GLSLANG_SOURCE_GLSL;
-        input.stage                             = stage;
-        input.client                            = GLSLANG_CLIENT_VULKAN;
-        input.client_version                    = GLSLANG_TARGET_VULKAN_1_3;
-        input.target_language                   = GLSLANG_TARGET_SPV;
-        input.target_language_version           = GLSLANG_TARGET_SPV_1_6;
-        input.code                              = source.c_str();
-        input.default_version                   = 100;
-        input.default_profile                   = GLSLANG_NO_PROFILE;
-        input.force_default_version_and_profile = false;
-        input.forward_compatible                = false;
-        input.messages                          = GLSLANG_MSG_DEFAULT_BIT;
-        input.resource                          = glslang_default_resource();
-        input.callbacks                         = includer;
+        const glslang_input_t input 
+        { 
+            .language                           = GLSLANG_SOURCE_GLSL,
+            .stage                              = stage,
+            .client                             = GLSLANG_CLIENT_VULKAN,
+            .client_version                     = GLSLANG_TARGET_VULKAN_1_3,
+            .target_language                    = GLSLANG_TARGET_SPV,
+            .target_language_version            = GLSLANG_TARGET_SPV_1_6,
+            .code                               = source.c_str(),
+            .default_version                    = 100,
+            .default_profile                    = GLSLANG_NO_PROFILE,
+            .force_default_version_and_profile  = false,
+            .forward_compatible                 = false,
+            .messages                           = GLSLANG_MSG_DEFAULT_BIT,
+            .resource                           = glslang_default_resource(),
+            .callbacks                          = includer
+        };
 
         auto ptr_shader = glslang_shader_create(&input);
 
@@ -221,12 +224,14 @@ namespace vrts::shader
 
         auto il = createIL(filename, type);
 
-        VkShaderModule              shader_module_handle        = VK_NULL_HANDLE;
-        VkShaderModuleCreateInfo    shader_module_create_info   = {};
-        
-        shader_module_create_info.sType     = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shader_module_create_info.codeSize  = il.size() * sizeof(uint32_t);
-        shader_module_create_info.pCode     = il.data();
+        VkShaderModule shader_module_handle = VK_NULL_HANDLE;
+
+        const VkShaderModuleCreateInfo shader_module_create_info
+        {
+            .sType      = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+            .codeSize   = il.size() * sizeof(uint32_t),
+            .pCode      = il.data()
+        };
 
         VK_CHECK(
             vkCreateShaderModule(

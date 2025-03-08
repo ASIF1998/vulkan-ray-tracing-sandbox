@@ -41,31 +41,34 @@ void HelloTriangle::createPipeline()
     {
         group.reserve(ShaderID::count);
 
-        VkRayTracingShaderGroupCreateInfoKHR ray_tracing_shader_group_create_info = { };
-        ray_tracing_shader_group_create_info.sType               = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
-        ray_tracing_shader_group_create_info.type                = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
-        ray_tracing_shader_group_create_info.generalShader       = VK_SHADER_UNUSED_KHR;
-        ray_tracing_shader_group_create_info.closestHitShader    = VK_SHADER_UNUSED_KHR;
-        ray_tracing_shader_group_create_info.anyHitShader        = VK_SHADER_UNUSED_KHR;
-        ray_tracing_shader_group_create_info.intersectionShader  = VK_SHADER_UNUSED_KHR;
+        const VkRayTracingShaderGroupCreateInfoKHR ray_tracing_shader_group_create_info 
+        { 
+            .sType              = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+            .type               = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+            .generalShader      = VK_SHADER_UNUSED_KHR,
+            .closestHitShader   = VK_SHADER_UNUSED_KHR,
+            .anyHitShader       = VK_SHADER_UNUSED_KHR,
+            .intersectionShader = VK_SHADER_UNUSED_KHR,
+        };
 
         group.push_back(ray_tracing_shader_group_create_info);
         group.back().generalShader = ShaderID::ray_gen;
 
         group.push_back(ray_tracing_shader_group_create_info);
-        group.back().generalShader  = ShaderID::miss;
+        group.back().generalShader = ShaderID::miss;
 
         group.push_back(ray_tracing_shader_group_create_info);
         group.back().generalShader      = VK_SHADER_UNUSED_KHR;
         group.back().closestHitShader   = ShaderID::chit;
         group.back().type               = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
-
     }
 
-    VkPipelineLayoutCreateInfo  pipeline_layout_create_info = { };
-    pipeline_layout_create_info.sType           = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_create_info.setLayoutCount  = 1;
-    pipeline_layout_create_info.pSetLayouts     = &_descriptor_set_layout_handle;
+    const VkPipelineLayoutCreateInfo  pipeline_layout_create_info 
+    { 
+        .sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .setLayoutCount = 1,
+        .pSetLayouts    = &_descriptor_set_layout_handle
+    };
 
     log::info("Create pipeline layout");
 
@@ -78,14 +81,16 @@ void HelloTriangle::createPipeline()
         )
     );
 
-    VkRayTracingPipelineCreateInfoKHR pipeline_create_info = { };
-    pipeline_create_info.sType                          = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
-    pipeline_create_info.stageCount                     = ShaderID::count;
-    pipeline_create_info.pStages                        = shaders_stage_infos.data();
-    pipeline_create_info.groupCount                     = static_cast<uint32_t>(group.size());
-    pipeline_create_info.pGroups                        = group.data();
-    pipeline_create_info.maxPipelineRayRecursionDepth   = 1;
-    pipeline_create_info.layout                         = _pipeline_layout_handle;
+    const VkRayTracingPipelineCreateInfoKHR pipeline_create_info 
+    { 
+        .sType                          = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR,
+        .stageCount                     = ShaderID::count,
+        .pStages                        = shaders_stage_infos.data(),
+        .groupCount                     = static_cast<uint32_t>(group.size()),
+        .pGroups                        = group.data(),
+        .maxPipelineRayRecursionDepth   = 1,
+        .layout                         = _pipeline_layout_handle
+    };
 
     auto func_table = VkUtils::getVulkanFunctionPointerTable();
 
@@ -119,10 +124,12 @@ void HelloTriangle::createBLAS()
 
     Buffer::writeData(transform_matrix_buffer, VkUtils::getVulkanIdentityMatrix());
 
-    VkAccelerationStructureGeometryKHR blas_geometry = { };
-    blas_geometry.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-    blas_geometry.flags         = VK_GEOMETRY_OPAQUE_BIT_KHR;
-    blas_geometry.geometryType  = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
+    VkAccelerationStructureGeometryKHR blas_geometry 
+    { 
+        .sType          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+        .geometryType   = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
+        .flags          = VK_GEOMETRY_OPAQUE_BIT_KHR
+    };
 
     auto& geometry = blas_geometry.geometry;
     geometry.triangles.sType                          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
@@ -134,17 +141,21 @@ void HelloTriangle::createBLAS()
     geometry.triangles.indexData.deviceAddress        = _mesh.index_buffer->getAddress();
     geometry.triangles.transformData.deviceAddress    = transform_matrix_buffer.getAddress();
 
-    VkAccelerationStructureBuildGeometryInfoKHR blas_build_geometry_info = { };
-    blas_build_geometry_info.sType          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-    blas_build_geometry_info.type           = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-    blas_build_geometry_info.flags          = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-    blas_build_geometry_info.geometryCount  = 1;
-    blas_build_geometry_info.pGeometries    = &blas_geometry;
+    const VkAccelerationStructureBuildGeometryInfoKHR blas_build_geometry_info 
+    { 
+        .sType          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+        .type           = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+        .flags          = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+        .geometryCount  = 1,
+        .pGeometries    = &blas_geometry
+    };
 
     const uint32_t num_triangles = 1;
 
-    VkAccelerationStructureBuildSizesInfoKHR blas_build_sizes = { };
-    blas_build_sizes.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
+    VkAccelerationStructureBuildSizesInfoKHR blas_build_sizes 
+    { 
+        .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR
+    };
 
     auto func_table = VkUtils::getVulkanFunctionPointerTable();
 
@@ -162,11 +173,13 @@ void HelloTriangle::createBLAS()
         .name("Blas buffer")
         .build();
 
-    VkAccelerationStructureCreateInfoKHR blas_create_info = { };
-    blas_create_info.sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-    blas_create_info.buffer = blas_buffer.vk_handle;
-    blas_create_info.size   = blas_build_sizes.accelerationStructureSize;
-    blas_create_info.type   = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+    const VkAccelerationStructureCreateInfoKHR blas_create_info 
+    { 
+        .sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
+        .buffer = blas_buffer.vk_handle,
+        .size   = blas_build_sizes.accelerationStructureSize,
+        .type   = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR
+    };
 
     VkAccelerationStructureKHR blas_handle = VK_NULL_HANDLE;
 
@@ -198,21 +211,24 @@ void HelloTriangle::createBLAS()
 
     command_buffer.write([&scratch_buffer, &func_table, &blas_geometry, &blas_handle] (VkCommandBuffer vk_handle)
     {
-        VkAccelerationStructureBuildRangeInfoKHR blas_build_range_info = { };
-        blas_build_range_info.primitiveCount = 1;
+        constexpr VkAccelerationStructureBuildRangeInfoKHR blas_build_range_info 
+        { 
+            .primitiveCount = 1
+        };
 
         const auto ptr_blas_build_range_info = &blas_build_range_info;
 
-        VkAccelerationStructureBuildGeometryInfoKHR blas_build_geometry_info = { };
-        blas_build_geometry_info.sType                      = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-        blas_build_geometry_info.type                       = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-        blas_build_geometry_info.flags                      = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-        blas_build_geometry_info.mode                       = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-        blas_build_geometry_info.dstAccelerationStructure   = blas_handle;
-        blas_build_geometry_info.geometryCount              = 1;
-        blas_build_geometry_info.pGeometries                = &blas_geometry;
-
-        blas_build_geometry_info.scratchData.deviceAddress  = scratch_buffer.getAddress();
+        const VkAccelerationStructureBuildGeometryInfoKHR blas_build_geometry_info 
+        { 
+            .sType                      = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+            .type                       = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+            .flags                      = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+            .mode                       = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+            .dstAccelerationStructure   = blas_handle,
+            .geometryCount              = 1,
+            .pGeometries                = &blas_geometry,
+            .scratchData                = {.deviceAddress  = scratch_buffer.getAddress()}
+        };
 
         func_table.vkCmdBuildAccelerationStructuresKHR(
             vk_handle, 
@@ -238,43 +254,55 @@ void HelloTriangle::createTLAS()
     auto func_table = VkUtils::getVulkanFunctionPointerTable();;
 
     {
-        VkAccelerationStructureDeviceAddressInfoKHR blas_address_info = { };
-        blas_address_info.sType                 = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
-        blas_address_info.accelerationStructure = _blas->vk_handle;
+        const VkAccelerationStructureDeviceAddressInfoKHR blas_address_info 
+        { 
+            .sType                  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
+            .accelerationStructure  = _blas->vk_handle,
+        };
 
-        VkAccelerationStructureInstanceKHR as_instance = { };
-        as_instance.transform = VkUtils::getVulkanIdentityMatrix();
-        as_instance.instanceCustomIndex                     = 0;
-        as_instance.accelerationStructureReference          = func_table.vkGetAccelerationStructureDeviceAddressKHR(_context.device_handle, &blas_address_info);
-        as_instance.flags                                   = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-        as_instance.mask                                    = 0xff;             // Попадание только в том случае, если rayMask и instance.mask != 0
-        as_instance.instanceShaderBindingTableRecordOffset  = 0;                // Мы будем использовать одну и ту же группу хитов для всех объектов
+        const VkAccelerationStructureInstanceKHR as_instance 
+        { 
+            .transform = VkUtils::getVulkanIdentityMatrix(),
+            .instanceCustomIndex                     = 0,
+            .mask                                    = 0xff,             // Попадание только в том случае, если rayMask и instance.mask != 0
+            .instanceShaderBindingTableRecordOffset  = 0,                // Мы будем использовать одну и ту же группу хитов для всех объектов
+            .flags                                   = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR,
+            .accelerationStructureReference          = func_table.vkGetAccelerationStructureDeviceAddressKHR(_context.device_handle, &blas_address_info)
+        };
 
         Buffer::writeData(instance_buffer, as_instance);
     }
 
     const auto instance_buffer_address = instance_buffer.getAddress();
 
-    VkAccelerationStructureGeometryInstancesDataKHR as_geometry_instance_data = { };
-    as_geometry_instance_data.sType                 = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
-    as_geometry_instance_data.data.deviceAddress    = instance_buffer_address;
+    const VkAccelerationStructureGeometryInstancesDataKHR as_geometry_instance_data 
+    { 
+        .sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR,
+        .data   = {.deviceAddress = instance_buffer_address}
+    };
 
-    VkAccelerationStructureGeometryKHR as_geometry = { };
-    as_geometry.sType               = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-    as_geometry.geometryType        = VK_GEOMETRY_TYPE_INSTANCES_KHR;
-    as_geometry.geometry.instances  = as_geometry_instance_data;
+    const VkAccelerationStructureGeometryKHR as_geometry 
+    { 
+        .sType          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+        .geometryType   = VK_GEOMETRY_TYPE_INSTANCES_KHR,
+        .geometry       = {.instances = as_geometry_instance_data}
+    };
 
     constexpr uint32_t geomtry_count = 1;
     
-    VkAccelerationStructureBuildGeometryInfoKHR geomerty_build_info = { };
-    geomerty_build_info.sType           = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-    geomerty_build_info.geometryCount   = geomtry_count;
-    geomerty_build_info.pGeometries     = &as_geometry;
-    geomerty_build_info.mode            = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-    geomerty_build_info.type            = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
+    VkAccelerationStructureBuildGeometryInfoKHR geomerty_build_info 
+    { 
+        .sType          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+        .type           = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
+        .mode           = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+        .geometryCount  = geomtry_count,
+        .pGeometries    = &as_geometry,
+    };
 
-    VkAccelerationStructureBuildSizesInfoKHR tlas_build_sizes = { };
-    tlas_build_sizes.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
+    VkAccelerationStructureBuildSizesInfoKHR tlas_build_sizes 
+    { 
+        .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR
+    };
 
     func_table.vkGetAccelerationStructureBuildSizesKHR(
         _context.device_handle, 
@@ -290,11 +318,13 @@ void HelloTriangle::createTLAS()
         .name("Tlas buffer")
         .build();
 
-    VkAccelerationStructureCreateInfoKHR tlas_create_info = { };
-    tlas_create_info.sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-    tlas_create_info.size   = tlas_build_sizes.accelerationStructureSize;
-    tlas_create_info.type   = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-    tlas_create_info.buffer = tlas_buffer.vk_handle;
+    const VkAccelerationStructureCreateInfoKHR tlas_create_info 
+    { 
+        .sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
+        .buffer = tlas_buffer.vk_handle,
+        .size   = tlas_build_sizes.accelerationStructureSize,
+        .type   = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR
+    };
 
     VkAccelerationStructureKHR tlas_handle = VK_NULL_HANDLE;
     
@@ -329,13 +359,15 @@ void HelloTriangle::createTLAS()
 
     command_buffer_for_build_tlas.write([&func_table, geomerty_build_info] (VkCommandBuffer vk_handle)
     {
-        const uint32_t primitive_count = 1;
+        constexpr uint32_t primitive_count = 1;
 
-        VkAccelerationStructureBuildRangeInfoKHR tlas_build_range_info = { };
-        tlas_build_range_info.firstVertex       = 0;
-        tlas_build_range_info.primitiveCount    = primitive_count;
-        tlas_build_range_info.primitiveOffset   = 0;
-        tlas_build_range_info.transformOffset   = 0;
+        constexpr VkAccelerationStructureBuildRangeInfoKHR tlas_build_range_info 
+        { 
+            .primitiveCount    = primitive_count,
+            .primitiveOffset   = 0,
+            .firstVertex       = 0,
+            .transformOffset   = 0
+        };
 
         const auto ptr_tlas_build_range_info = &tlas_build_range_info;
 
@@ -353,7 +385,7 @@ void HelloTriangle::createTLAS()
 
 void HelloTriangle::compileShaders()
 {
-    std::array shaders
+    const std::array shaders
     {
         project_dir / "shaders/hello_triangle/hello_triangle.glsl.rgen",
         project_dir / "shaders/hello_triangle/hello_triangle.glsl.rmiss",
@@ -449,24 +481,30 @@ void HelloTriangle::createShaderBindingTable()
 
 void HelloTriangle::creareDescriptorSets()
 {
-    std::vector<VkDescriptorSetLayoutBinding> bindings;
-    
-    bindings.push_back({ });
-    bindings.back().binding         = 0;
-    bindings.back().descriptorCount = 1;
-    bindings.back().descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-    bindings.back().stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+    constexpr std::array bindings
+    {
+        VkDescriptorSetLayoutBinding
+        {
+            .binding         = 0,
+            .descriptorType  = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+            .descriptorCount = 1,
+            .stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR
+        },
+        VkDescriptorSetLayoutBinding
+        { 
+            .binding         = 1,
+            .descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+            .descriptorCount = 1,
+            .stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR
+        }
+    };
 
-    bindings.push_back({ });
-    bindings.back().binding         = 1;
-    bindings.back().descriptorCount = 1;
-    bindings.back().descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    bindings.back().stageFlags      = VK_SHADER_STAGE_RAYGEN_BIT_KHR;
-
-    VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info = { };
-    descriptor_set_layout_create_info.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    descriptor_set_layout_create_info.bindingCount  = static_cast<uint32_t>(bindings.size());
-    descriptor_set_layout_create_info.pBindings     = bindings.data();
+    const VkDescriptorSetLayoutCreateInfo descriptor_set_layout_create_info 
+    { 
+        .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .bindingCount  = static_cast<uint32_t>(bindings.size()),
+        .pBindings     = bindings.data()
+    };
 
     VK_CHECK(
         vkCreateDescriptorSetLayout(
@@ -477,19 +515,27 @@ void HelloTriangle::creareDescriptorSets()
         )
     );
 
-    std::array<VkDescriptorPoolSize, 2> pool_sizes = { };
+    constexpr std::array pool_sizes 
+    { 
+        VkDescriptorPoolSize
+        {
+            .type              = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
+            .descriptorCount   = 1
+        },
+        VkDescriptorPoolSize
+        {
+            .type              = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+            .descriptorCount   = 1
+        }
+    };
 
-    pool_sizes[0].type              = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
-    pool_sizes[0].descriptorCount   = 1;
-    
-    pool_sizes[1].type              = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    pool_sizes[1].descriptorCount   = 1;
-
-    VkDescriptorPoolCreateInfo descriptor_pool_create_info = { };
-    descriptor_pool_create_info.sType           = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    descriptor_pool_create_info.poolSizeCount   = static_cast<uint32_t>(pool_sizes.size());
-    descriptor_pool_create_info.pPoolSizes      = pool_sizes.data();
-    descriptor_pool_create_info.maxSets         = static_cast<uint32_t>(_descriptor_set_handles.size());
+    const VkDescriptorPoolCreateInfo descriptor_pool_create_info 
+    { 
+        .sType          = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .maxSets        = static_cast<uint32_t>(_descriptor_set_handles.size()),
+        .poolSizeCount  = static_cast<uint32_t>(pool_sizes.size()),
+        .pPoolSizes     = pool_sizes.data()
+    };
 
     VK_CHECK(
         vkCreateDescriptorPool(
@@ -500,11 +546,13 @@ void HelloTriangle::creareDescriptorSets()
         )
     );
 
-    VkDescriptorSetAllocateInfo descriptor_set_allocate_info = { };
-    descriptor_set_allocate_info.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptor_set_allocate_info.descriptorPool     = _descriptor_pool_handle;
-    descriptor_set_allocate_info.descriptorSetCount = 1;
-    descriptor_set_allocate_info.pSetLayouts        = &_descriptor_set_layout_handle;
+    const VkDescriptorSetAllocateInfo descriptor_set_allocate_info 
+    { 
+        .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .descriptorPool     = _descriptor_pool_handle,
+        .descriptorSetCount = 1,
+        .pSetLayouts        = &_descriptor_set_layout_handle,
+    };
 
     for (auto i: std::views::iota(0u, _descriptor_set_handles.size()))
         VK_CHECK(vkAllocateDescriptorSets(_context.device_handle, &descriptor_set_allocate_info, &_descriptor_set_handles[i]));
@@ -512,15 +560,19 @@ void HelloTriangle::creareDescriptorSets()
 
 void HelloTriangle::updateDescriptorSets()
 {
-    VkDescriptorImageInfo storage_image_descriptor{};
-    storage_image_descriptor.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+    VkDescriptorImageInfo storage_image_descriptor
+    {
+        .imageLayout = VK_IMAGE_LAYOUT_GENERAL
+    };
 
-    VkWriteDescriptorSet result_image_write = { };
-    result_image_write.sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    result_image_write.descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-    result_image_write.dstBinding       = 1;
-    result_image_write.pImageInfo       = &storage_image_descriptor;
-    result_image_write.descriptorCount  = 1;
+    VkWriteDescriptorSet result_image_write 
+    { 
+        .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstBinding       = 1,
+        .descriptorCount  = 1,
+        .descriptorType   = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+        .pImageInfo       = &storage_image_descriptor
+    };
 
     for (auto i: std::views::iota(0u, _descriptor_set_handles.size()))
     {
@@ -530,17 +582,21 @@ void HelloTriangle::updateDescriptorSets()
         vkUpdateDescriptorSets(_context.device_handle, 1, &result_image_write, 0, VK_NULL_HANDLE);
     }
 
-    VkWriteDescriptorSetAccelerationStructureKHR as_write_info = { };
-    as_write_info.sType                         = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-    as_write_info.accelerationStructureCount    = 1;
-    as_write_info.pAccelerationStructures       = &_tlas->vk_handle;
+    const VkWriteDescriptorSetAccelerationStructureKHR as_write_info 
+    { 
+        .sType                         = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR,
+        .accelerationStructureCount    = 1,
+        .pAccelerationStructures       = &_tlas->vk_handle
+    };
 
-    VkWriteDescriptorSet write_descriptor_set_info = { };
-    write_descriptor_set_info.sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_descriptor_set_info.pNext             = &as_write_info;
-    write_descriptor_set_info.dstBinding        = 0;
-    write_descriptor_set_info.descriptorCount   = 1;
-    write_descriptor_set_info.descriptorType    = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+    VkWriteDescriptorSet write_descriptor_set_info 
+    { 
+        .sType             = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .pNext             = &as_write_info,
+        .dstBinding        = 0,
+        .descriptorCount   = 1,
+        .descriptorType    = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR
+    };
 
     for (auto descriptor_set_handle: _descriptor_set_handles)
     {
@@ -564,16 +620,16 @@ void HelloTriangle::initMesh()
 {
     log::info("Create triangle");
     
-    _mesh.vertices.push_back(glm::vec3(1, 1, 0));
-    _mesh.vertices.push_back(glm::vec3(-1, 1, 0));
-    _mesh.vertices.push_back(glm::vec3(0, -1, 0));
+    _mesh.vertices.emplace_back(1, 1, 0);
+    _mesh.vertices.emplace_back(-1, 1, 0);
+    _mesh.vertices.emplace_back(0, -1, 0);
 
     _mesh.indices.push_back(0);
     _mesh.indices.push_back(1);
     _mesh.indices.push_back(2);
 
-    uint32_t vertex_buffer_size = static_cast<uint32_t>(sizeof(glm::vec3) * _mesh.vertices.size());
-    uint32_t index_buffer_size  = static_cast<uint32_t>(sizeof(uint32_t) * _mesh.indices.size());
+    const auto vertex_buffer_size = static_cast<uint32_t>(sizeof(glm::vec3) * _mesh.vertices.size());
+    const auto index_buffer_size  = static_cast<uint32_t>(sizeof(uint32_t) * _mesh.indices.size());
 
     auto shared_usage_flags = 
             VK_BUFFER_USAGE_TRANSFER_DST_BIT 
@@ -666,17 +722,22 @@ void HelloTriangle::buildCommandBuffers()
     }
 
     /// build command buffers for switch images layout from swapchain
-    VkImageMemoryBarrier image_barrier = { };
-    image_barrier.sType                             = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    image_barrier.oldLayout                         = VK_IMAGE_LAYOUT_GENERAL;
-    image_barrier.newLayout                         = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    image_barrier.srcQueueFamilyIndex               = 0;
-    image_barrier.dstQueueFamilyIndex               = 0;
-    image_barrier.subresourceRange.aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT;
-    image_barrier.subresourceRange.baseArrayLayer   = 0;
-    image_barrier.subresourceRange.layerCount       = 1;
-    image_barrier.subresourceRange.baseMipLevel     = 0;
-    image_barrier.subresourceRange.levelCount       = 1;
+    VkImageMemoryBarrier image_barrier 
+    { 
+        .sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .oldLayout              = VK_IMAGE_LAYOUT_GENERAL,
+        .newLayout              = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        .srcQueueFamilyIndex    = 0,
+        .dstQueueFamilyIndex    = 0,
+        .subresourceRange       = 
+        {
+            .aspectMask       = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel     = 0,
+            .levelCount       = 1,
+            .baseArrayLayer   = 0,
+            .layerCount       = 1
+        }
+    };
 
     for (auto image_index: std::views::iota(0u, NUM_IMAGES_IN_SWAPCHAIN))
     {
@@ -725,11 +786,13 @@ void HelloTriangle::show()
     
     VkResult result = VK_SUCCESS;
 
-    VkPresentInfoKHR present_info = { };
-    present_info.sType          = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-    present_info.pResults       = &result;
-    present_info.pSwapchains    = &_swapchain_handle;
-    present_info.swapchainCount = 1;
+    VkPresentInfoKHR present_info 
+    { 
+        .sType          = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .swapchainCount = 1,
+        .pSwapchains    = &_swapchain_handle,
+        .pResults       = &result
+    };
 
     while (stay)
     {
@@ -751,7 +814,7 @@ void HelloTriangle::show()
             }
         }
 
-        auto image_index = getNextImageIndex();
+        const auto image_index = getNextImageIndex();
         if (auto is_resize_window = image_index == std::numeric_limits<uint32_t>::max(); is_resize_window)
             continue;
 

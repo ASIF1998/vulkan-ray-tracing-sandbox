@@ -129,10 +129,7 @@ private:
         std::optional<Buffer> scene_info_reference;
     } _vertex_buffers_references;
 
-    struct 
-    {
-        float delta;
-    } _time;
+    float _delta_time = 0.0f;
 
     dancing_penguin::PushConstants _push_constants;
 

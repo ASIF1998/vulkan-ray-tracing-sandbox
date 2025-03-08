@@ -86,7 +86,7 @@ namespace vrts
 
     class Scene::Importer
     {
-        using Vertices = std::pair<std::vector<uint32_t>, std::vector<Mesh::Attributes>>;
+        using Vertices = std::pair<std::vector<uint32_t>, std::vector<Attributes>>;
 
         friend class ScopedTransform;
 
@@ -109,7 +109,7 @@ namespace vrts
         size_t getMeshCount() const;
 
         void processMaterial(const aiScene* ptr_scene, const aiMaterial* ptr_material);
-        void processAnimation(const aiMesh* ptr_mesh, std::span<Mesh::SkinningData> skinning_data);
+        void processAnimation(const aiMesh* ptr_mesh, std::span<SkinningData> skinning_data);
         void processNode(const aiScene* ptr_scene, const aiNode* ptr_node);
 
         void getKeyFrames(const aiAnimation* ptr_animation);
@@ -117,17 +117,17 @@ namespace vrts
 
         [[nodiscard]]
         Mesh createMesh (
-            const std::string_view              name,
-            const std::span<uint32_t>           indices,
-            const std::span<Mesh::Attributes>   attributes
+            const std::string_view      name,
+            const std::span<uint32_t>   indices,
+            const std::span<Attributes> attributes
         ) const;
         
         [[nodiscard]]
         SkinnedMesh createMesh (
-            const std::string_view              name,
-            const std::span<uint32_t>           indices,
-            const std::span<Mesh::Attributes>   attributes,
-            const std::span<Mesh::SkinningData> skinning_data
+            const std::string_view          name,
+            const std::span<uint32_t>       indices,
+            const std::span<Attributes>     attributes,
+            const std::span<SkinningData>   skinning_data
         ) const;
 
 
@@ -151,10 +151,10 @@ namespace vrts
         );
 
         void add(
-            const std::string_view              name, 
-            const std::span<uint32_t>           indices, 
-            const std::span<Mesh::Attributes>   attributes, 
-            const std::span<Mesh::SkinningData> skinning_data
+            const std::string_view          name, 
+            const std::span<uint32_t>       indices, 
+            const std::span<Attributes>     attributes, 
+            const std::span<SkinningData>   skinning_data
         );
 
         void add(const aiLight* ptr_light);

@@ -35,7 +35,7 @@ namespace vrts
         vkGetRayTracingShaderGroupHandlesKHR            = loadFunction<PFN_vkGetRayTracingShaderGroupHandlesKHR>(device_handle, "vkGetRayTracingShaderGroupHandlesKHR");
         vkCmdTraceRaysKHR                               = loadFunction<PFN_vkCmdTraceRaysKHR>(device_handle, "vkCmdTraceRaysKHR");
   
-        if (vrts::enable_vk_debug_marker)
+        if constexpr (vrts::enable_vk_debug_marker)
         {
             vkCmdDebugMarkerBeginEXT    = loadFunction<PFN_vkCmdDebugMarkerBeginEXT>(device_handle, "vkCmdDebugMarkerBeginEXT");
             vkCmdDebugMarkerEndEXT      = loadFunction<PFN_vkCmdDebugMarkerEndEXT>(device_handle, "vkCmdDebugMarkerEndEXT");

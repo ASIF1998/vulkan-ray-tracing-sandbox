@@ -49,7 +49,7 @@ namespace vrts
 
     Image& Image::operator = (Image&& image)
     {
-        format   = image.format;
+        format      = image.format;
         level_count = image.level_count;
         layer_count = image.layer_count;
 
@@ -72,9 +72,9 @@ namespace vrts
 
     void Image::writeData(const ImageWriteData& write_data)
     {
-        size_t pixel_format_size    = VkUtils::getFormatSize(write_data.format);
-        size_t scanline_size        = write_data.width * pixel_format_size; 
-        size_t image_size           = write_data.height * scanline_size;
+        const size_t pixel_format_size    = VkUtils::getFormatSize(write_data.format);
+        const size_t scanline_size        = write_data.width * pixel_format_size; 
+        const size_t image_size           = write_data.height * scanline_size;
 
         auto temp_buffer = Buffer::Builder(_ptr_context)
             .vkSize(image_size)
@@ -105,28 +105,34 @@ namespace vrts
 
         command_buffer.write([this, &temp_buffer, &write_data] (VkCommandBuffer command_buffer_handle)
         {
-            VkImageSubresourceLayers subresource = { };
-            subresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            subresource.baseArrayLayer  = 0;
-            subresource.layerCount      = 1;
-            subresource.mipLevel        = 0;
+            constexpr VkImageSubresourceLayers subresource 
+            { 
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .mipLevel       = 0,
+                .baseArrayLayer = 0,
+                .layerCount     = 1
+            };
 
-            VkBufferImageCopy2 region = { };
-            region.sType                = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2;
-            region.bufferImageHeight    = write_data.height;
-            region.bufferOffset         = 0;
-            region.bufferRowLength      = write_data.width; // scanline_size;
-            region.imageExtent          = {static_cast<uint32_t>(write_data.width), static_cast<uint32_t>(write_data.height), 1};
-            region.imageOffset          = { };
-            region.imageSubresource     = subresource;
+            const VkBufferImageCopy2 region 
+            { 
+                .sType                = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
+                .bufferOffset         = 0,
+                .bufferRowLength      = static_cast<uint32_t>(write_data.width), // scanline_size
+                .bufferImageHeight    = static_cast<uint32_t>(write_data.height),
+                .imageSubresource     = subresource,
+                .imageOffset          = { },
+                .imageExtent          = {static_cast<uint32_t>(write_data.width), static_cast<uint32_t>(write_data.height), 1}
+            };
 
-            VkCopyBufferToImageInfo2 copy_info = { };
-            copy_info.sType             = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2;
-            copy_info.srcBuffer         = temp_buffer.vk_handle;
-            copy_info.dstImage          = vk_handle;
-            copy_info.dstImageLayout    = VK_IMAGE_LAYOUT_GENERAL;
-            copy_info.regionCount       = 1;
-            copy_info.pRegions          = &region;
+            const VkCopyBufferToImageInfo2 copy_info 
+            { 
+                .sType             = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
+                .srcBuffer         = temp_buffer.vk_handle,
+                .dstImage          = vk_handle,
+                .dstImageLayout    = VK_IMAGE_LAYOUT_GENERAL,
+                .regionCount       = 1,
+                .pRegions          = &region
+            };
 
             vkCmdCopyBufferToImage2(command_buffer_handle, &copy_info);
         }, "Write data in image", GpuMarkerColors::write_data_in_image);
@@ -161,34 +167,42 @@ namespace vrts
                 auto dst_width  = std::max(size.x >> mip_level, 1);
                 auto dst_height = std::max(size.y >> mip_level, 1);
 
-                VkImageSubresourceLayers src_subresource = { };
-                src_subresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-                src_subresource.baseArrayLayer  = 0;
-                src_subresource.layerCount      = 1;
-                src_subresource.mipLevel        = mip_level - 1;
+                const VkImageSubresourceLayers src_subresource 
+                { 
+                    .aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .mipLevel        = mip_level - 1,
+                    .baseArrayLayer  = 0,
+                    .layerCount      = 1
+                };
 
-                VkImageSubresourceLayers dst_subresource = { };
-                dst_subresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-                dst_subresource.baseArrayLayer  = 0;
-                dst_subresource.layerCount      = 1;
-                dst_subresource.mipLevel        = mip_level;
+                const VkImageSubresourceLayers dst_subresource 
+                { 
+                    .aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .mipLevel        = mip_level,
+                    .baseArrayLayer  = 0,
+                    .layerCount      = 1
+                };
 
-                VkImageBlit2 region = { };
-                region.sType            = VK_STRUCTURE_TYPE_IMAGE_BLIT_2;
-                region.srcSubresource   = src_subresource;
-                region.srcOffsets[1]    = {src_width, src_height, 1};
-                region.dstSubresource   = dst_subresource;
-                region.dstOffsets[1]    = {dst_width, dst_height, 1};
+                const VkImageBlit2 region 
+                { 
+                    .sType          = VK_STRUCTURE_TYPE_IMAGE_BLIT_2,
+                    .srcSubresource = src_subresource,
+                    .srcOffsets     = {{}, {src_width, src_height, 1}},
+                    .dstSubresource = dst_subresource,
+                    .dstOffsets     = {{}, {dst_width, dst_height, 1}}
+                };
 
-                VkBlitImageInfo2 blit_info = { };
-                blit_info.sType             = VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2;
-                blit_info.srcImage          = image.vk_handle;
-                blit_info.srcImageLayout    = VK_IMAGE_LAYOUT_GENERAL;
-                blit_info.dstImage          = image.vk_handle;
-                blit_info.dstImageLayout    = VK_IMAGE_LAYOUT_GENERAL;
-                blit_info.filter            = filter;
-                blit_info.pRegions          = &region;
-                blit_info.regionCount       = 1;
+                const VkBlitImageInfo2 blit_info 
+                { 
+                    .sType             = VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2,
+                    .srcImage          = image.vk_handle,
+                    .srcImageLayout    = VK_IMAGE_LAYOUT_GENERAL,
+                    .dstImage          = image.vk_handle,
+                    .dstImageLayout    = VK_IMAGE_LAYOUT_GENERAL,
+                    .regionCount       = 1,
+                    .pRegions          = &region,
+                    .filter            = filter
+                };
 
                 command_buffer.write([&blit_info] (VkCommandBuffer command_buffer_handle)
                 {
@@ -251,30 +265,36 @@ namespace vrts
 
         command_buffer.write([this, &image] (VkCommandBuffer command_buffer_handle)
         {
-            VkImageSubresourceRange subresource = { };
-            subresource.aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT;
-            subresource.baseArrayLayer  = 0;
-            subresource.layerCount      = image.layer_count;
-            subresource.baseMipLevel    = 0;
-            subresource.levelCount      = image.level_count; 
+            const VkImageSubresourceRange subresource 
+            { 
+                .aspectMask      = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel    = 0,
+                .levelCount      = image.level_count,
+                .baseArrayLayer  = 0,
+                .layerCount      = image.layer_count
+            };
 
-            VkImageMemoryBarrier2 image_memory_barrier = { };
-            image_memory_barrier.sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
-            image_memory_barrier.srcAccessMask          = VK_ACCESS_2_NONE;
-            image_memory_barrier.dstAccessMask          = VK_ACCESS_2_NONE;
-            image_memory_barrier.srcQueueFamilyIndex    = _ptr_context->queue.family_index;
-            image_memory_barrier.dstQueueFamilyIndex    = _ptr_context->queue.family_index;
-            image_memory_barrier.srcStageMask           = VK_PIPELINE_STAGE_2_NONE;
-            image_memory_barrier.dstStageMask           = VK_PIPELINE_STAGE_2_NONE;
-            image_memory_barrier.image                  = image.vk_handle;
-            image_memory_barrier.oldLayout              = VK_IMAGE_LAYOUT_UNDEFINED;
-            image_memory_barrier.newLayout              = VK_IMAGE_LAYOUT_GENERAL;
-            image_memory_barrier.subresourceRange       = subresource;
+            const VkImageMemoryBarrier2 image_memory_barrier 
+            { 
+                .sType                  = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+                .srcStageMask           = VK_PIPELINE_STAGE_2_NONE,
+                .srcAccessMask          = VK_ACCESS_2_NONE,
+                .dstStageMask           = VK_PIPELINE_STAGE_2_NONE,
+                .dstAccessMask          = VK_ACCESS_2_NONE,
+                .oldLayout              = VK_IMAGE_LAYOUT_UNDEFINED,
+                .newLayout              = VK_IMAGE_LAYOUT_GENERAL,
+                .srcQueueFamilyIndex    = _ptr_context->queue.family_index,
+                .dstQueueFamilyIndex    = _ptr_context->queue.family_index,
+                .image                  = image.vk_handle,
+                .subresourceRange       = subresource
+            };
 
-            VkDependencyInfo dependency_info = { };
-            dependency_info.sType                   = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-            dependency_info.imageMemoryBarrierCount = 1;
-            dependency_info.pImageMemoryBarriers    = &image_memory_barrier;
+            const VkDependencyInfo dependency_info 
+            { 
+                .sType                      = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+                .imageMemoryBarrierCount    = 1,
+                .pImageMemoryBarriers       = &image_memory_barrier
+            };
 
             vkCmdPipelineBarrier2(command_buffer_handle, &dependency_info);
         }, "Change image layout from undefined to general");
@@ -298,31 +318,27 @@ namespace vrts
     {
         validate();
         
-        VkImageCreateInfo image_create_info = { };
-        image_create_info.sType                 = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        image_create_info.usage                 = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        image_create_info.extent                = {_width, _height, 1};
-        image_create_info.format                = _format;
-        image_create_info.samples               = VK_SAMPLE_COUNT_1_BIT;
-        image_create_info.imageType             = VK_IMAGE_TYPE_2D;
-        image_create_info.initialLayout         = VK_IMAGE_LAYOUT_UNDEFINED;
-        image_create_info.arrayLayers           = 1;
-        image_create_info.mipLevels             = 1;    
-        image_create_info.queueFamilyIndexCount = 1;
-        image_create_info.pQueueFamilyIndices   = &_ptr_context->queue.family_index;
-        image_create_info.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
-        image_create_info.tiling                = VK_IMAGE_TILING_OPTIMAL;
-
-        if (_generate_mipmap)
-            image_create_info.mipLevels = VkUtils::getMipLevelsCount(_width, _height);
+        const VkImageCreateInfo image_create_info 
+        { 
+            .sType                  = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+            .imageType              = VK_IMAGE_TYPE_2D,
+            .format                 = _format,
+            .extent                 = {_width, _height, 1},
+            .mipLevels              = _generate_mipmap ? VkUtils::getMipLevelsCount(_width, _height) : 1,
+            .arrayLayers            = 1,
+            .samples                = VK_SAMPLE_COUNT_1_BIT,
+            .tiling                 = VK_IMAGE_TILING_OPTIMAL,
+            .usage                  = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            .sharingMode            = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount  = 1,
+            .pQueueFamilyIndices    = &_ptr_context->queue.family_index,
+            .initialLayout          = VK_IMAGE_LAYOUT_UNDEFINED
+        };
 
         Image image (_ptr_context);
-
-        image.level_count = image_create_info.mipLevels;
-
-        image.format = _format;
-
-        image._ptr_context = _ptr_context;
+        image.level_count   = image_create_info.mipLevels;
+        image.format        = _format;
+        image._ptr_context  = _ptr_context;
 
         VK_CHECK(
             vkCreateImage(
@@ -337,17 +353,21 @@ namespace vrts
 
         vkGetImageMemoryRequirements(_ptr_context->device_handle, image.vk_handle, &memory_requirements);
 
-        VkMemoryAllocateFlagsInfoKHR memory_allocation_flags = { };
-        memory_allocation_flags.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR;
-        memory_allocation_flags.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
+        constexpr VkMemoryAllocateFlagsInfoKHR memory_allocation_flags 
+        { 
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHR,
+            .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR
+        };
 
-        auto aligned_size = (memory_requirements.size + (memory_requirements.alignment - 1)) & ~(memory_requirements.alignment - 1);
+        const auto aligned_size = (memory_requirements.size + (memory_requirements.alignment - 1)) & ~(memory_requirements.alignment - 1);
 
-        VkMemoryAllocateInfo allocate_info = { };
-        allocate_info.sType             = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocate_info.pNext             = &memory_allocation_flags;
-        allocate_info.memoryTypeIndex   = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-        allocate_info.allocationSize    = aligned_size;
+        const VkMemoryAllocateInfo allocate_info 
+        { 
+            .sType              = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .pNext              = &memory_allocation_flags,
+            .allocationSize     = aligned_size,
+            .memoryTypeIndex    = MemoryProperties::getMemoryIndex(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+        };
 
         VK_CHECK(
             vkAllocateMemory(
@@ -358,10 +378,13 @@ namespace vrts
             )
         );
 
-        VkBindImageMemoryInfo bind_info = { };
-        bind_info.sType     = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
-        bind_info.image     = image.vk_handle;
-        bind_info.memory    = image._memory_handle;
+        const VkBindImageMemoryInfo bind_info 
+        { 
+            .sType  = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO,
+            .image  = image.vk_handle,
+            .memory = image._memory_handle
+        };
+
         VK_CHECK(
             vkBindImageMemory2(
                 _ptr_context->device_handle,
@@ -370,26 +393,23 @@ namespace vrts
             )
         );
 
-        VkImageViewCreateInfo image_view_create_info = { };
-        image_view_create_info.sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        image_view_create_info.image    = image.vk_handle;
-        image_view_create_info.format   = image.format;
-        image_view_create_info.components   = 
+        const VkImageViewCreateInfo image_view_create_info 
         { 
-            VK_COMPONENT_SWIZZLE_R, 
-            VK_COMPONENT_SWIZZLE_G, 
-            VK_COMPONENT_SWIZZLE_B, 
-            VK_COMPONENT_SWIZZLE_A
+            .sType              = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .image              = image.vk_handle,
+            .viewType           = VK_IMAGE_VIEW_TYPE_2D,
+            .format             = image.format,
+            .components         = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A },
+            .subresourceRange   = 
+            {
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel   = 0,
+                .levelCount     = image.level_count,
+                .baseArrayLayer = 0,
+                .layerCount     = image.layer_count
+            }
         };
         
-        auto& subresource_range = image_view_create_info.subresourceRange;
-        subresource_range.aspectMask        = VK_IMAGE_ASPECT_COLOR_BIT;
-        subresource_range.baseArrayLayer    = 0;
-        subresource_range.baseMipLevel      = 0;
-        subresource_range.layerCount        = image.layer_count;
-        subresource_range.levelCount        = image.level_count;
-
         VK_CHECK(
             vkCreateImageView(
                 _ptr_context->device_handle,
@@ -403,19 +423,21 @@ namespace vrts
 
         if (_filter != VK_FILTER_MAX_ENUM)
         {
-            VkSamplerCreateInfo sampler_create_info = { };
-            sampler_create_info.sType               = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-            sampler_create_info.addressModeU        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            sampler_create_info.addressModeV        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            sampler_create_info.addressModeW        = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            sampler_create_info.borderColor         = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
-            sampler_create_info.compareEnable       = VK_FALSE;
-            sampler_create_info.minFilter           = _filter;
-            sampler_create_info.magFilter           = _filter;
-            sampler_create_info.anisotropyEnable    = VK_FALSE;
-            sampler_create_info.mipmapMode          = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-            sampler_create_info.minLod              = 0;
-            sampler_create_info.maxLod              = static_cast<float>(image.level_count);
+            const VkSamplerCreateInfo sampler_create_info 
+            { 
+                .sType              = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+                .magFilter          = _filter,
+                .minFilter          = _filter,
+                .mipmapMode         = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+                .addressModeU       = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                .addressModeV       = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                .addressModeW       = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                .anisotropyEnable   = VK_FALSE,
+                .compareEnable      = VK_FALSE,
+                .minLod             = 0,
+                .maxLod             = static_cast<float>(image.level_count),
+                .borderColor        = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK
+            };
 
             VK_CHECK(
                 vkCreateSampler(
@@ -433,18 +455,19 @@ namespace vrts
             
             command_buffer.write([&image, this](VkCommandBuffer handle)
             {
-                VkClearColorValue clear_color = { };
-                clear_color.float32[0] = _fill_color->r;
-                clear_color.float32[1] = _fill_color->g;
-                clear_color.float32[2] = _fill_color->b;
-                clear_color.float32[3] = 1.0f;
+                const VkClearColorValue clear_color 
+                { 
+                    .float32 = {_fill_color->r, _fill_color->g, _fill_color->b, 1.0}
+                };
 
-                VkImageSubresourceRange range = { };
-                range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-                range.baseArrayLayer    = 0;
-                range.layerCount        = 1;
-                range.baseMipLevel      = 0;
-                range.levelCount        = 1;
+                const VkImageSubresourceRange range 
+                { 
+                    .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .baseMipLevel   = 0,
+                    .levelCount     = 1,
+                    .baseArrayLayer = 0,
+                    .layerCount     = 1
+                };
 
                 vkCmdClearColorImage(handle, image.vk_handle, VK_IMAGE_LAYOUT_GENERAL, &clear_color, 1, &range);
             }, "Fill image", GpuMarkerColors::write_data_in_image);

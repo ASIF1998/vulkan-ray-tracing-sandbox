@@ -57,17 +57,21 @@ namespace vrts
 
         auto get_instance = [this, &func_table, ptr_node] (const auto& child)
         {
-            VkAccelerationStructureDeviceAddressInfoKHR address_info = { };
-            address_info.sType                  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR;
-            address_info.accelerationStructure  = child->acceleation_structure->vk_handle;
+            const VkAccelerationStructureDeviceAddressInfoKHR address_info
+            {
+                .sType                  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_DEVICE_ADDRESS_INFO_KHR,
+                .accelerationStructure  = child->acceleation_structure->vk_handle
+            };
 
-            VkAccelerationStructureInstanceKHR instance = { };
-            instance.transform                              = VkUtils::cast(child->transform * ptr_node->transform);
-            instance.instanceCustomIndex                    = _custom_index++; /// gl_InstanceCustomIndexEXT 
-            instance.accelerationStructureReference         = func_table.vkGetAccelerationStructureDeviceAddressKHR(_ptr_context->device_handle, &address_info);
-            instance.flags                                  = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-            instance.mask                                   = 0xff;
-            instance.instanceShaderBindingTableRecordOffset = 0;
+            const VkAccelerationStructureInstanceKHR instance 
+            { 
+                .transform                              = VkUtils::cast(child->transform * ptr_node->transform),
+                .instanceCustomIndex                    = _custom_index++, /// gl_InstanceCustomIndexEXT 
+                .mask                                   = 0xff,
+                .instanceShaderBindingTableRecordOffset = 0,
+                .flags                                  = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR,
+                .accelerationStructureReference         = func_table.vkGetAccelerationStructureDeviceAddressKHR(_ptr_context->device_handle, &address_info)
+            };
 
             return instance;
         };
@@ -112,16 +116,20 @@ namespace vrts
             geometry_instances.arrayOfPointers      = VK_FALSE;
         }
 
-        VkAccelerationStructureBuildGeometryInfoKHR geometry_build_info = { };
-        geometry_build_info.sType           = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;   
-        geometry_build_info.geometryCount   = 1;
-        geometry_build_info.pGeometries     = &geometry;
-        geometry_build_info.mode            = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-        geometry_build_info.type            = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-        geometry_build_info.flags           = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+        VkAccelerationStructureBuildGeometryInfoKHR geometry_build_info 
+        { 
+            .sType          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+            .type           = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
+            .flags          = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+            .mode           = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+            .geometryCount  = 1,
+            .pGeometries    = &geometry,
+        };
 
-        VkAccelerationStructureBuildSizesInfoKHR tlas_size = { };
-        tlas_size.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
+        VkAccelerationStructureBuildSizesInfoKHR tlas_size 
+        { 
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR
+        };
         
         func_table.vkGetAccelerationStructureBuildSizesKHR(
             _ptr_context->device_handle,
@@ -137,11 +145,13 @@ namespace vrts
             .name(std::format("[TLAS] Buffer: {}", ptr_node->name))
             .build();
 
-        VkAccelerationStructureCreateInfoKHR tlas_info = { };
-        tlas_info.sType     = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-        tlas_info.size      = tlas_size.accelerationStructureSize;
-        tlas_info.buffer    = tlas_buffer.vk_handle;
-        tlas_info.type      = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
+        const VkAccelerationStructureCreateInfoKHR tlas_info 
+        { 
+            .sType  = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
+            .buffer = tlas_buffer.vk_handle,
+            .size   = tlas_size.accelerationStructureSize,
+            .type   = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR
+        };
 
         VK_CHECK(
             func_table.vkCreateAccelerationStructureKHR(
@@ -172,8 +182,10 @@ namespace vrts
 
         command_buffer_for_build.write([primitive_count, &func_table, &geometry_build_info] (VkCommandBuffer vk_handle)
         {
-            VkAccelerationStructureBuildRangeInfoKHR build_range = { };
-            build_range.primitiveCount = primitive_count;
+            const VkAccelerationStructureBuildRangeInfoKHR build_range 
+            { 
+                .primitiveCount = primitive_count
+            };
             
             auto ptr_build_range = &build_range;
 
@@ -219,39 +231,44 @@ namespace vrts
         uint32_t            index_count
     )
     {
-        VkAccelerationStructureGeometryKHR mesh_info = { };
-        mesh_info.sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-        mesh_info.flags         = VK_GEOMETRY_OPAQUE_BIT_KHR;
-        mesh_info.geometryType  = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
+        VkAccelerationStructureGeometryKHR mesh_info 
+        { 
+            .sType         = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR,
+            .geometryType  = VK_GEOMETRY_TYPE_TRIANGLES_KHR,
+            .flags         = VK_GEOMETRY_OPAQUE_BIT_KHR
+        };
         
         {
             auto& triangles = mesh_info.geometry.triangles;
 
-            triangles = { };
-            triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
-
-            triangles.indexData.deviceAddress   = index_buffer.getAddress();
-            triangles.indexType                 = VK_INDEX_TYPE_UINT32;
-
-            triangles.maxVertex                 = vertex_count;
-            triangles.vertexData.deviceAddress  = vertex_buffer.getAddress();
-            triangles.vertexFormat              = VK_FORMAT_R32G32B32_SFLOAT;
-            triangles.vertexStride              = sizeof(Mesh::Attributes);
-
-            triangles.transformData.deviceAddress = _identity_matrix->getAddress();
+            triangles = 
+            { 
+                .sType          = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR,
+                .vertexFormat   = VK_FORMAT_R32G32B32_SFLOAT,
+                .vertexData     = { .deviceAddress = vertex_buffer.getAddress() },
+                .vertexStride   = sizeof(Attributes),
+                .maxVertex      = vertex_count,
+                .indexType      = VK_INDEX_TYPE_UINT32,
+                .indexData      = { .deviceAddress = index_buffer.getAddress() },
+                .transformData  = { .deviceAddress = _identity_matrix->getAddress() }
+            };
         }
 
-        VkAccelerationStructureBuildGeometryInfoKHR build_geometry_info = { };
-        build_geometry_info.sType           = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-        build_geometry_info.geometryCount   = 1;
-        build_geometry_info.pGeometries     = &mesh_info;
-        build_geometry_info.mode            = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-        build_geometry_info.type            = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+        const VkAccelerationStructureBuildGeometryInfoKHR build_geometry_info 
+        { 
+            .sType           = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+            .type            = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+            .mode            = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+            .geometryCount   = 1,
+            .pGeometries     = &mesh_info
+        };
 
         const auto primitive_count =  index_count / 3;
 
-        VkAccelerationStructureBuildSizesInfoKHR as_size = { };
-        as_size.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
+        VkAccelerationStructureBuildSizesInfoKHR as_size 
+        { 
+            .sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR
+        };
 
         auto func_table = VkUtils::getVulkanFunctionPointerTable();
 
@@ -271,11 +288,13 @@ namespace vrts
             .name(std::format("[BLAS] Buffer: {}", name))
             .build();
 
-        VkAccelerationStructureCreateInfoKHR as_info = { };
-        as_info.sType   = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-        as_info.buffer  = blas_buffer.vk_handle;
-        as_info.size    = as_size.accelerationStructureSize;
-        as_info.type    = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+        const VkAccelerationStructureCreateInfoKHR as_info 
+        { 
+            .sType   = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR,
+            .buffer  = blas_buffer.vk_handle,
+            .size    = as_size.accelerationStructureSize,
+            .type    = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR
+        };
         
         VK_CHECK(
             func_table.vkCreateAccelerationStructureKHR(
@@ -299,15 +318,17 @@ namespace vrts
             .name(std::format("[BLAS] Scratch buffer: {}", name))
             .build();
 
-        VkAccelerationStructureBuildGeometryInfoKHR build_info = { };
-        build_info.sType                        = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-        build_info.type                         = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
-        build_info.mode                         = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
-        build_info.flags                        = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR;
-        build_info.geometryCount                = 1;
-        build_info.pGeometries                  = &mesh_info;
-        build_info.scratchData.deviceAddress    = scratch_buffer.getAddress();
-        build_info.dstAccelerationStructure     = acceleration_structure_handle;
+        const VkAccelerationStructureBuildGeometryInfoKHR build_info 
+        { 
+            .sType                      = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+            .type                       = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+            .flags                      = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR,
+            .mode                       = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
+            .dstAccelerationStructure   = acceleration_structure_handle,
+            .geometryCount              = 1,
+            .pGeometries                = &mesh_info,
+            .scratchData                = { .deviceAddress = scratch_buffer.getAddress() }
+        };
 
         auto command_buffer_for_build = VkUtils::getCommandBuffer(_ptr_context);
 
