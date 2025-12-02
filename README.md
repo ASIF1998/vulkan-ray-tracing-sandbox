@@ -42,3 +42,6 @@
 ![](results/dancing-penguin/dancing-penguin-1.png)
 ![](results/dancing-penguin/dancing-penguin-2.png)
 ![](results/dancing-penguin/dancing-penguin-3.png)
+
+## GaussianSplatting
+В этой сцене рисуется модель [Tree - Scaniverse 3D Gaussian Splat ply](https://sketchfab.com/3d-models/tree-scaniverse-3d-gaussian-splat-ply-6fa62a71aa184963a5082c4436e07920) при помощи Ray tracing'а.
